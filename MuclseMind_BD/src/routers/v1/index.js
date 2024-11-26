@@ -4,7 +4,7 @@ const UserRoute = require("./UserRoutes.js");
 
 const Routes = [
   {
-    path: "/project",
+    path: "/user",
     route: UserRoute,
   },
 ];

@@ -6,6 +6,7 @@ import { useBreakpoint } from '../customHooks';
 import { message } from 'antd';
 import { Formik, Form, Field, ErrorMessage } from 'formik';
 import * as Yup from 'yup';
+import Select from 'react-select';
 
 const CreateAccount = () => {
   const navigate = useNavigate();
@@ -104,6 +105,12 @@ const CreateAccount = () => {
     }
   };
 
+  const titleOptions = [
+    { value: 'mr', label: 'Mr' },
+    { value: 'mrs', label: 'Mrs' },
+    { value: 'dr', label: 'Dr' }
+  ];
+
   return (
     <div className="relative w-full h-screen flex items-center justify-center bg-gray-100">
       {currentBreakPoint !== "sm" && (
@@ -118,19 +125,24 @@ const CreateAccount = () => {
           validationSchema={validationSchema}
           onSubmit={handleSubmit}
         >
-          {({ values }) => (
+          {({ values, setFieldValue }) => (
             <Form className="space-y-4">
               <div>
-                <label htmlFor="username" className="block text-sm font-medium text-gray-900">Username</label>
-                <div className="mt-2">
+                <label htmlFor="username" className="block text-sm font-medium text-gray-900">Name</label>
+                <div className="mt-2 flex">
+                  <Select
+                    options={titleOptions}
+                    className="w-1/4"
+                    onChange={(option) => setFieldValue('title', option.value)}
+                  />
                   <Field
                     type="text"
                     id="username"
                     name="username"
-                    className="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm"
+                    className="flex-1 block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm"
                   />
-                  <ErrorMessage name="username" component="div" className="text-meta-1 text-sm" />
                 </div>
+                <ErrorMessage name="username" component="div" className="text-meta-1 text-sm" />
               </div>
               <div>
                 <label htmlFor="email" className="block text-sm font-medium text-gray-900">Email</label>

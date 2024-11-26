@@ -20,7 +20,7 @@ app.use(cors());
 app.options("*", cors());
 
 app.get("/", (req, res) => {
-  res.status(200).send({ message: "BTL BACKEND WORKING........" });
+  res.status(200).send({ message: "CRM BACKEND IS WORKING........" });
 });
 
 app.use("/v1", routes);
