@@ -36,3 +36,22 @@ export const resendOtp = async (data) => {
     throw error.response?.data || error;
   }
 };
+
+// Forgot password services
+export const sendPasswordResetOtp = async (data) => {
+  try {
+    const res = await interceptors.post("v1/user/forgot-password", data);
+    return res.data;
+  } catch (error) {
+    throw error.response?.data || error;
+  }
+};
+
+export const resetPassword = async (data) => {
+  try {
+    const res = await interceptors.post("v1/user/reset-password", data);
+    return res.data;
+  } catch (error) {
+    throw error.response?.data || error;
+  }
+};

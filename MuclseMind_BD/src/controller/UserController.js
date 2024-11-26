@@ -1,5 +1,5 @@
 require('dotenv').config();
-const { registerUser, sendOtp, verifyOtp, loginUser } = require('../services/UserService.js');
+const { registerUser, sendOtp, verifyOtp, loginUser, sendPasswordResetOtp, resetPassword } = require('../services/UserService.js');
 const { createResponse } = require('../utils/responseUtil.js');
 const jwt = require('jsonwebtoken');
 
@@ -59,4 +59,24 @@ const loginUserController = async (req, res) => {
   }
 };
 
-module.exports = { sendOtpController, verifyOtpController, registerUserController, loginUserController };
+const forgotPasswordController = async (req, res) => {
+  const { email } = req.body;
+  try {
+    await sendPasswordResetOtp(email);
+    res.status(200).json(createResponse(true, 'Password reset OTP sent successfully'));
+  } catch (error) {
+    res.status(500).json(createResponse(false, 'Failed to send password reset OTP', null, error.message));
+  }
+};
+
+const resetPasswordController = async (req, res) => {
+  const { email, otp, newPassword } = req.body;
+  try {
+    await resetPassword(email, otp, newPassword);
+    res.status(200).json(createResponse(true, 'Password reset successfully'));
+  } catch (error) {
+    res.status(500).json(createResponse(false, 'Failed to reset password', null, error.message));
+  }
+};
+
+module.exports = { sendOtpController, verifyOtpController, registerUserController, loginUserController, forgotPasswordController, resetPasswordController };

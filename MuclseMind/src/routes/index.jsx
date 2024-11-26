@@ -9,7 +9,7 @@ const Reminders = lazy(() => import('../components/Reminders'));
 const Clinic = lazy(() => import('../components/ClinicInfo'));
 const Login = lazy(() => import('../components/login'));
 const createAccount = lazy(() => import('../components/CreateAccount'));
-
+const ForgotPassword = lazy(() => import('../components/ForgotPassword'));
 const coreRoutes = [
   { path: '/', title: 'Login', component: Login },
   { path: '/dashboard', title: 'Dashboard', component: Dashboard },
@@ -20,6 +20,7 @@ const coreRoutes = [
   { path: '/reminders', title: 'Reminders', component: Reminders },
   { path: '/clinc', title: 'Clinic', component: Clinic },
   { path: '/create-account', title: 'Clinic', component: createAccount },
+  { path: '/forgot-password', title: 'Forgot Password', component: ForgotPassword },
 ];
 
 const routes = [...coreRoutes];

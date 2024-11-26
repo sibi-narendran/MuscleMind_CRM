@@ -1,3 +1,4 @@
+const bcrypt = require('bcrypt');
 const { createUser, getUserByEmail } = require('../models/UserModels.js');
 const { sendEmail } = require('../utils/mail.js');
 
@@ -49,13 +50,15 @@ const verifyOtp = async (email, otp) => {
 
 const registerUser = async (userData) => {
   try {
-    const { email, otp } = userData;
+    const { email, otp, password } = userData;
     const isOtpVerified = await verifyOtp(email, otp);
     if (!isOtpVerified) {
       throw new Error('OTP verification failed');
     }
 
-    const newUser = await createUser(userData);
+    // Hash the password before storing
+    const hashedPassword = await bcrypt.hash(password, 10);
+    const newUser = await createUser({ ...userData, password: hashedPassword });
     
     // Delete OTP after successful registration
     delete otpStore[email];
@@ -74,8 +77,9 @@ const loginUser = async (email, password) => {
       throw new Error('User not found');
     }
 
-    // Compare plain text passwords
-    if (password !== user[0].password) {
+    // Compare hashed passwords
+    const isPasswordValid = await bcrypt.compare(password, user[0].password);
+    if (!isPasswordValid) {
       throw new Error('Invalid password');
     }
 
@@ -86,4 +90,53 @@ const loginUser = async (email, password) => {
   }
 };
 
-module.exports = { sendOtp, verifyOtp, registerUser, loginUser };
+const sendPasswordResetOtp = async (email) => {
+  try {
+    const user = await getUserByEmail(email);
+    if (!user || user.length === 0) {
+      throw new Error('User not found');
+    }
+    const otp = await sendOtpToUser(email);
+    otpStore[email] = otp; // Store OTP temporarily
+    return otp;
+  } catch (error) {
+    console.error("Error in sendPasswordResetOtp:", error);
+    throw error;
+  }
+};
+
+const resetPassword = async (email, otp, newPassword) => {
+  try {
+    const isOtpVerified = await verifyOtp(email, otp);
+    if (!isOtpVerified) {
+      throw new Error('OTP verification failed');
+    }
+
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
+    const { data, error } = await supabase
+      .from('users')
+      .update({ password: hashedPassword })
+      .eq('email', email);
+
+    if (error) {
+      throw new Error('Failed to update password');
+    }
+
+    // Delete OTP after successful password reset
+    delete otpStore[email];
+
+    return data;
+  } catch (error) {
+    console.error("Error in resetPassword:", error);
+    throw error;
+  }
+};
+
+module.exports = { 
+  sendOtp, 
+  verifyOtp, 
+  registerUser, 
+  loginUser, 
+  sendPasswordResetOtp, 
+  resetPassword 
+};
