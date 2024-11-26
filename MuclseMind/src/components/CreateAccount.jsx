@@ -1,12 +1,14 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import axios from "axios";
 import RandomImageGrid from "../components/RandomImageGrid";
 import { useBreakpoint } from '../customHooks';
 import { message } from 'antd';
 import { Formik, Form, Field, ErrorMessage } from 'formik';
 import * as Yup from 'yup';
-import Select from 'react-select';
+import { Select } from 'antd';
+import { userRegister, otpVerify, resendOtp } from '../api.services/services'; 
+
+const { Option } = Select;
 
 const CreateAccount = () => {
   const navigate = useNavigate();
@@ -41,7 +43,7 @@ const CreateAccount = () => {
     }
 
     try {
-      await axios.post('http://localhost:9955/user/send-otp', { email });
+      await resendOtp({ email }); // Use resendOtp service
       setOtpSent(true);
       message.success('OTP sent to your email.');
     } catch (err) {
@@ -65,12 +67,12 @@ const CreateAccount = () => {
   const handleOtpVerification = async (email) => {
     const otpValue = otp.join("");
     try {
-      const response = await axios.post('http://localhost:9955/user/verify-otp', { otp: otpValue, email });
-      if (response.data.success) {
+      const response = await otpVerify({ otp: otpValue, email }); // Use otpVerify service
+      if (response.success) {
         setIsEmailVerified(true);
         message.success('OTP verified successfully.');
       } else {
-        message.error(response.data.message || 'Invalid OTP. Please try again.');
+        message.error(response.message || 'Invalid OTP. Please try again.');
       }
     } catch (err) {
       message.error(err.response?.data?.message || 'Failed to verify OTP. Please try again.');
@@ -87,16 +89,17 @@ const CreateAccount = () => {
     }
 
     try {
-      const response = await axios.post('http://localhost:9955/user/register', {
+      const response = await userRegister({
         username: values.username,
         email: values.email,
         phoneNumber: values.phoneNumber,
-        password: values.password
+        password: values.password,
+        otp: otp.join("")
       });
 
       if (response.status === 201) {
         message.success('Account created successfully.');
-        navigate('/dashboard');
+        navigate('/');
       }
     } catch (err) {
       message.error(err.response?.data?.message || 'An error occurred. Please try again.');
@@ -104,12 +107,6 @@ const CreateAccount = () => {
       setLoading(false);
     }
   };
-
-  const titleOptions = [
-    { value: 'mr', label: 'Mr' },
-    { value: 'mrs', label: 'Mrs' },
-    { value: 'dr', label: 'Dr' }
-  ];
 
   return (
     <div className="relative w-full h-screen flex items-center justify-center bg-gray-100">
@@ -131,15 +128,19 @@ const CreateAccount = () => {
                 <label htmlFor="username" className="block text-sm font-medium text-gray-900">Name</label>
                 <div className="mt-2 flex">
                   <Select
-                    options={titleOptions}
-                    className="w-1/4"
-                    onChange={(option) => setFieldValue('title', option.value)}
-                  />
+                    defaultValue="mr"
+                    className="w-1/8"
+                    onChange={(value) => setFieldValue('title', value)}
+                  >
+                    <Option value="mr">Mr</Option>
+                    <Option value="mrs">Mrs</Option>
+                    <Option value="dr">Dr</Option>
+                  </Select>
                   <Field
                     type="text"
                     id="username"
                     name="username"
-                    className="flex-1 block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm"
+                    className="flex-1 block w-full rounded-r-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm"
                   />
                 </div>
                 <ErrorMessage name="username" component="div" className="text-meta-1 text-sm" />

@@ -1,5 +1,9 @@
-const { registerUser, sendOtp, verifyOtp } = require('../services/UserService.js');
+require('dotenv').config();
+const { registerUser, sendOtp, verifyOtp, loginUser } = require('../services/UserService.js');
 const { createResponse } = require('../utils/responseUtil.js');
+const jwt = require('jsonwebtoken');
+
+const JWT_SECRET = process.env.JWT_SECRET;
 
 const sendOtpController = async (req, res) => {
   const { email } = req.body;
@@ -14,8 +18,6 @@ const sendOtpController = async (req, res) => {
 const verifyOtpController = async (req, res) => {
   try {
     const { email, otp } = req.body;
-    console.log("Received email:", email);
-    console.log("Received OTP:", otp);
 
     if (!email) {
       return res.status(400).json(createResponse(false, 'Email is required'));
@@ -34,7 +36,7 @@ const verifyOtpController = async (req, res) => {
 };
 
 const registerUserController = async (req, res) => {
-  const { username, email, phoneNumber, password } = req.body;
+  const { username, email, phoneNumber, password, otp } = req.body;
   try {
     const userData = { username, email, phoneNumber, password, otp };
     const newUser = await registerUser(userData);
@@ -44,4 +46,17 @@ const registerUserController = async (req, res) => {
   }
 };
 
-module.exports = { sendOtpController, verifyOtpController, registerUserController };
+const loginUserController = async (req, res) => {
+  const { email, password } = req.body;
+  try {
+    const user = await loginUser(email, password);
+    
+    const token = jwt.sign({ id: user.id, email: user.email }, JWT_SECRET, { expiresIn: '1h' });
+
+    res.status(200).json(createResponse(true, 'Login successful', { user, token }));
+  } catch (error) {
+    res.status(401).json(createResponse(false, 'Login failed', null, error.message));
+  }
+};
+
+module.exports = { sendOtpController, verifyOtpController, registerUserController, loginUserController };

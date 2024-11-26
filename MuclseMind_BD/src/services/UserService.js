@@ -1,8 +1,7 @@
 const { createUser, getUserByEmail } = require('../models/UserModels.js');
 const { sendEmail } = require('../utils/mail.js');
 
-let otpStore = {}; 
-console.log(otpStore,"otpStore");
+let otpStore = {};
 
 const sendOtpToUser = async (email) => {
   const otp = Math.floor(100000 + Math.random() * 900000); // Generate a 6-digit OTP
@@ -21,7 +20,6 @@ const sendOtp = async (email) => {
     }
     const otp = await sendOtpToUser(email);
     otpStore[email] = otp; // Store OTP temporarily
-    console.log(`OTP for ${email} stored:`, otpStore[email]); // Log the stored OTP
     return otp;
   } catch (error) {
     console.error("Error in sendOtp:", error);
@@ -34,15 +32,12 @@ const verifyOtp = async (email, otp) => {
     if (!email) {
       throw new Error('Email is undefined');
     }
-    console.log(`Verifying OTP for ${email}:`, otp, "Stored OTP:", otpStore[email]); // Log OTPs
 
     // Ensure both OTPs are strings for comparison
     const storedOtp = otpStore[email]?.toString();
     const inputOtp = otp.toString();
 
     if (storedOtp && storedOtp === inputOtp) {
-      console.log(`OTP verified successfully for ${email}`);
-      delete otpStore[email]; // Clear OTP after successful verification
       return true;
     }
     throw new Error('Invalid or expired OTP');
@@ -61,6 +56,10 @@ const registerUser = async (userData) => {
     }
 
     const newUser = await createUser(userData);
+    
+    // Delete OTP after successful registration
+    delete otpStore[email];
+
     return newUser;
   } catch (error) {
     console.error("Error in registerUser:", error);
@@ -68,4 +67,23 @@ const registerUser = async (userData) => {
   }
 };
 
-module.exports = { sendOtp, verifyOtp, registerUser };
+const loginUser = async (email, password) => {
+  try {
+    const user = await getUserByEmail(email);
+    if (!user || user.length === 0) {
+      throw new Error('User not found');
+    }
+
+    // Compare plain text passwords
+    if (password !== user[0].password) {
+      throw new Error('Invalid password');
+    }
+
+    return user[0]; // Return user data if login is successful
+  } catch (error) {
+    console.error("Error in loginUser:", error);
+    throw error;
+  }
+};
+
+module.exports = { sendOtp, verifyOtp, registerUser, loginUser };

@@ -2,6 +2,9 @@ import React, { useEffect, useState } from "react";
 import RandomImageGrid from "../components/RandomImageGrid";
 import { useNavigate } from "react-router-dom";
 import { useBreakpoint } from '../customHooks';
+import { message } from 'antd';
+import Loader from '../styles/Loader';
+import { userLogin } from '../api.services/services';
 
 const Login = () => {
   const currentBreakPoint = useBreakpoint();
@@ -9,7 +12,6 @@ const Login = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
 
   const scrollToTop = () => {
     window.scrollTo({ top: 1, behavior: "smooth" });
@@ -19,24 +21,34 @@ const Login = () => {
     scrollToTop();
   }, []);
 
-  const handleLogin = (e) => {
+  const handleLogin = async (e) => {
     e.preventDefault();
     setLoading(true);
-    setError('');
 
-    // Simulate a fake API call
-    setTimeout(() => {
-      setLoading(false);
-      if (email === 'test@example.com' && password === 'password') {
+    try {
+      const response = await userLogin({ email, password });
+
+      if (response.success && response.data.token) {
+        localStorage.setItem('token', response.data.token);
+        message.success(response.message || 'Login successful');
         navigate('/dashboard');
       } else {
-        setError('Invalid email or password');
+        message.error('Failed to retrieve token. Please try again.');
       }
-    }, 1000);
+    } catch (err) {
+      message.error(err.message || 'An error occurred. Please try again.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
     <div className="w-full h-screen overflow-hidden mx-auto font-roboto bg-[#FCFCFC]" style={{ userSelect: "none" }}>
+      {loading && (
+        <div className="fixed inset-0 flex items-center justify-center z-50 bg-white bg-opacity-75">
+          <Loader />
+        </div>
+      )}
       <div className="relative grid grid-rows-1 grid-cols-1 min-h-[85vh]">
         {currentBreakPoint !== "sm" && (
           <div className="row-start-1 col-start-1 z-0">
@@ -88,8 +100,6 @@ const Login = () => {
                     />
                   </div>
                 </div>
-
-                {error && <div className="text-red-500 text-sm">{error}</div>}
 
                 <div>
                   <button
