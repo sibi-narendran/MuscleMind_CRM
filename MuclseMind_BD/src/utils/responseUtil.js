@@ -1,9 +1,10 @@
-const createResponse = (success, message, data = null, error = null) => {
+const createResponse = (success, message, data = null, error = null, status = null) => {
   return {
     success,
     message,
     data,
     error,
+    status,
   };
 };
 

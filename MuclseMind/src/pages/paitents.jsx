@@ -7,7 +7,7 @@ const PatientsPage = () => {
     <React.Fragment>
       <Breadcrumb pageName="Patients" />
 
-      <div className="flex flex-col gap-10">
+      <div className="flex flex-col gap-5">
       <Patients />
       </div>
     </React.Fragment>

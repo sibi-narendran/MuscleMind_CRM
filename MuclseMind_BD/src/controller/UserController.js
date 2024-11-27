@@ -40,9 +40,10 @@ const registerUserController = async (req, res) => {
   try {
     const userData = { username, email, phoneNumber, password, otp };
     const newUser = await registerUser(userData);
-    res.status(201).json(createResponse(true, 'User registered successfully', newUser));
+    
+    res.json(createResponse(true, 'User registered successfully', newUser, null, 201));
   } catch (error) {
-    res.status(500).json(createResponse(false, 'Failed to register user', null, error.message));
+    res.json(createResponse(false, 'Failed to register user', null, error.message, 500));
   }
 };
 
@@ -51,7 +52,7 @@ const loginUserController = async (req, res) => {
   try {
     const user = await loginUser(email, password);
     
-    const token = jwt.sign({ id: user.id, email: user.email }, JWT_SECRET, { expiresIn: '1h' });
+    const token = jwt.sign({ id: user.id, email: user.email }, JWT_SECRET, { expiresIn: '15d' });
 
     res.status(200).json(createResponse(true, 'Login successful', { user, token }));
   } catch (error) {

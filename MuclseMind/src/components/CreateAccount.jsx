@@ -6,7 +6,7 @@ import { message } from 'antd';
 import { Formik, Form, Field, ErrorMessage } from 'formik';
 import * as Yup from 'yup';
 import { Select } from 'antd';
-import { userRegister, otpVerify, resendOtp } from '../api.services/services'; 
+import { userRegister, otpVerify,sendOtp } from '../api.services/services'; 
 
 const { Option } = Select;
 
@@ -17,6 +17,7 @@ const CreateAccount = () => {
   const [isEmailVerified, setIsEmailVerified] = useState(false);
   const [otpSent, setOtpSent] = useState(false);
   const [otp, setOtp] = useState(new Array(6).fill(""));
+  const [otpLoading, setOtpLoading] = useState(false);
 
   const initialValues = {
     username: '',
@@ -42,12 +43,16 @@ const CreateAccount = () => {
       return;
     }
 
+    setOtpLoading(true);
+
     try {
-      await resendOtp({ email }); // Use resendOtp service
+      await sendOtp({ email });
       setOtpSent(true);
       message.success('OTP sent to your email.');
     } catch (err) {
       message.error('Failed to send OTP. Please try again.');
+    } finally {
+      setOtpLoading(false);
     }
   };
 
@@ -158,8 +163,9 @@ const CreateAccount = () => {
                     type="button"
                     onClick={() => handleEmailVerification(values.email)}
                     className="ml-2 px-4 py-1.5 text-white bg-meta-5 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-meta-5 focus:ring-offset-2 transition duration-150"
+                    disabled={otpLoading}
                   >
-                    Verify
+                    {otpLoading ? 'Sending...' : 'Verify'}
                   </button>
                 </div>
                 <ErrorMessage name="email" component="div" className="text-meta-1 text-sm" />
