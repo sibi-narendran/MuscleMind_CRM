@@ -1,9 +1,294 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useTable } from 'react-table';
-import { Button, Modal, Input, Upload } from 'antd';
-import { PlusOutlined } from '@ant-design/icons';
+import { Button, Modal, Input, Upload, Form, InputNumber, Select, DatePicker, List, Typography } from 'antd';
+import { PlusOutlined, EditOutlined, EyeOutlined, EyeInvisibleOutlined } from '@ant-design/icons';
+import moment from 'moment';
+
+const { TextArea } = Input;
+const { Option } = Select;
 
 const ClinicInfo = () => {
+  // Default operating hours
+  const defaultOperatingHours = {
+    monday: { status: 'open', open: '10:00', close: '18:30' },
+    tuesday: { status: 'open', open: '10:00', close: '18:30' },
+    wednesday: { status: 'open', open: '10:00', close: '18:30' },
+    thursday: { status: 'open', open: '10:00', close: '18:30' },
+    friday: { status: 'open', open: '10:00', close: '18:30' },
+    saturday: { status: 'open', open: '10:00', close: '18:30' },
+    sunday: { status: 'open', open: '10:00', close: '18:30' },
+  };
+
+  // Extended clinic data state
+  const [clinicData, setClinicData] = useState({
+    name: 'Smile Dental Clinic',
+    tagline: 'Your Smile, Our Priority',
+    description: 'We are committed to providing the best dental care...',
+    operatingHours: defaultOperatingHours,
+    address: '123 Smile St, Dental City, DC 12345',
+    phone: '(123) 456-7890',
+    email: 'contact@smiledental.com',
+    socialMedia: {
+      facebook: 'https://facebook.com',
+      instagram: 'https://instagram.com',
+    },
+    location: {
+      latitude: 0,
+      longitude: 0,
+    },
+    photos: [],
+  });
+
+  // Treatment fees and procedures state
+  const [treatments, setTreatments] = useState([
+    {
+      category: 'General Dentistry',
+      procedures: [
+        { name: 'Dental Checkup', cost: 50, duration: '30 mins' },
+        { name: 'Teeth Cleaning', cost: 80, duration: '45 mins' },
+      ],
+    },
+    // ... other categories
+  ]);
+
+  // Preferred medications state
+  const [medications, setMedications] = useState([
+    {
+      condition: 'Post Extraction Pain',
+      medications: [
+        {
+          name: 'Ibuprofen',
+          brandPreference: 'Brufen',
+          dosageByAge: {
+            adult: '400mg 3 times daily',
+            child: '200mg 3 times daily',
+            infant: 'Not recommended',
+          },
+        },
+      ],
+    },
+  ]);
+
+  // Modal states
+  const [isEditClinicModal, setIsEditClinicModal] = useState(false);
+  const [isTreatmentModal, setIsTreatmentModal] = useState(false);
+  const [isMedicationModal, setIsMedicationModal] = useState(false);
+  const [isEditOperatingHoursModal, setIsEditOperatingHoursModal] = useState(false);
+
+  // State for special holidays
+  const [specialHolidays, setSpecialHolidays] = useState([]);
+
+  // State for modal visibility
+  const [isSpecialHolidayModalVisible, setIsSpecialHolidayModalVisible] = useState(false);
+
+  // State for new holiday
+  const [newHoliday, setNewHoliday] = useState({ name: '', date: null });
+
+  // State to toggle holiday list visibility
+  const [isHolidayListVisible, setIsHolidayListVisible] = useState(false);
+
+  // Function to add a new holiday
+  const addSpecialHoliday = () => {
+    if (newHoliday.name && newHoliday.date) {
+      setSpecialHolidays([...specialHolidays, newHoliday]);
+      setNewHoliday({ name: '', date: null });
+      setIsSpecialHolidayModalVisible(false);
+    }
+  };
+
+  // Function to remove past holidays
+  const removePastHolidays = () => {
+    const today = moment();
+    setSpecialHolidays(specialHolidays.filter(holiday => moment(holiday.date).isSameOrAfter(today, 'day')));
+  };
+
+  // Effect to remove past holidays on component mount
+  useEffect(() => {
+    removePastHolidays();
+  }, []);
+
+  // Render special holidays section
+  const renderSpecialHolidays = () => (
+    <section className="mb-8">
+      <h2 className="text-2xl font-bold mb-4">Special Holidays</h2>
+      <List
+        bordered
+        dataSource={specialHolidays}
+        renderItem={holiday => (
+          <List.Item>
+            <strong>{holiday.name}</strong> - {moment(holiday.date).format('MMMM Do, YYYY')}
+          </List.Item>
+        )}
+      />
+    </section>
+  );
+
+  // Special Holiday Modal
+  const SpecialHolidayModal = () => (
+    <Modal
+      title="Add Special Holiday"
+      visible={isSpecialHolidayModalVisible}
+      onCancel={() => setIsSpecialHolidayModalVisible(false)}
+      footer={null}
+      centered
+    >
+      <div className="flex flex-col space-y-4">
+        <Input
+          placeholder="Holiday Name"
+          value={newHoliday.name}
+          onChange={(e) => setNewHoliday({ ...newHoliday, name: e.target.value })}
+          prefix={<PlusOutlined />}
+        />
+        <DatePicker
+          style={{ width: '100%' }}
+          value={newHoliday.date}
+          onChange={(date) => setNewHoliday({ ...newHoliday, date })}
+          placeholder="Select Date"
+        />
+        <Button type="primary" onClick={addSpecialHoliday} block>
+          Add Holiday
+        </Button>
+        <Button
+          type="default"
+          onClick={() => setIsHolidayListVisible(!isHolidayListVisible)}
+          block
+          icon={isHolidayListVisible ? <EyeInvisibleOutlined /> : <EyeOutlined />}
+        >
+          {isHolidayListVisible ? 'Hide Holidays' : 'Show All Holidays'}
+        </Button>
+        {isHolidayListVisible && (
+          <List
+            bordered
+            dataSource={specialHolidays}
+            renderItem={holiday => (
+              <List.Item>
+                <Typography.Text strong>{holiday.name}</Typography.Text> - {moment(holiday.date).format('MMMM Do, YYYY')}
+              </List.Item>
+            )}
+            style={{ marginTop: '10px' }}
+          />
+        )}
+      </div>
+    </Modal>
+  );
+
+  // Add new treatment procedure
+  const addTreatment = (values) => {
+    const { category, procedureName, cost, duration } = values;
+    setTreatments(prev => {
+      const categoryIndex = prev.findIndex(c => c.category === category);
+      if (categoryIndex === -1) {
+        return [...prev, {
+          category,
+          procedures: [{ name: procedureName, cost, duration }]
+        }];
+      }
+      
+      const updated = [...prev];
+      updated[categoryIndex].procedures.push({ name: procedureName, cost, duration });
+      return updated;
+    });
+    setIsTreatmentModal(false);
+  };
+
+  // Treatment Form
+  const TreatmentForm = () => (
+    <Form onFinish={addTreatment}>
+      <Form.Item name="category" label="Category">
+        <Select
+          placeholder="Select or enter category"
+          allowClear
+          showSearch
+          allowCreate
+        >
+          {treatments.map(t => (
+            <Option key={t.category} value={t.category}>{t.category}</Option>
+          ))}
+        </Select>
+      </Form.Item>
+      <Form.Item name="procedureName" label="Procedure Name">
+        <Input />
+      </Form.Item>
+      <Form.Item name="cost" label="Cost">
+        <InputNumber prefix="$" />
+      </Form.Item>
+      <Form.Item name="duration" label="Duration">
+        <Input placeholder="e.g., 30 mins" />
+      </Form.Item>
+    </Form>
+  );
+
+  // Add new medication preference
+  const addMedication = (values) => {
+    setMedications(prev => [...prev, values]);
+    setIsMedicationModal(false);
+  };
+
+  // Medication Form
+  const MedicationForm = () => (
+    <Form onFinish={addMedication}>
+      <Form.Item name="condition" label="Medical Condition">
+        <Input />
+      </Form.Item>
+      <Form.Item name="medicationName" label="Medication Name">
+        <Input />
+      </Form.Item>
+      <Form.Item name="brandPreference" label="Preferred Brand">
+        <Input />
+      </Form.Item>
+      <Form.Item label="Dosage by Age Group">
+        <Form.Item name={['dosage', 'adult']} label="Adult">
+          <Input />
+        </Form.Item>
+        <Form.Item name={['dosage', 'child']} label="Child">
+          <Input />
+        </Form.Item>
+        <Form.Item name={['dosage', 'infant']} label="Infant">
+          <Input />
+        </Form.Item>
+      </Form.Item>
+    </Form>
+  );
+
+  // Render treatment procedures section
+  const renderTreatments = () => (
+    <section className="mb-8">
+      <div className="flex justify-between items-center mb-4">
+        <h2 className="text-2xl font-bold">Treatment Procedures & Fees</h2>
+        <Button type="primary" onClick={() => setIsTreatmentModal(true)}>
+          Add Procedure
+        </Button>
+      </div>
+      {treatments.map((category, idx) => (
+        <div key={idx} className="mb-4">
+          <h3 className="text-xl font-semibold mb-2">{category.category}</h3>
+          <table className="min-w-full">
+            <thead>
+              <tr>
+                <th className="px-4 py-2">Procedure</th>
+                <th className="px-4 py-2">Cost</th>
+                <th className="px-4 py-2">Duration</th>
+                <th className="px-4 py-2">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {category.procedures.map((proc, pIdx) => (
+                <tr key={pIdx}>
+                  <td className="px-4 py-2">{proc.name}</td>
+                  <td className="px-4 py-2">${proc.cost}</td>
+                  <td className="px-4 py-2">{proc.duration}</td>
+                  <td className="px-4 py-2">
+                    <Button icon={<EditOutlined />} size="small" />
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      ))}
+    </section>
+  );
+
   // Sample data for the table
   const data = React.useMemo(
     () => [
@@ -83,57 +368,259 @@ const ClinicInfo = () => {
     reader.readAsDataURL(file.originFileObj);
   };
 
+  // Function to handle editing clinic data
+  const handleEditClinicData = (field, value) => {
+    setClinicData(prev => ({ ...prev, [field]: value }));
+  };
+
+  // Function to generate Google Maps link
+  const generateGoogleMapsLink = (address) => {
+    const encodedAddress = encodeURIComponent(address);
+    return `https://www.google.com/maps/search/?api=1&query=${encodedAddress}`;
+  };
+
+  // Render combined clinic overview and contact information section
+  const renderClinicOverviewAndContact = () => (
+    <section className="mb-8">
+      <div className="flex justify-between items-center mb-4">
+        <h2 className="text-2xl font-bold">Clinic Overview & Contact Information</h2>
+        <Button type="primary" onClick={() => setIsEditClinicModal(true)}>
+          Edit
+        </Button>
+      </div>
+      <p><strong>Name:</strong> {clinicData.name}</p>
+      <p><strong>Tagline:</strong> {clinicData.tagline}</p>
+      <p><strong>Address:</strong> {clinicData.address}</p>
+      <p>
+        <a 
+          href={clinicData.gmapLink || generateGoogleMapsLink(clinicData.address)} 
+          target="_blank" 
+          rel="noopener noreferrer" 
+          className="text-blue-500"
+        >
+          View on Google Maps
+        </a>
+      </p>
+      <p><strong>Phone:</strong> {clinicData.phone}</p>
+      <p><strong>Email:</strong> {clinicData.email}</p>
+      <p>
+        <strong>Social Media:</strong> 
+        <a href={clinicData.socialMedia.facebook} className="text-blue-500">Facebook</a>, 
+        <a href={clinicData.socialMedia.instagram} className="text-blue-500">Instagram</a>
+      </p>
+      <div className="flex flex-col items-start mt-4 space-y-2">
+        <Button type="primary" onClick={() => setIsEditOperatingHoursModal(true)} style={{ width: 'auto' }}>
+          Edit Operating Hours
+        </Button>
+        <Button type="primary" onClick={() => setIsSpecialHolidayModalVisible(true)} style={{ width: 'auto' }}>
+          Special Holiday
+        </Button>
+      </div>
+    </section>
+  );
+
+  // State for other clinic information
+  const [otherClinicInfo, setOtherClinicInfo] = useState({
+    licenseNumber: '',
+    insuranceProviders: '',
+    emergencyContact: '',
+    languagesSpoken: '',
+    paymentMethods: '',
+    parkingInfo: '',
+    accessibilityFeatures: '',
+    patientReviews: '',
+    appointmentBooking: '',
+    specialServices: '',
+  });
+
+  // State for modal visibility
+  const [isEditOtherInfoModal, setIsEditOtherInfoModal] = useState(false);
+
+  // Render other clinic information section
+  const renderOtherClinicInfo = () => (
+    <section className="mb-8">
+      <div className="flex justify-between items-center mb-4">
+        <h2 className="text-2xl font-bold">Other Clinic Information</h2>
+        <Button type="primary" onClick={() => setIsEditOtherInfoModal(true)}>
+          Edit
+        </Button>
+      </div>
+      <p><strong>License Number:</strong> {otherClinicInfo.licenseNumber}</p>
+      <p><strong>Insurance Providers:</strong> {otherClinicInfo.insuranceProviders}</p>
+      <p><strong>Emergency Contact:</strong> {otherClinicInfo.emergencyContact}</p>
+      <p><strong>Languages Spoken:</strong> {otherClinicInfo.languagesSpoken}</p>
+      <p><strong>Payment Methods:</strong> {otherClinicInfo.paymentMethods}</p>
+      <p><strong>Parking Information:</strong> {otherClinicInfo.parkingInfo}</p>
+      <p><strong>Accessibility Features:</strong> {otherClinicInfo.accessibilityFeatures}</p>
+      <p><strong>Patient Reviews:</strong> {otherClinicInfo.patientReviews}</p>
+      <p><strong>Appointment Booking:</strong> {otherClinicInfo.appointmentBooking}</p>
+      <p><strong>Special Services:</strong> {otherClinicInfo.specialServices}</p>
+    </section>
+  );
+
+  // Edit Other Clinic Information Modal
+  const EditOtherInfoModal = () => (
+    <Modal
+      title="Edit Other Clinic Information"
+      open={isEditOtherInfoModal}
+      onCancel={() => setIsEditOtherInfoModal(false)}
+      footer={null}
+    >
+      <Form
+        initialValues={otherClinicInfo}
+        onFinish={(values) => {
+          setOtherClinicInfo(values);
+          setIsEditOtherInfoModal(false);
+        }}
+      >
+        <Form.Item name="licenseNumber" label="License Number">
+          <Input />
+        </Form.Item>
+        <Form.Item name="insuranceProviders" label="Insurance Providers">
+          <Input />
+        </Form.Item>
+        <Form.Item name="emergencyContact" label="Emergency Contact">
+          <Input />
+        </Form.Item>
+        <Form.Item name="languagesSpoken" label="Languages Spoken">
+          <Input />
+        </Form.Item>
+        <Form.Item name="paymentMethods" label="Payment Methods">
+          <Input />
+        </Form.Item>
+        <Form.Item name="parkingInfo" label="Parking Information">
+          <Input />
+        </Form.Item>
+        <Form.Item name="accessibilityFeatures" label="Accessibility Features">
+          <Input />
+        </Form.Item>
+        <Form.Item name="patientReviews" label="Patient Reviews">
+          <Input.TextArea />
+        </Form.Item>
+        <Form.Item name="appointmentBooking" label="Appointment Booking">
+          <Input />
+        </Form.Item>
+        <Form.Item name="specialServices" label="Special Services">
+          <Input />
+        </Form.Item>
+        <Button type="primary" htmlType="submit">
+          Save
+        </Button>
+      </Form>
+    </Modal>
+  );
+
+  // Edit Clinic Modal
+  const EditClinicModal = () => (
+    <Modal
+      title="Edit Clinic Information"
+      open={isEditClinicModal}
+      onCancel={() => setIsEditClinicModal(false)}
+      footer={null}
+    >
+      <Form
+        initialValues={clinicData}
+        onFinish={(values) => {
+          setClinicData(values);
+          setIsEditClinicModal(false);
+        }}
+      >
+        <Form.Item name="name" label="Clinic Name">
+          <Input />
+        </Form.Item>
+        <Form.Item name="tagline" label="Tagline">
+          <Input />
+        </Form.Item>
+        <Form.Item name="address" label="Address">
+          <Input />
+        </Form.Item>
+        <Form.Item name="gmapLink" label="Google Maps Link">
+          <Input />
+        </Form.Item>
+        <Form.Item name="phone" label="Phone">
+          <Input />
+        </Form.Item>
+        <Form.Item name="email" label="Email">
+          <Input />
+        </Form.Item>
+        <Form.Item name={['socialMedia', 'facebook']} label="Facebook">
+          <Input />
+        </Form.Item>
+        <Form.Item name={['socialMedia', 'instagram']} label="Instagram">
+          <Input />
+        </Form.Item>
+        <Button type="primary" htmlType="submit">
+          Save
+        </Button>
+      </Form>
+    </Modal>
+  );
+
+  // Edit Operating Hours Modal
+  const EditOperatingHoursModal = () => {
+    const [form] = Form.useForm();
+
+    return (
+      <Modal
+        title="Edit Operating Hours"
+        open={isEditOperatingHoursModal}
+        onCancel={() => setIsEditOperatingHoursModal(false)}
+        footer={null}
+      >
+        <Form
+          form={form}
+          initialValues={clinicData.operatingHours}
+          onFinish={(values) => {
+            setClinicData(prev => ({ ...prev, operatingHours: values }));
+            setIsEditOperatingHoursModal(false);
+          }}
+          layout="vertical"
+        >
+          {Object.keys(clinicData.operatingHours).map(day => (
+            <div key={day} className="flex items-center space-x-4 mb-4">
+              <Form.Item
+                name={[day, 'status']}
+                label={`${capitalize(day)} Status`}
+                className="flex-1"
+              >
+                <Select defaultValue={clinicData.operatingHours[day].status}>
+                  <Select.Option value="open">Open</Select.Option>
+                  <Select.Option value="closed">Closed</Select.Option>
+                </Select>
+              </Form.Item>
+              <Form.Item
+                name={[day, 'open']}
+                label={`${capitalize(day)} Open`}
+                className="flex-1"
+              >
+                <Input type="time" defaultValue={clinicData.operatingHours[day].open} />
+              </Form.Item>
+              <Form.Item
+                name={[day, 'close']}
+                label={`${capitalize(day)} Close`}
+                className="flex-1"
+              >
+                <Input type="time" defaultValue={clinicData.operatingHours[day].close} />
+              </Form.Item>
+            </div>
+          ))}
+          <div className="flex justify-end">
+            <Button type="primary" htmlType="submit">
+              Save
+            </Button>
+          </div>
+        </Form>
+      </Modal>
+    );
+  };
+
+  // Helper function to capitalize day names
+  const capitalize = (str) => str.charAt(0).toUpperCase() + str.slice(1);
+
   return (
     <div className="max-w-full mx-auto p-6 bg-white shadow-md rounded-lg">
-      {/* Clinic Overview */}
-      <section className="mb-8">
-        <h2 className="text-2xl font-bold mb-4">Clinic Overview</h2>
-        <p><strong>Name:</strong> Smile Dental Clinic</p>
-        <p><strong>Tagline:</strong> Your Smile, Our Priority</p>
-        <p><strong>Description:</strong> We are committed to providing the best dental care with a focus on patient comfort and satisfaction. Our mission is to enhance your smile and improve your oral health.</p>
-        <p><strong>Operating Hours:</strong> Mon-Fri: 9 AM - 6 PM, Sat: 10 AM - 4 PM</p>
-      </section>
-
-      {/* Contact Information */}
-      <section className="mb-8">
-        <h2 className="text-2xl font-bold mb-4">Contact Information</h2>
-        <p><strong>Address:</strong> 123 Smile St, Dental City, DC 12345 <a href="https://maps.google.com" target="_blank" rel="noopener noreferrer" className="text-blue-500">View on Google Maps</a></p>
-        <p><strong>Phone:</strong> (123) 456-7890</p>
-        <p><strong>Email:</strong> contact@smiledental.com</p>
-        <p><strong>Social Media:</strong> <a href="https://facebook.com" className="text-blue-500">Facebook</a>, <a href="https://instagram.com" className="text-blue-500">Instagram</a></p>
-      </section>
-
-      {/* Dental Services Table */}
-      <section className="mb-8">
-        <h2 className="text-2xl font-bold mb-4">Dental Services</h2>
-        <table {...getTableProps()} className="min-w-full bg-white">
-          <thead>
-            {headerGroups.map(headerGroup => (
-              <tr {...headerGroup.getHeaderGroupProps()}>
-                {headerGroup.headers.map(column => (
-                  <th {...column.getHeaderProps()} className="px-4 py-2 border-b-2 border-gray-200 bg-gray-100 text-left text-sm font-semibold text-gray-600">
-                    {column.render('Header')}
-                  </th>
-                ))}
-              </tr>
-            ))}
-          </thead>
-          <tbody {...getTableBodyProps()}>
-            {rows.map(row => {
-              prepareRow(row);
-              return (
-                <tr {...row.getRowProps()}>
-                  {row.cells.map(cell => (
-                    <td {...cell.getCellProps()} className="px-4 py-2 border-b border-gray-200 text-sm">
-                      {cell.render('Cell')}
-                    </td>
-                  ))}
-                </tr>
-              );
-            })}
-          </tbody>
-        </table>
-      </section>
+      {/* Combined Clinic Overview and Contact Information */}
+      {renderClinicOverviewAndContact()}
 
       {/* Dental Team */}
       <section className="mb-8 relative">
@@ -161,27 +648,45 @@ const ClinicInfo = () => {
         {/* Add Team Member Modal */}
         <Modal
           title="Add Team Member"
-          visible={isModalVisible}
+          open={isModalVisible}
           onOk={addTeamMember}
           onCancel={() => setIsModalVisible(false)}
           okText="Add"
           cancelText="Cancel"
         >
           <div className="flex flex-col space-y-4">
+            <Select
+              placeholder="Select Title"
+              value={newMember.title}
+              onChange={(value) => setNewMember({ ...newMember, title: value })}
+            >
+              <Select.Option value="mr">Mr.</Select.Option>
+              <Select.Option value="ms">Ms.</Select.Option>
+              <Select.Option value="dr">Dr.</Select.Option>
+            </Select>
             <Input
               placeholder="Name"
               value={newMember.name}
               onChange={(e) => setNewMember({ ...newMember, name: e.target.value })}
             />
+            <Select
+              placeholder="Select Role"
+              value={newMember.role}
+              onChange={(value) => setNewMember({ ...newMember, role: value })}
+            >
+              <Select.Option value="doctor">Doctor</Select.Option>
+              <Select.Option value="visiting_doctor">Visiting Doctor</Select.Option>
+              <Select.Option value="admin_staff">Admin Staff</Select.Option>
+            </Select>
             <Input
-              placeholder="Qualifications"
-              value={newMember.qualifications}
-              onChange={(e) => setNewMember({ ...newMember, qualifications: e.target.value })}
+              placeholder="Specialization (e.g., Orthodontist)"
+              value={newMember.specialization}
+              onChange={(e) => setNewMember({ ...newMember, specialization: e.target.value })}
             />
             <Input
-              placeholder="Experience"
-              value={newMember.experience}
-              onChange={(e) => setNewMember({ ...newMember, experience: e.target.value })}
+              placeholder="Email Address"
+              value={newMember.email}
+              onChange={(e) => setNewMember({ ...newMember, email: e.target.value })}
             />
             <Upload
               name="file"
@@ -206,6 +711,49 @@ const ClinicInfo = () => {
           </div>
         </Modal>
       </section>
+
+      {/* Add Treatment Procedures Section */}
+      {renderTreatments()}
+
+      {/* Add Medication Preferences Section */}
+      <section className="mb-8">
+        <div className="flex justify-between items-center mb-4">
+          <h2 className="text-2xl font-bold">Medication Preferences</h2>
+          <Button type="primary" onClick={() => setIsMedicationModal(true)}>
+            Add Medication
+          </Button>
+        </div>
+        {/* Render medication preferences... */}
+      </section>
+
+      {/* Special Holidays */}
+      {renderSpecialHolidays()}
+
+      {/* Other Clinic Information */}
+      {renderOtherClinicInfo()}
+
+      {/* Modals */}
+      <EditClinicModal />
+      <EditOperatingHoursModal />
+      <EditOtherInfoModal />
+      <SpecialHolidayModal />
+      <Modal
+        title="Add Treatment Procedure"
+        open={isTreatmentModal}
+        onCancel={() => setIsTreatmentModal(false)}
+        footer={null}
+      >
+        <TreatmentForm />
+      </Modal>
+
+      <Modal
+        title="Add Medication Preference"
+        open={isMedicationModal}
+        onCancel={() => setIsMedicationModal(false)}
+        footer={null}
+      >
+        <MedicationForm />
+      </Modal>
     </div>
   );
 };

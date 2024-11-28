@@ -18,7 +18,7 @@ const coreRoutes = [
   { path: '/billing', title: 'Billing', component: Billing },
   { path: '/management', title: 'Management', component: Management },
   { path: '/reminders', title: 'Reminders', component: Reminders },
-  { path: '/clinc', title: 'Clinic', component: Clinic },
+  { path: '/clinic', title: 'Clinic', component: Clinic },
   { path: '/create-account', title: 'Clinic', component: createAccount },
   { path: '/forgot-password', title: 'Forgot Password', component: ForgotPassword },
 ];
