@@ -77,22 +77,16 @@ const ClinicInfo = () => {
 
   // State for special holidays
   const [specialHolidays, setSpecialHolidays] = useState([]);
-
-  // State for modal visibility
-  const [isSpecialHolidayModalVisible, setIsSpecialHolidayModalVisible] = useState(false);
-
-  // State for new holiday
-  const [newHoliday, setNewHoliday] = useState({ name: '', date: null });
-
-  // State to toggle holiday list visibility
+  const [isHolidayModalVisible, setIsHolidayModalVisible] = useState(false);
+  const [newHoliday, setNewHoliday] = useState({ reason: '', date: null });
   const [isHolidayListVisible, setIsHolidayListVisible] = useState(false);
 
   // Function to add a new holiday
   const addSpecialHoliday = () => {
-    if (newHoliday.name && newHoliday.date) {
+    if (newHoliday.reason && newHoliday.date) {
       setSpecialHolidays([...specialHolidays, newHoliday]);
-      setNewHoliday({ name: '', date: null });
-      setIsSpecialHolidayModalVisible(false);
+      setNewHoliday({ reason: '', date: null });
+      setIsHolidayModalVisible(false);
     }
   };
 
@@ -116,37 +110,32 @@ const ClinicInfo = () => {
         dataSource={specialHolidays}
         renderItem={holiday => (
           <List.Item className="bg-white dark:bg-boxdark text-black dark:text-white">
-            <strong>{holiday.name}</strong> - {moment(holiday.date).format('MMMM Do, YYYY')}
+            <strong>{holiday.reason}</strong> - {moment(holiday.date).format('MMMM Do, YYYY')}
           </List.Item>
         )}
       />
     </section>
   );
 
-  // Special Holiday Modal
-  const SpecialHolidayModal = () => (
+  // Render the Add Holiday Modal
+  const renderAddHolidayModal = () => (
     <Modal
-      title="Add Special Holiday"
-      visible={isSpecialHolidayModalVisible}
-      onCancel={() => setIsSpecialHolidayModalVisible(false)}
+      title="Add Holiday"
+      visible={isHolidayModalVisible}
+      onCancel={() => setIsHolidayModalVisible(false)}
       footer={null}
-      centered
-      className="dark:bg-boxdark"
     >
       <div className="flex flex-col space-y-4">
         <Input
-          placeholder="Holiday Name"
-          value={newHoliday.name}
-          onChange={(e) => setNewHoliday({ ...newHoliday, name: e.target.value })}
-          prefix={<PlusOutlined />}
-          className="bg-white dark:bg-boxdark text-black dark:text-white"
+          placeholder="Reason for Holiday"
+          value={newHoliday.reason}
+          onChange={(e) => setNewHoliday({ ...newHoliday, reason: e.target.value })}
         />
         <DatePicker
           style={{ width: '100%' }}
           value={newHoliday.date}
           onChange={(date) => setNewHoliday({ ...newHoliday, date })}
           placeholder="Select Date"
-          className="bg-white dark:bg-boxdark text-black dark:text-white"
         />
         <Button type="primary" onClick={addSpecialHoliday} block>
           Add Holiday
@@ -155,7 +144,6 @@ const ClinicInfo = () => {
           type="default"
           onClick={() => setIsHolidayListVisible(!isHolidayListVisible)}
           block
-          icon={isHolidayListVisible ? <EyeInvisibleOutlined /> : <EyeOutlined />}
         >
           {isHolidayListVisible ? 'Hide Holidays' : 'Show All Holidays'}
         </Button>
@@ -164,8 +152,8 @@ const ClinicInfo = () => {
             bordered
             dataSource={specialHolidays}
             renderItem={holiday => (
-              <List.Item className="bg-white dark:bg-boxdark text-black dark:text-white">
-                <Typography.Text strong>{holiday.name}</Typography.Text> - {moment(holiday.date).format('MMMM Do, YYYY')}
+              <List.Item>
+                <Typography.Text strong>{holiday.reason}</Typography.Text> - {moment(holiday.date).format('MMMM Do, YYYY')}
               </List.Item>
             )}
             style={{ marginTop: '10px' }}
@@ -218,6 +206,11 @@ const ClinicInfo = () => {
       <Form.Item name="duration" label="Duration">
         <Input placeholder="e.g., 30 mins" />
       </Form.Item>
+      <Form.Item>
+        <Button type="primary" htmlType="submit">
+          Save
+        </Button>
+      </Form.Item>
     </Form>
   );
 
@@ -265,22 +258,22 @@ const ClinicInfo = () => {
       {treatments.map((category, idx) => (
         <div key={idx} className="mb-4">
           <h3 className="text-xl font-semibold mb-2">{category.category}</h3>
-          <table className="min-w-full">
+          <table className="min-w-full border-collapse">
             <thead>
               <tr>
-                <th className="px-4 py-2">Procedure</th>
-                <th className="px-4 py-2">Cost</th>
-                <th className="px-4 py-2">Duration</th>
-                <th className="px-4 py-2">Actions</th>
+                <th className="px-4 py-2 border-b">Procedure</th>
+                <th className="px-4 py-2 border-b">Cost</th>
+                <th className="px-4 py-2 border-b">Duration</th>
+                <th className="px-4 py-2 border-b">Actions</th>
               </tr>
             </thead>
             <tbody>
               {category.procedures.map((proc, pIdx) => (
-                <tr key={pIdx}>
-                  <td className="px-4 py-2">{proc.name}</td>
-                  <td className="px-4 py-2">${proc.cost}</td>
-                  <td className="px-4 py-2">{proc.duration}</td>
-                  <td className="px-4 py-2">
+                <tr key={pIdx} className="hover:bg-gray-100">
+                  <td className="px-4 py-2 border-b">{proc.name}</td>
+                  <td className="px-4 py-2 border-b">${proc.cost}</td>
+                  <td className="px-4 py-2 border-b">{proc.duration}</td>
+                  <td className="px-4 py-2 border-b">
                     <Button icon={<EditOutlined />} size="small" />
                   </td>
                 </tr>
@@ -415,8 +408,8 @@ const ClinicInfo = () => {
         <Button type="primary" onClick={() => setIsEditOperatingHoursModal(true)} style={{ width: 'auto' }}>
           Edit Operating Hours
         </Button>
-        <Button type="primary" onClick={() => setIsSpecialHolidayModalVisible(true)} style={{ width: 'auto' }}>
-          Special Holiday
+        <Button type="primary" onClick={() => setIsHolidayModalVisible(true)} style={{ width: 'auto' }}>
+          Add Holiday
         </Button>
       </div>
     </section>
@@ -730,7 +723,7 @@ const ClinicInfo = () => {
       </section>
 
       {/* Special Holidays */}
-      {renderSpecialHolidays()}
+      {/* {renderSpecialHolidays()} */}
 
       {/* Other Clinic Information */}
       {renderOtherClinicInfo()}
@@ -739,7 +732,6 @@ const ClinicInfo = () => {
       <EditClinicModal />
       <EditOperatingHoursModal />
       <EditOtherInfoModal />
-      <SpecialHolidayModal />
       <Modal
         title="Add Treatment Procedure"
         open={isTreatmentModal}
@@ -757,6 +749,7 @@ const ClinicInfo = () => {
       >
         <MedicationForm />
       </Modal>
+      {renderAddHolidayModal()}
     </div>
   );
 };
