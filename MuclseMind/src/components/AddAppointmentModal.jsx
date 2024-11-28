@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from 'react';
-import { Modal, Form, Input, Button, DatePicker, TimePicker, Select } from 'antd';
+import { Modal, Form, Input, Button, DatePicker, TimePicker, Select, message } from 'antd';
 import moment from 'moment';
-import { getPatients } from '../api.services/services';
-import AddPatientModal from './AddPatientModal'; // Import the AddPatientModal
+import { getPatients, addPatient } from '../api.services/services';
+import AddPatientModal from './AddPatientModal';
 
 const { Option } = Select;
 
@@ -11,24 +11,39 @@ const AddAppointmentModal = ({ visible, onClose, onAdd }) => {
   const [showAddPatientModal, setShowAddPatientModal] = useState(false);
 
   useEffect(() => {
-    const fetchPatients = async () => {
-      try {
-        const response = await getPatients();
-        if (response.success) {
-          setPatients(response.data);
-        }
-      } catch (error) {
-        console.error('Failed to fetch patients:', error);
-      }
-    };
-
     fetchPatients();
   }, []);
+
+  const fetchPatients = async () => {
+    try {
+      const response = await getPatients();
+      if (response.success) {
+        setPatients(response.data);
+      }
+    } catch (error) {
+      console.error('Failed to fetch patients:', error);
+    }
+  };
 
   const handleAdd = (values) => {
     console.log('New Appointment:', values);
     onAdd(values);
     onClose();
+  };
+
+  const handleAddPatient = async (newPatient) => {
+    try {
+      const response = await addPatient(newPatient);
+      if (response.success) {
+        message.success('Patient added successfully');
+        setShowAddPatientModal(false);
+        fetchPatients(); // Refetch patients after adding
+      } else {
+        message.error('Failed to add patient');
+      }
+    } catch (error) {
+      message.error('Failed to add patient: ' + error.message);
+    }
   };
 
   return (
@@ -114,10 +129,7 @@ const AddAppointmentModal = ({ visible, onClose, onAdd }) => {
       <AddPatientModal
         visible={showAddPatientModal}
         onClose={() => setShowAddPatientModal(false)}
-        onAdd={(newPatient) => {
-          setPatients([...patients, newPatient]);
-          setShowAddPatientModal(false);
-        }}
+        onAdd={handleAddPatient}
       />
     </>
   );
