@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useMemo } from 'react';
 import { Button, Input, message, Space, Modal, Spin, Select } from 'antd';
-import { PlusOutlined, EditOutlined, DeleteOutlined, DownloadOutlined, FileTextOutlined } from '@ant-design/icons';
+import { PlusOutlined, EditOutlined, DeleteOutlined, DownloadOutlined, FileTextOutlined, EyeOutlined } from '@ant-design/icons';
 import { jsPDF } from 'jspdf';
 import AddPatientModal from './AddPatientModal';
 import EditPatientModal from './EditPatientModal';
@@ -46,15 +46,16 @@ const Patients = () => {
   const handleDownloadPDF = (patient) => {
     const doc = new jsPDF();
     doc.text(`Patient Details`, 10, 10);
-    doc.text(`Name: ${patient.name}`, 10, 20);
-    doc.text(`Email: ${patient.email}`, 10, 30);
-    doc.text(`Phone: ${patient.phone}`, 10, 40);
-    doc.text(`Care of: ${patient.care_person || 'N/A'}`, 10, 50);
-    doc.text(`Notes: ${patient.notes || 'N/A'}`, 10, 60);
+    doc.text(`Patient ID: ${patient.patient_id}`, 10, 20);
+    doc.text(`Name: ${patient.name}`, 10, 30);
+    doc.text(`Email: ${patient.email}`, 10, 40);
+    doc.text(`Phone: ${patient.phone}`, 10, 50);
+    doc.text(`Care of: ${patient.care_person || 'N/A'}`, 10, 60);
+    doc.text(`Notes: ${patient.notes || 'N/A'}`, 10, 70);
     doc.save(`${patient.name}_details.pdf`);
   };
 
-  const showDeleteConfirm = (id) => {
+  const showDeleteConfirm = (patient) => {
     confirm({
       title: 'Are you sure you want to delete this patient?',
       content: 'This action cannot be undone.',
@@ -62,7 +63,7 @@ const Patients = () => {
       okType: 'danger',
       cancelText: 'No',
       onOk() {
-        handleDeletePatient(id);
+        handleDeletePatient(patient.id);
       },
     });
   };
@@ -104,8 +105,30 @@ const Patients = () => {
     setNoteModalVisible(true);
   };
 
+  const handleViewPatient = (patient) => {
+    console.log('Viewing patient:', patient);
+  };
+
+  const handleDownloadCaseSheet = (patient) => {
+    console.log('Downloading case sheet for:', patient);
+  };
+
+  const handleCarePersonChange = async (patientId, carePerson) => {
+    try {
+      await editPatient(patientId, { care_person: carePerson });
+      message.success('Care person updated successfully');
+      fetchPatients(); // Refetch patients to update the UI
+    } catch (error) {
+      message.error('Failed to update care person: ' + error.message);
+    }
+  };
+
   const columns = useMemo(
     () => [
+      {
+        Header: 'Patient ID',
+        accessor: 'patient_id',
+      },
       {
         Header: 'Name',
         accessor: 'name',
@@ -135,11 +158,14 @@ const Patients = () => {
         ),
       },
       {
-        Header: 'Notes',
-        accessor: 'notes',
+        Header: 'Case Sheet',
+        accessor: 'case_sheet_file',
         Cell: ({ row }) => (
-          <Button onClick={() => showNoteModal(row.original.notes)}>
-            View
+          <Button
+            onClick={() => showModal('viewCaseSheet', row.original)}
+            icon={<FileTextOutlined />}
+          >
+            View 
           </Button>
         ),
       },
@@ -161,6 +187,10 @@ const Patients = () => {
         Cell: ({ row }) => (
           <Space>
             <Button
+              icon={<EyeOutlined />}
+              onClick={() => handleViewPatient(row.original)}
+            />
+            <Button
               icon={<EditOutlined />}
               onClick={() => {
                 setCurrentPatient(row.original);
@@ -168,12 +198,8 @@ const Patients = () => {
               }}
             />
             <Button
-              icon={<DeleteOutlined />}
-              onClick={() => showDeleteConfirm(row.original.id)}
-            />
-            <Button
               icon={<DownloadOutlined />}
-              onClick={() => handleDownloadPDF(row.original)}
+              onClick={() => handleDownloadCaseSheet(row.original)}
             />
           </Space>
         ),
@@ -264,6 +290,7 @@ const Patients = () => {
         onClose={() => setEditModalVisible(false)}
         patient={currentPatient}
         onSave={handleEditPatient}
+        onDelete={showDeleteConfirm}
       />
 
       <Modal

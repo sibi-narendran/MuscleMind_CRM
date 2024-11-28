@@ -1,7 +1,8 @@
 const { createPatient, getPatientsByUserId, updatePatient, deletePatient } = require('../models/PatientModels.js');
 
 const addPatient = async (userId, patientData) => {
-  return await createPatient({ ...patientData, user_id: userId });
+  const dataWithUserId = { ...patientData, user_id: userId };
+  return await createPatient(dataWithUserId);
 };
 
 const getPatients = async (userId) => {
