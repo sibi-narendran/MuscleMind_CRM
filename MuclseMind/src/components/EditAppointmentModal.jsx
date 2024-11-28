@@ -1,20 +1,31 @@
 import React from 'react';
-import { Modal, Form, Input, DatePicker, TimePicker, Button, Select } from 'antd';
+import { Modal, Form, Input, DatePicker, TimePicker, Button, Select, message } from 'antd';
 import moment from 'moment';
+import { updateAppointment } from '../api.services/services'; // Import updateAppointment service
 
 const { Option } = Select;
 
 const EditAppointmentModal = ({ visible, onClose, onEdit, appointment }) => {
   const [form] = Form.useForm();
 
-  const handleFinish = (values) => {
-    onEdit({
-      ...appointment,
-      ...values,
-      date: values.date.toDate(),
-      time: values.time.format('hh:mm A'),
-    });
-    onClose();
+  const handleFinish = async (values) => {
+    try {
+      const updatedData = {
+        ...values,
+        date: values.date.format('YYYY-MM-DD'),
+        time: values.time.format('HH:mm'),
+      };
+      const response = await updateAppointment(appointment.id, updatedData);
+      if (response.success) {
+        message.success('Appointment updated successfully');
+        onEdit(response.data);
+        onClose();
+      } else {
+        message.error('Failed to update appointment');
+      }
+    } catch (error) {
+      message.error('Failed to update appointment: ' + error.message);
+    }
   };
 
   return (
@@ -31,7 +42,7 @@ const EditAppointmentModal = ({ visible, onClose, onEdit, appointment }) => {
           patient: appointment.patient,
           treatment: appointment.treatment,
           date: moment(appointment.date),
-          time: moment(appointment.time, 'hh:mm A'),
+          time: moment(appointment.time, 'HH:mm'),
           status: appointment.status,
         }}
         onFinish={handleFinish}
@@ -62,7 +73,7 @@ const EditAppointmentModal = ({ visible, onClose, onEdit, appointment }) => {
           name="time"
           rules={[{ required: true, message: 'Please select the time' }]}
         >
-          <TimePicker style={{ width: '100%' }} format="hh:mm A" use12Hours />
+          <TimePicker style={{ width: '100%' }} format="HH:mm" />
         </Form.Item>
         <Form.Item
           label="Status"
@@ -84,4 +95,4 @@ const EditAppointmentModal = ({ visible, onClose, onEdit, appointment }) => {
   );
 };
 
-export default EditAppointmentModal; 
+export default EditAppointmentModal;

@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Modal, Form, Input, Button, DatePicker, TimePicker, Select, message } from 'antd';
 import moment from 'moment';
-import { getPatients, addPatient } from '../api.services/services';
+import { getPatients, addAppointment } from '../api.services/services';
 import AddPatientModal from './AddPatientModal';
 
 const { Option } = Select;
@@ -25,10 +25,24 @@ const AddAppointmentModal = ({ visible, onClose, onAdd }) => {
     }
   };
 
-  const handleAdd = (values) => {
-    console.log('New Appointment:', values);
-    onAdd(values);
-    onClose();
+  const handleAdd = async (values) => {
+    try {
+      const appointmentData = {
+        ...values,
+        date: values.date.format('YYYY-MM-DD'),
+        time: values.time.format('HH:mm'),
+      };
+      const response = await addAppointment(appointmentData);
+      if (response.success) {
+        message.success('Appointment added successfully');
+        onAdd(response.data);
+        onClose();
+      } else {
+        message.error('Failed to add appointment');
+      }
+    } catch (error) {
+      message.error('Failed to add appointment: ' + error.message);
+    }
   };
 
   const handleAddPatient = async (newPatient) => {
@@ -115,7 +129,7 @@ const AddAppointmentModal = ({ visible, onClose, onAdd }) => {
             name="time"
             rules={[{ required: true, message: 'Please select the time' }]}
           >
-            <TimePicker style={{ width: '100%' }} defaultOpenValue={moment('00:00:00', 'HH:mm:ss')} />
+            <TimePicker style={{ width: '100%' }} format="HH:mm" />
           </Form.Item>
           <Form.Item>
             <Button type="primary" htmlType="submit" style={{ width: '100%' }}>

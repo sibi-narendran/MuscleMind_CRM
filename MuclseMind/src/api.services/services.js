@@ -92,3 +92,40 @@ export const deletePatient = async (id) => {
     throw error.response?.data || error;
   }
 };
+
+// Appointment services
+export const addAppointment = async (data) => {
+  try {
+    const res = await interceptors.post("v1/appointments", data);
+    return res.data;
+  } catch (error) {
+    throw error.response?.data || error;
+  }
+};
+
+export const getAppointments = async () => {
+  try {
+    const res = await interceptors.get("v1/appointments");
+    return res.data;
+  } catch (error) {
+    throw error.response?.data || error;
+  }
+};
+
+export const updateAppointment = async (id, data) => {
+  try {
+    const res = await interceptors.put(`v1/appointments/${id}`, data);
+    return res.data;
+  } catch (error) {
+    throw error.response?.data || error;
+  }
+};
+
+export const deleteAppointment = async (id) => {
+  try {
+    const res = await interceptors.delete(`v1/appointments/${id}`);
+    return res.data;
+  } catch (error) {
+    throw error.response?.data || error;
+  }
+};

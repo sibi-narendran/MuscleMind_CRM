@@ -1,62 +1,45 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Calendar as CalendarIcon, Clock, Plus } from 'lucide-react';
 import { format } from 'date-fns';
 import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
 import AddAppointmentModal from './AddAppointmentModal';
 import EditAppointmentModal from './EditAppointmentModal';
-import { Modal, Button } from 'antd';
+import { Modal, Button, message } from 'antd';
+import { getAppointments, deleteAppointment } from '../api.services/services'; // Import services
 
 const Appointments = () => {
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [selectedAppointment, setSelectedAppointment] = useState(null);
-  const [appointments, setAppointments] = useState([
-    {
-      id: 1,
-      patient_Id: 45646,
-      date: new Date(),
-      time: '09:00 AM',
-      patient: 'Sarah Johnson',
-      treatment: 'Dental Cleaning',
-      duration: '1 hour',
-      status: 'Confirmed',
-      documents: {
-        procedure: 'Dental_Cleaning.pdf',
-        caseSheet: 'Case_Sheet_1.pdf',
-        notes: 'Notes_1.pdf',
-      },
-    },
-    {
-      id: 2,
-      patient_Id: 58478,
-      date: new Date(),
-      time: '10:30 AM',
-      patient: 'Michael Chen',
-      treatment: 'Root Canal',
-      duration: '2 hours',
-      status: 'Pending',
-      documents: {
-        procedure: 'Root_Canal_Procedure.pdf',
-        caseSheet: 'Case_Sheet_2.pdf',
-        notes: 'Notes_2.pdf',
-      },
-    },
-  ]);
+  const [appointments, setAppointments] = useState([]);
   const [showAddModal, setShowAddModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [dateRange, setDateRange] = useState([null, null]);
   const [startDate, endDate] = dateRange;
   const [showDetailsModal, setShowDetailsModal] = useState(false);
 
-  const headerText = startDate && endDate
-    ? `Appointments from ${format(startDate, 'MMM dd, yyyy')} to ${format(endDate, 'MMM dd, yyyy')}`
-    : `Today Appointments`;
+  // Define headerText
+  const headerText = "Appointments"; // or any other dynamic value
+
+  useEffect(() => {
+    fetchAppointments();
+  }, []);
+
+  const fetchAppointments = async () => {
+    try {
+      const response = await getAppointments();
+      if (response.success) {
+        setAppointments(response.data);
+      } else {
+        message.error('Failed to fetch appointments');
+      }
+    } catch (error) {
+      message.error('Failed to fetch appointments: ' + error.message);
+    }
+  };
 
   const handleAddAppointment = (newAppointment) => {
-    setAppointments([
-      ...appointments,
-      { ...newAppointment, id: appointments.length + 1 },
-    ]);
+    setAppointments([...appointments, newAppointment]);
     setShowAddModal(false);
   };
 
@@ -74,11 +57,17 @@ const Appointments = () => {
     setShowDetailsModal(true);
   };
 
-  const handleDeleteAppointment = () => {
-    setAppointments((prev) =>
-      prev.filter((apt) => apt.id !== selectedAppointment.id)
-    );
-    setShowDetailsModal(false);
+  const handleDeleteAppointment = async () => {
+    try {
+      await deleteAppointment(selectedAppointment.id);
+      setAppointments((prev) =>
+        prev.filter((apt) => apt.id !== selectedAppointment.id)
+      );
+      setShowDetailsModal(false);
+      message.success('Appointment deleted successfully');
+    } catch (error) {
+      message.error('Failed to delete appointment: ' + error.message);
+    }
   };
 
   const handleEditButtonClick = () => {
