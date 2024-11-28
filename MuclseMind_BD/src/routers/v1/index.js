@@ -2,6 +2,7 @@ const express = require("express");
 const router = express.Router();
 const UserRoute = require("./UserRoutes.js");
 const PatientRoute = require("./PatientRoutes.js");
+const AppointmentRoute = require("./AppointmentRoutes.js");
 const Routes = [
   {
     path: "/user",
@@ -10,6 +11,10 @@ const Routes = [
   {
     path: "/patients",
     route: PatientRoute,
+  },
+  {
+    path: "/appointments",
+    route: AppointmentRoute,
   },
 ];
 
