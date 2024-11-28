@@ -12,7 +12,7 @@ const CARE_PERSONS = [
   "Dr. Emily Davis"
 ];
 
-const EditPatientModal = ({ visible, onClose, patient, onSave }) => {
+const EditPatientModal = ({ visible, onClose, patient, onSave, onDelete }) => {
   const [formData, setFormData] = useState(patient);
 
   useEffect(() => {
@@ -31,6 +31,17 @@ const EditPatientModal = ({ visible, onClose, patient, onSave }) => {
       onCancel={onClose}
       okText="Save"
       cancelText="Cancel"
+      footer={[
+        <Button key="delete" type="danger" onClick={() => onDelete(patient)}>
+          Delete
+        </Button>,
+        <Button key="cancel" onClick={onClose}>
+          Cancel
+        </Button>,
+        <Button key="save" type="primary" onClick={handleSave}>
+          Save
+        </Button>,
+      ]}
     >
       <Form layout="vertical">
         <Form.Item label="Name">

@@ -62,4 +62,19 @@ const deletePatient = async (id) => {
   return data;
 };
 
-module.exports = { createPatient, getPatientsByUserId, updatePatient, deletePatient }; 
+const getPatientByPatientId = async (patientId) => {
+  const { data, error } = await supabase
+    .from('patients')
+    .select('*')
+    .eq('patient_id', patientId)
+    .single();
+
+  if (error) {
+    console.error("Error fetching patient by ID:", error);
+    return null;
+  }
+
+  return data;
+};
+
+module.exports = { createPatient, getPatientsByUserId, updatePatient, deletePatient, getPatientByPatientId }; 
