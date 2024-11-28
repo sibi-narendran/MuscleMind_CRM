@@ -110,12 +110,12 @@ const ClinicInfo = () => {
   // Render special holidays section
   const renderSpecialHolidays = () => (
     <section className="mb-8">
-      <h2 className="text-2xl font-bold mb-4">Special Holidays</h2>
+      <h2 className="text-2xl font-bold mb-4 text-black dark:text-white">Special Holidays</h2>
       <List
         bordered
         dataSource={specialHolidays}
         renderItem={holiday => (
-          <List.Item>
+          <List.Item className="bg-white dark:bg-boxdark text-black dark:text-white">
             <strong>{holiday.name}</strong> - {moment(holiday.date).format('MMMM Do, YYYY')}
           </List.Item>
         )}
@@ -131,6 +131,7 @@ const ClinicInfo = () => {
       onCancel={() => setIsSpecialHolidayModalVisible(false)}
       footer={null}
       centered
+      className="dark:bg-boxdark"
     >
       <div className="flex flex-col space-y-4">
         <Input
@@ -138,12 +139,14 @@ const ClinicInfo = () => {
           value={newHoliday.name}
           onChange={(e) => setNewHoliday({ ...newHoliday, name: e.target.value })}
           prefix={<PlusOutlined />}
+          className="bg-white dark:bg-boxdark text-black dark:text-white"
         />
         <DatePicker
           style={{ width: '100%' }}
           value={newHoliday.date}
           onChange={(date) => setNewHoliday({ ...newHoliday, date })}
           placeholder="Select Date"
+          className="bg-white dark:bg-boxdark text-black dark:text-white"
         />
         <Button type="primary" onClick={addSpecialHoliday} block>
           Add Holiday
@@ -161,7 +164,7 @@ const ClinicInfo = () => {
             bordered
             dataSource={specialHolidays}
             renderItem={holiday => (
-              <List.Item>
+              <List.Item className="bg-white dark:bg-boxdark text-black dark:text-white">
                 <Typography.Text strong>{holiday.name}</Typography.Text> - {moment(holiday.date).format('MMMM Do, YYYY')}
               </List.Item>
             )}
@@ -618,7 +621,7 @@ const ClinicInfo = () => {
   const capitalize = (str) => str.charAt(0).toUpperCase() + str.slice(1);
 
   return (
-    <div className="max-w-full mx-auto p-6 bg-white shadow-md rounded-lg">
+    <div className="max-w-full mx-auto p-6 bg-white dark:bg-boxdark shadow-md rounded-lg">
       {/* Combined Clinic Overview and Contact Information */}
       {renderClinicOverviewAndContact()}
 
@@ -718,7 +721,7 @@ const ClinicInfo = () => {
       {/* Add Medication Preferences Section */}
       <section className="mb-8">
         <div className="flex justify-between items-center mb-4">
-          <h2 className="text-2xl font-bold">Medication Preferences</h2>
+          <h2 className="text-2xl font-bold text-black dark:text-white">Medication Preferences</h2>
           <Button type="primary" onClick={() => setIsMedicationModal(true)}>
             Add Medication
           </Button>
