@@ -16,4 +16,21 @@ const authenticateJWT = (req, res, next) => {
   });
 };
 
-module.exports = { authenticateJWT }; 
+
+const authenticateJWTUserID = (req, res, next) => {
+  const token = req.headers.authorization?.split(' ')[1];
+  if (!token) {
+    return res.status(401).json({ message: 'Access token is missing or invalid' });
+  }
+  console.log(token);
+
+  jwt.verify(token, JWT_SECRET, (err, decoded) => {
+    if (err) {
+      return res.status(403).json({ message: 'Token is not valid' });
+    }
+    req.user = { userId: decoded.id }; // Ensure userId is extracted and set
+    next();
+  });
+};
+
+module.exports = { authenticateJWTUserID, authenticateJWT }; 

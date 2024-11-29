@@ -12,11 +12,7 @@ const createAppointment = async (appointmentData) => {
     .from('appointments')
     .insert([appointmentData]);
 
-  if (error) {
-    console.error("Error creating appointment:", error);
-    throw error;
-  }
-
+  if (error) throw error;
   return data;
 };
 
@@ -25,11 +21,17 @@ const getAppointments = async () => {
     .from('appointments')
     .select('*');
 
-  if (error) {
-    console.error("Error fetching appointments:", error);
-    throw error;
-  }
+  if (error) throw error;
+  return data;
+};
 
+const getAppointmentsByDate = async (date) => {
+  const { data, error } = await supabase
+    .from('appointments')
+    .select('*')
+    .eq('date', date);
+
+  if (error) throw error;
   return data;
 };
 
@@ -39,11 +41,7 @@ const updateAppointment = async (id, updatedData) => {
     .update(updatedData)
     .eq('id', id);
 
-  if (error) {
-    console.error("Error updating appointment:", error);
-    throw error;
-  }
-
+  if (error) throw error;
   return data;
 };
 
@@ -53,12 +51,8 @@ const deleteAppointment = async (id) => {
     .delete()
     .eq('id', id);
 
-  if (error) {
-    console.error("Error deleting appointment:", error);
-    throw error;
-  }
-
+  if (error) throw error;
   return data;
 };
 
-module.exports = { createAppointment, getAppointments, updateAppointment, deleteAppointment }; 
+module.exports = { createAppointment, getAppointments, getAppointmentsByDate, updateAppointment, deleteAppointment }; 

@@ -1,17 +1,15 @@
 const { addPatient, getPatients, editPatient, removePatient } = require('../services/PatientService.js');
 const { createResponse } = require('../utils/responseUtil.js');
-const { getPatientByPatientId } = require('../models/PatientModels.js');
 
-const generateUniquePatientId = async () => {
-  let isUnique = false;
+const usedPatientIds = new Set(); // In-memory store for used patient IDs
+
+const generateUniquePatientId = () => {
   let patientId;
-  while (!isUnique) {
+  do {
     patientId = Math.floor(10000 + Math.random() * 90000).toString(); // Generate a 5-digit number
-    const existingPatient = await getPatientByPatientId(patientId);
-    if (!existingPatient) {
-      isUnique = true;
-    }
-  }
+  } while (usedPatientIds.has(patientId));
+  
+  usedPatientIds.add(patientId); // Mark this ID as used
   return patientId;
 };
 

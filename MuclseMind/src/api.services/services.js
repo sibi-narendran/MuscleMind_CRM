@@ -94,18 +94,18 @@ export const deletePatient = async (id) => {
 };
 
 // Appointment services
-export const addAppointment = async (data) => {
+export const getAppointments = async () => {
   try {
-    const res = await interceptors.post("v1/appointments", data);
+    const res = await interceptors.get("v1/appointments/getAppointments");
     return res.data;
   } catch (error) {
     throw error.response?.data || error;
   }
 };
 
-export const getAppointments = async () => {
+export const addAppointment = async (data) => {
   try {
-    const res = await interceptors.get("v1/appointments");
+    const res = await interceptors.post("v1/appointments/addAppointment", data);
     return res.data;
   } catch (error) {
     throw error.response?.data || error;
@@ -114,7 +114,7 @@ export const getAppointments = async () => {
 
 export const updateAppointment = async (id, data) => {
   try {
-    const res = await interceptors.put(`v1/appointments/${id}`, data);
+    const res = await interceptors.put(`v1/appointments/updateAppointment/${id}`, data);
     return res.data;
   } catch (error) {
     throw error.response?.data || error;
@@ -123,7 +123,207 @@ export const updateAppointment = async (id, data) => {
 
 export const deleteAppointment = async (id) => {
   try {
-    const res = await interceptors.delete(`v1/appointments/${id}`);
+    const res = await interceptors.delete(`v1/appointments/deleteAppointment/${id}`);
+    return res.data;
+  } catch (error) {
+    throw error.response?.data || error;
+  }
+};
+
+// Clinic Overview & Contact Information
+export const addClinic = async (data) => {
+  try {
+    const res = await interceptors.post("v1/clinics", data);
+    return res.data;
+  } catch (error) {
+    throw error.response?.data || error;
+  }
+};
+
+export const getClinics = async () => {
+  try {
+    const res = await interceptors.get("v1/clinics");
+    return res.data;
+  } catch (error) {
+    throw error.response?.data || error;
+  }
+};
+
+export const updateClinic = async (id, data) => {
+  try {
+    const res = await interceptors.put(`v1/clinics/${id}`, data);
+    return res.data;
+  } catch (error) {
+    throw error.response?.data || error;
+  }
+};
+
+// Operating Hours
+export const getOperatingHours = async () => {
+  try {
+    const res = await interceptors.get("v1//operating-hours/operating-hours");
+    return res.data;
+  } catch (error) {
+    throw error.response?.data || error;
+  }
+};
+
+export const updateOperatingHours = async (data) => {
+  try {
+    const res = await interceptors.put("v1//operating-hours/operating-hours", data, {
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${localStorage.getItem('token')}`,
+      },
+    });
+    return res.data;
+  } catch (error) {
+    throw error.response?.data || error;
+  }
+};
+
+// Holidays
+export const addHoliday = async (data) => {
+  try {
+    const res = await interceptors.post("v1/holidays", data);
+    return res.data;
+  } catch (error) {
+    throw error.response?.data || error;
+  }
+};
+
+export const getHolidays = async () => {
+  try {
+    const res = await interceptors.get("v1/holidays");
+    return res.data;
+  } catch (error) {
+    throw error.response?.data || error;
+  }
+};
+
+export const updateHoliday = async (id, data) => {
+  try {
+    const res = await interceptors.put(`v1/holidays/${id}`, data);
+    return res.data;
+  } catch (error) {
+    throw error.response?.data || error;
+  }
+};
+
+export const deleteHoliday = async (id) => {
+  try {
+    const res = await interceptors.delete(`v1/holidays/${id}`);
+    return res.data;
+  } catch (error) {
+    throw error.response?.data || error;
+  }
+};
+
+// Repeat similar functions for Dental Team, Treatment Procedures & Fees, and Medication Preferences
+
+export const getTreatments = async () => {
+  try {
+    const res = await interceptors.get("v1/treatments/getTreatments");
+    return res.data;
+  } catch (error) {
+    throw error.response?.data || error;
+  }
+};
+
+export const addTreatment = async (data) => {
+  try {
+    const res = await interceptors.post("v1/treatments/addTreatment", data);
+    return res.data;
+  } catch (error) {
+    throw error.response?.data || error;
+  }
+};
+
+export const editTreatment = async (id, data) => {
+  try {
+    const res = await interceptors.put(`v1/treatments/editTreatment/${id}`, data);
+    return res.data;
+  } catch (error) {
+    throw error.response?.data || error;
+  }
+};
+
+export const deleteTreatment = async (id) => {
+  try {
+    const res = await interceptors.delete(`v1/treatments/deleteTreatment/${id}`);
+    return res.data;
+  } catch (error) {
+    throw error.response?.data || error;
+  }
+};
+
+export const getMedications = async () => {
+  try {
+    const res = await interceptors.get("v1/medications/getMedications");
+    return res.data;
+  } catch (error) {
+    throw error.response?.data || error;
+  }
+};
+
+export const addMedication = async (data) => {
+  try {
+    const res = await interceptors.post("v1/medications/addMedication", data);
+    return res.data;
+  } catch (error) {
+    throw error.response?.data || error;
+  }
+};
+
+export const editMedication = async (id, data) => {
+  try {
+    const res = await interceptors.put(`v1/medications/editMedication/${id}`, data);
+    return res.data;
+  } catch (error) {
+    throw error.response?.data || error;
+  }
+};
+
+export const deleteMedication = async (id) => {
+  try {
+    const res = await interceptors.delete(`v1/medications/deleteMedication/${id}`);
+    return res.data;
+  } catch (error) {
+    throw error.response?.data || error;
+  }
+};
+
+// Dental Team services
+export const getTeamMembers = async () => {
+  try {
+    const res = await interceptors.get("v1/dental-team/getTeamMembers");
+    return res.data;
+  } catch (error) {
+    throw error.response?.data || error;
+  }
+};
+
+export const addTeamMember = async (data) => {
+  try {
+    const res = await interceptors.post("v1/dental-team/addTeamMember", data);
+    return res.data;
+  } catch (error) {
+    throw error.response?.data || error;
+  }
+};
+
+export const editTeamMember = async (id, data) => {
+  try {
+    const res = await interceptors.put(`v1/dental-team/editTeamMember/${id}`, data);
+    return res.data;
+  } catch (error) {
+    throw error.response?.data || error;
+  }
+};
+
+export const deleteTeamMember = async (id) => {
+  try {
+    const res = await interceptors.delete(`v1/dental-team/deleteTeamMember/${id}`);
     return res.data;
   } catch (error) {
     throw error.response?.data || error;

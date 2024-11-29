@@ -7,58 +7,55 @@ const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
 const supabase = createClient(supabaseUrl, supabaseKey);
 
-const createPatient = async (patientData) => {
+const createClinic = async (clinicData) => {
   const { data, error } = await supabase
-    .from('patients')
-    .insert([patientData]);
+    .from('clinics')
+    .insert([clinicData]);
 
   if (error) {
-    console.error("Error creating patient:", error);
+    console.error("Error creating clinic:", error);
     throw error;
   }
   return data;
 };
 
-const getPatientsByUserId = async (userId) => {
+const getClinics = async (userId) => {
   const { data, error } = await supabase
-    .from('patients')
+    .from('clinics')
     .select('*')
     .eq('user_id', userId);
 
   if (error) {
-    console.error("Error fetching patients:", error);
+    console.error("Error fetching clinics:", error);
     throw error;
   }
-
   return data;
 };
 
-const updatePatient = async (id, patientData) => {
+const updateClinic = async (id, clinicData) => {
   const { data, error } = await supabase
-    .from('patients')
-    .update(patientData)
+    .from('clinics')
+    .update(clinicData)
     .eq('id', id);
 
   if (error) {
-    console.error("Error updating patient:", error);
+    console.error("Error updating clinic:", error);
     throw error;
   }
-
   return data;
 };
 
-const deletePatient = async (id) => {
+const deleteClinic = async (id) => {
   const { data, error } = await supabase
-    .from('patients')
+    .from('clinics')
     .delete()
     .eq('id', id);
 
   if (error) {
-    console.error("Error deleting patient:", error);
+    console.error("Error deleting clinic:", error);
     throw error;
   }
-
   return data;
 };
 
-module.exports = { createPatient, getPatientsByUserId, updatePatient, deletePatient }; 
+module.exports = { createClinic, getClinics, updateClinic, deleteClinic };

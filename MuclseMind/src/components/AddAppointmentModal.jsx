@@ -1,18 +1,22 @@
 import React, { useEffect, useState } from 'react';
 import { Modal, Form, Input, Button, DatePicker, TimePicker, Select, message } from 'antd';
 import moment from 'moment';
-import { getPatients, addAppointment } from '../api.services/services';
+import { getPatients, addAppointment, getTreatments } from '../api.services/services';
 import AddPatientModal from './AddPatientModal';
 
 const { Option } = Select;
 
 const AddAppointmentModal = ({ visible, onClose, onAdd }) => {
   const [patients, setPatients] = useState([]);
+  const [treatments, setTreatments] = useState([]);
   const [showAddPatientModal, setShowAddPatientModal] = useState(false);
 
   useEffect(() => {
-    fetchPatients();
-  }, []);
+    if (visible) {
+      fetchPatients();
+      fetchTreatments();
+    }
+  }, [visible]);
 
   const fetchPatients = async () => {
     try {
@@ -22,6 +26,17 @@ const AddAppointmentModal = ({ visible, onClose, onAdd }) => {
       }
     } catch (error) {
       console.error('Failed to fetch patients:', error);
+    }
+  };
+
+  const fetchTreatments = async () => {
+    try {
+      const response = await getTreatments();
+      if (response.success) {
+        setTreatments(response.data);
+      }
+    } catch (error) {
+      console.error('Failed to fetch treatments:', error);
     }
   };
 
@@ -51,7 +66,7 @@ const AddAppointmentModal = ({ visible, onClose, onAdd }) => {
       if (response.success) {
         message.success('Patient added successfully');
         setShowAddPatientModal(false);
-        fetchPatients(); // Refetch patients after adding
+        fetchPatients();
       } else {
         message.error('Failed to add patient');
       }
@@ -113,9 +128,23 @@ const AddAppointmentModal = ({ visible, onClose, onAdd }) => {
           <Form.Item
             label={<span style={{ fontWeight: 'bold' }}>Treatment</span>}
             name="treatment"
-            rules={[{ required: true, message: 'Please enter the treatment' }]}
+            rules={[{ required: true, message: 'Please select a treatment' }]}
           >
-            <Input style={{ textAlign: 'center' }} />
+            <Select
+              placeholder="Select a treatment"
+              style={{ width: '100%' }}
+              showSearch
+              optionFilterProp="children"
+              filterOption={(input, option) =>
+                option.children.toLowerCase().indexOf(input.toLowerCase()) >= 0
+              }
+            >
+              {treatments.map((treatment) => (
+                <Option key={treatment.id} value={treatment.id}>
+                  {`${treatment.category} - ${treatment.procedure_name}`}
+                </Option>
+              ))}
+            </Select>
           </Form.Item>
           <Form.Item
             label={<span style={{ fontWeight: 'bold' }}>Date</span>}

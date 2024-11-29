@@ -1,5 +1,5 @@
-const { addAppointment, fetchAppointments, modifyAppointment, removeAppointment } = require('../services/AppointmentService.js');
-const { createResponse } = require('../utils/responseUtil.js');
+const { addAppointment, fetchAppointments, modifyAppointment, removeAppointment } = require('../services/AppointmentService');
+const { createResponse } = require('../utils/responseUtil');
 
 const addAppointmentController = async (req, res) => {
   try {
@@ -14,9 +14,9 @@ const addAppointmentController = async (req, res) => {
 const getAppointmentsController = async (req, res) => {
   try {
     const appointments = await fetchAppointments();
-    res.status(200).json(createResponse(true, 'Appointments fetched successfully', appointments));
+    res.status(200).json(createResponse(true, 'Appointments retrieved successfully', appointments));
   } catch (error) {
-    res.status(500).json(createResponse(false, 'Failed to fetch appointments', null, error.message));
+    res.status(500).json(createResponse(false, 'Failed to retrieve appointments', null, error.message));
   }
 };
 

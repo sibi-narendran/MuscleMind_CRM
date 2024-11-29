@@ -1,30 +1,28 @@
 import React, { useState, useEffect } from 'react';
-import { useTable } from 'react-table';
-import { Button, Modal, Input, Upload, Form, InputNumber, Select, DatePicker, List, Typography } from 'antd';
-import { PlusOutlined, EditOutlined, EyeOutlined, EyeInvisibleOutlined } from '@ant-design/icons';
+import { Modal, Form, Input, InputNumber, Select, Button, Table, Upload, DatePicker, List, Typography, message, TimePicker } from 'antd';
+import { PlusOutlined, EditOutlined, DeleteOutlined } from '@ant-design/icons';
 import moment from 'moment';
+import { getOperatingHours, updateOperatingHours,getTreatments, addTreatment, editTreatment, deleteTreatment  } from '../api.services/services';
+import { getMedications, addMedication, editMedication, deleteMedication } from '../api.services/services';
+import { getTeamMembers, addTeamMember, editTeamMember, deleteTeamMember } from '../api.services/services';
 
-const { TextArea } = Input;
 const { Option } = Select;
 
-const ClinicInfo = () => {
-  // Default operating hours
-  const defaultOperatingHours = {
-    monday: { status: 'open', open: '10:00', close: '18:30' },
-    tuesday: { status: 'open', open: '10:00', close: '18:30' },
-    wednesday: { status: 'open', open: '10:00', close: '18:30' },
-    thursday: { status: 'open', open: '10:00', close: '18:30' },
-    friday: { status: 'open', open: '10:00', close: '18:30' },
-    saturday: { status: 'open', open: '10:00', close: '18:30' },
-    sunday: { status: 'open', open: '10:00', close: '18:30' },
-  };
 
-  // Extended clinic data state
+
+// Helper function to capitalize day names
+const capitalize = (str) => str.charAt(0).toUpperCase() + str.slice(1);
+
+// Helper function to generate Google Maps link
+const generateGoogleMapsLink = (address) => {
+  const encodedAddress = encodeURIComponent(address);
+  return `https://www.google.com/maps/search/?api=1&query=${encodedAddress}`;
+};
+
+const ClinicInfo = () => {
   const [clinicData, setClinicData] = useState({
     name: 'Smile Dental Clinic',
     tagline: 'Your Smile, Our Priority',
-    description: 'We are committed to providing the best dental care...',
-    operatingHours: defaultOperatingHours,
     address: '123 Smile St, Dental City, DC 12345',
     phone: '(123) 456-7890',
     email: 'contact@smiledental.com',
@@ -32,355 +30,294 @@ const ClinicInfo = () => {
       facebook: 'https://facebook.com',
       instagram: 'https://instagram.com',
     },
-    location: {
-      latitude: 0,
-      longitude: 0,
-    },
-    photos: [],
+    operatingHours: [],
   });
 
-  // Treatment fees and procedures state
-  const [treatments, setTreatments] = useState([
-    {
-      category: 'General Dentistry',
-      procedures: [
-        { name: 'Dental Checkup', cost: 50, duration: '30 mins' },
-        { name: 'Teeth Cleaning', cost: 80, duration: '45 mins' },
-      ],
-    },
-    // ... other categories
-  ]);
+  const [teamMembers, setTeamMembers] = useState();
 
-  // Preferred medications state
-  const [medications, setMedications] = useState([
-    {
-      condition: 'Post Extraction Pain',
-      medications: [
-        {
-          name: 'Ibuprofen',
-          brandPreference: 'Brufen',
-          dosageByAge: {
-            adult: '400mg 3 times daily',
-            child: '200mg 3 times daily',
-            infant: 'Not recommended',
-          },
-        },
-      ],
-    },
-  ]);
+  const [treatments, setTreatments] = useState([]);
 
-  // Modal states
-  const [isEditClinicModal, setIsEditClinicModal] = useState(false);
-  const [isTreatmentModal, setIsTreatmentModal] = useState(false);
+  const [medications, setMedications] = useState([]);
   const [isMedicationModal, setIsMedicationModal] = useState(false);
-  const [isEditOperatingHoursModal, setIsEditOperatingHoursModal] = useState(false);
+  const [editMedicationData, setEditMedicationData] = useState(null);
 
-  // State for special holidays
   const [specialHolidays, setSpecialHolidays] = useState([]);
-  const [isHolidayModalVisible, setIsHolidayModalVisible] = useState(false);
-  const [newHoliday, setNewHoliday] = useState({ reason: '', date: null });
-  const [isHolidayListVisible, setIsHolidayListVisible] = useState(false);
+  const [otherClinicInfo, setOtherClinicInfo] = useState({
+    licenseNumber: '',
+    insuranceProviders: '',
+    emergencyContact: '',
+    languagesSpoken: '',
+    paymentMethods: '',
+    parkingInfo: '',
+    accessibilityFeatures: '',
+    patientReviews: '',
+    appointmentBooking: '',
+    specialServices: '',
+  });
 
-  // Function to add a new holiday
-  const addSpecialHoliday = () => {
-    if (newHoliday.reason && newHoliday.date) {
-      setSpecialHolidays([...specialHolidays, newHoliday]);
-      setNewHoliday({ reason: '', date: null });
-      setIsHolidayModalVisible(false);
+  // Modal visibility states
+  const [isEditClinicModal, setIsEditClinicModal] = useState(false);
+  const [isEditOperatingHoursModal, setIsEditOperatingHoursModal] = useState(false);
+  const [isHolidayModalVisible, setIsHolidayModalVisible] = useState(false);
+  const [isEditOtherInfoModal, setIsEditOtherInfoModal] = useState(false);
+  const [isTreatmentModalVisible, setIsTreatmentModalVisible] = useState(false);
+  const [isTeamMemberModalVisible, setIsTeamMemberModalVisible] = useState(false);
+  const [editHoliday, setEditHoliday] = useState(null);
+  const [editTreatmentData, setEditTreatmentData] = useState(null);
+  const [editTeamMemberData, setEditTeamMemberData] = useState(null);
+
+  useEffect(() => {
+    const fetchOperatingHours = async () => {
+      try {
+        const response = await getOperatingHours();
+        if (response.success) {
+          setClinicData(prev => ({ ...prev, operatingHours: response.data }));
+        } else {
+          message.error('Failed to fetch operating hours');
+        }
+      } catch (error) {
+        message.error('Error fetching operating hours');
+      }
+    };
+
+    fetchOperatingHours();
+  }, []);
+
+  const fetchTreatments = async () => {
+    try {
+      const response = await getTreatments();
+      if (response.success) {
+        setTreatments(response.data);
+      } else {
+        message.error('Failed to fetch treatments');
+      }
+    } catch (error) {
+      message.error('Error fetching treatments');
     }
   };
 
-  // Function to remove past holidays
-  const removePastHolidays = () => {
-    const today = moment();
-    setSpecialHolidays(specialHolidays.filter(holiday => moment(holiday.date).isSameOrAfter(today, 'day')));
-  };
-
-  // Effect to remove past holidays on component mount
   useEffect(() => {
-    removePastHolidays();
+    fetchTreatments();
   }, []);
 
-  // Render special holidays section
-  const renderSpecialHolidays = () => (
-    <section className="mb-8">
-      <h2 className="text-2xl font-bold mb-4 text-black dark:text-white">Special Holidays</h2>
-      <List
-        bordered
-        dataSource={specialHolidays}
-        renderItem={holiday => (
-          <List.Item className="bg-white dark:bg-boxdark text-black dark:text-white">
-            <strong>{holiday.reason}</strong> - {moment(holiday.date).format('MMMM Do, YYYY')}
-          </List.Item>
-        )}
-      />
-    </section>
-  );
+  const handleSaveOperatingHours = async (values) => {
+    try {
+      const updatedData = Object.entries(values).map(([day, { status, open, close }]) => ({
+        day: day.toLowerCase(),
+        status: status || 'closed',
+        open_time: open || null,
+        close_time: close || null,
+      }));
 
-  // Render the Add Holiday Modal
-  const renderAddHolidayModal = () => (
-    <Modal
-      title="Add Holiday"
-      visible={isHolidayModalVisible}
-      onCancel={() => setIsHolidayModalVisible(false)}
-      footer={null}
-    >
-      <div className="flex flex-col space-y-4">
-        <Input
-          placeholder="Reason for Holiday"
-          value={newHoliday.reason}
-          onChange={(e) => setNewHoliday({ ...newHoliday, reason: e.target.value })}
-        />
-        <DatePicker
-          style={{ width: '100%' }}
-          value={newHoliday.date}
-          onChange={(date) => setNewHoliday({ ...newHoliday, date })}
-          placeholder="Select Date"
-        />
-        <Button type="primary" onClick={addSpecialHoliday} block>
-          Add Holiday
-        </Button>
-        <Button
-          type="default"
-          onClick={() => setIsHolidayListVisible(!isHolidayListVisible)}
-          block
-        >
-          {isHolidayListVisible ? 'Hide Holidays' : 'Show All Holidays'}
-        </Button>
-        {isHolidayListVisible && (
-          <List
-            bordered
-            dataSource={specialHolidays}
-            renderItem={holiday => (
-              <List.Item>
-                <Typography.Text strong>{holiday.reason}</Typography.Text> - {moment(holiday.date).format('MMMM Do, YYYY')}
-              </List.Item>
-            )}
-            style={{ marginTop: '10px' }}
-          />
-        )}
-      </div>
-    </Modal>
-  );
-
-  // Add new treatment procedure
-  const addTreatment = (values) => {
-    const { category, procedureName, cost, duration } = values;
-    setTreatments(prev => {
-      const categoryIndex = prev.findIndex(c => c.category === category);
-      if (categoryIndex === -1) {
-        return [...prev, {
-          category,
-          procedures: [{ name: procedureName, cost, duration }]
-        }];
+      const response = await updateOperatingHours(updatedData);
+      if (response.success) {
+        message.success('Operating hours updated successfully');
+        setClinicData(prev => ({ ...prev, operatingHours: updatedData }));
+      } else {
+        message.error('Failed to update operating hours');
       }
-      
-      const updated = [...prev];
-      updated[categoryIndex].procedures.push({ name: procedureName, cost, duration });
-      return updated;
-    });
-    setIsTreatmentModal(false);
+    } catch (error) {
+      message.error('Error updating operating hours');
+    } finally {
+      setIsEditOperatingHoursModal(false);
+    }
   };
 
-  // Treatment Form
-  const TreatmentForm = () => (
-    <Form onFinish={addTreatment}>
-      <Form.Item name="category" label="Category">
-        <Select
-          placeholder="Select or enter category"
-          allowClear
-          showSearch
-          allowCreate
-        >
-          {treatments.map(t => (
-            <Option key={t.category} value={t.category}>{t.category}</Option>
-          ))}
-        </Select>
-      </Form.Item>
-      <Form.Item name="procedureName" label="Procedure Name">
-        <Input />
-      </Form.Item>
-      <Form.Item name="cost" label="Cost">
-        <InputNumber prefix="$" />
-      </Form.Item>
-      <Form.Item name="duration" label="Duration">
-        <Input placeholder="e.g., 30 mins" />
-      </Form.Item>
-      <Form.Item>
-        <Button type="primary" htmlType="submit">
-          Save
-        </Button>
-      </Form.Item>
-    </Form>
-  );
-
-  // Add new medication preference
-  const addMedication = (values) => {
-    setMedications(prev => [...prev, values]);
-    setIsMedicationModal(false);
+  const handleEditTreatment = (record) => {
+    setEditTreatmentData(record);
+    setIsTreatmentModalVisible(true);
   };
 
-  // Medication Form
-  const MedicationForm = () => (
-    <Form onFinish={addMedication}>
-      <Form.Item name="condition" label="Medical Condition">
-        <Input />
-      </Form.Item>
-      <Form.Item name="medicationName" label="Medication Name">
-        <Input />
-      </Form.Item>
-      <Form.Item name="brandPreference" label="Preferred Brand">
-        <Input />
-      </Form.Item>
-      <Form.Item label="Dosage by Age Group">
-        <Form.Item name={['dosage', 'adult']} label="Adult">
-          <Input />
-        </Form.Item>
-        <Form.Item name={['dosage', 'child']} label="Child">
-          <Input />
-        </Form.Item>
-        <Form.Item name={['dosage', 'infant']} label="Infant">
-          <Input />
-        </Form.Item>
-      </Form.Item>
-    </Form>
-  );
+  const handleAddOrEditTreatment = async (values) => {
+    try {
+      const payload = {
+        ...values,
+        procedure_name: values.procedure_name,
+        duration: String(values.duration),
+      };
+      delete payload.name; // Remove 'name' if it exists
 
-  // Render treatment procedures section
-  const renderTreatments = () => (
-    <section className="mb-8">
-      <div className="flex justify-between items-center mb-4">
-        <h2 className="text-2xl font-bold">Treatment Procedures & Fees</h2>
-        <Button type="primary" onClick={() => setIsTreatmentModal(true)}>
-          Add Procedure
-        </Button>
-      </div>
-      {treatments.map((category, idx) => (
-        <div key={idx} className="mb-4">
-          <h3 className="text-xl font-semibold mb-2">{category.category}</h3>
-          <table className="min-w-full border-collapse">
-            <thead>
-              <tr>
-                <th className="px-4 py-2 border-b">Procedure</th>
-                <th className="px-4 py-2 border-b">Cost</th>
-                <th className="px-4 py-2 border-b">Duration</th>
-                <th className="px-4 py-2 border-b">Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {category.procedures.map((proc, pIdx) => (
-                <tr key={pIdx} className="hover:bg-gray-100">
-                  <td className="px-4 py-2 border-b">{proc.name}</td>
-                  <td className="px-4 py-2 border-b">${proc.cost}</td>
-                  <td className="px-4 py-2 border-b">{proc.duration}</td>
-                  <td className="px-4 py-2 border-b">
-                    <Button icon={<EditOutlined />} size="small" />
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      ))}
-    </section>
-  );
-
-  // Sample data for the table
-  const data = React.useMemo(
-    () => [
-      { service: 'General Dentistry', patients: 120 },
-      { service: 'Teeth Whitening', patients: 80 },
-      { service: 'Dental Implants', patients: 50 },
-      { service: 'Braces', patients: 30 },
-      { service: 'Pediatric Dentistry', patients: 60 },
-    ],
-    []
-  );
-
-  // Define columns for the table
-  const columns = React.useMemo(
-    () => [
-      { Header: 'Service', accessor: 'service' },
-      { Header: 'Patients', accessor: 'patients' },
-    ],
-    []
-  );
-
-  // Use the useTable hook
-  const {
-    getTableProps,
-    getTableBodyProps,
-    headerGroups,
-    rows,
-    prepareRow,
-  } = useTable({ columns, data });
-
-  // State for team members
-  const [teamMembers, setTeamMembers] = useState([
-    {
-      name: 'Dr. John Doe',
-      qualifications: 'DDS, Specialist in Orthodontics',
-      experience: '10 years',
-      image: 'https://via.placeholder.com/100',
-    },
-    {
-      name: 'Dr. Jane Smith',
-      qualifications: 'DDS, Specialist in Pediatric Dentistry',
-      experience: '8 years',
-      image: 'https://via.placeholder.com/100',
-    },
-    {
-      name: 'Dr. Emily White',
-      qualifications: 'DDS, Specialist in Cosmetic Dentistry',
-      experience: '5 years',
-      image: 'https://via.placeholder.com/100',
-    },
-  ]);
-
-  // State for modal visibility
-  const [isModalVisible, setIsModalVisible] = useState(false);
-
-  // State for new member form
-  const [newMember, setNewMember] = useState({
-    name: '',
-    qualifications: '',
-    experience: '',
-    image: '',
-  });
-
-  // Function to handle adding a new team member
-  const addTeamMember = () => {
-    setTeamMembers([...teamMembers, newMember]);
-    setNewMember({ name: '', qualifications: '', experience: '', image: '' });
-    setIsModalVisible(false);
+      let response;
+      if (editTreatmentData) {
+        response = await editTreatment(editTreatmentData.id, payload);
+        if (response.success) {
+          message.success('Treatment updated successfully');
+        } else {
+          message.error('Failed to update treatment');
+        }
+      } else {
+        response = await addTreatment(payload);
+        if (response.success) {
+          message.success('Treatment added successfully');
+        } else {
+          message.error('Failed to add treatment');
+        }
+      }
+      fetchTreatments();
+    } catch (error) {
+      message.error('Error saving treatment');
+    } finally {
+      setEditTreatmentData(null);
+      setIsTreatmentModalVisible(false);
+    }
   };
 
-  // Function to handle image upload
-  const handleImageUpload = ({ file }) => {
-    const reader = new FileReader();
-    reader.onload = () => {
-      setNewMember({ ...newMember, image: reader.result });
-    };
-    reader.readAsDataURL(file.originFileObj);
+  const handleDeleteTreatment = async (id) => {
+    try {
+      const response = await deleteTreatment(id);
+      if (response.success) {
+        message.success('Treatment deleted successfully');
+        setTreatments(treatments.filter(t => t.id !== id));
+      } else {
+        message.error('Failed to delete treatment');
+      }
+    } catch (error) {
+      message.error('Error deleting treatment');
+    }
   };
 
-  // Function to handle editing clinic data
-  const handleEditClinicData = (field, value) => {
-    setClinicData(prev => ({ ...prev, [field]: value }));
+  const fetchMedications = async () => {
+    try {
+      const response = await getMedications();
+      if (response.success) {
+        // Parse the dosage JSON string into an object
+        const medicationsWithParsedDosage = response.data.map(medication => ({
+          ...medication,
+          dosage: JSON.parse(medication.dosage)
+        }));
+        setMedications(medicationsWithParsedDosage);
+      } else {
+        message.error('Failed to fetch medications');
+      }
+    } catch (error) {
+      message.error('Error fetching medications');
+    }
   };
 
-  // Function to generate Google Maps link
-  const generateGoogleMapsLink = (address) => {
-    const encodedAddress = encodeURIComponent(address);
-    return `https://www.google.com/maps/search/?api=1&query=${encodedAddress}`;
+  useEffect(() => {
+    fetchMedications();
+  }, []);
+
+  const handleAddOrEditMedication = async (values) => {
+    try {
+      let response;
+      if (editMedicationData) {
+        response = await editMedication(editMedicationData.id, values);
+        if (response.success) {
+          message.success('Medication updated successfully');
+        } else {
+          message.error('Failed to update medication');
+        }
+      } else {
+        response = await addMedication(values);
+        if (response.success) {
+          message.success('Medication added successfully');
+        } else {
+          message.error('Failed to add medication');
+        }
+      }
+      fetchMedications();
+    } catch (error) {
+      message.error('Error saving medication');
+    } finally {
+      setEditMedicationData(null);
+      setIsMedicationModal(false);
+    }
   };
 
-  // Render combined clinic overview and contact information section
+  const handleDeleteMedication = async (id) => {
+    try {
+      const response = await deleteMedication(id);
+      if (response.success) {
+        message.success('Medication deleted successfully');
+        fetchMedications();
+      } else {
+        message.error('Failed to delete medication');
+      }
+    } catch (error) {
+      message.error('Error deleting medication');
+    }
+  };
+
+  const handleEditMedication = (record) => {
+    setEditMedicationData(record);
+    setIsMedicationModal(true);
+  };
+
+  const handleAddTeamMember = () => {
+    setEditTeamMemberData(null);
+    setIsTeamMemberModalVisible(true);
+  };
+
+  const handleEditTeamMember = (member) => {
+    setEditTeamMemberData(member);
+    setIsTeamMemberModalVisible(true);
+  };
+
+  const fetchTeamMembers = async () => {
+    try {
+      const response = await getTeamMembers();
+      if (response.success) {
+        setTeamMembers(response.data);
+      } else {
+        message.error('Failed to fetch team members');
+      }
+    } catch (error) {
+      message.error('Error fetching team members');
+    }
+  };
+
+  useEffect(() => {
+    fetchTeamMembers();
+  }, []);
+
+  const handleAddOrEditTeamMember = async (values) => {
+    try {
+      let response;
+      if (editTeamMemberData) {
+        response = await editTeamMember(editTeamMemberData.id, values);
+        if (response.success) {
+          message.success('Team member updated successfully');
+        } else {
+          message.error('Failed to update team member');
+        }
+      } else {
+        response = await addTeamMember(values);
+        if (response.success) {
+          message.success('Team member added successfully');
+        } else {
+          message.error('Failed to add team member');
+        }
+      }
+      fetchTeamMembers(); // Refetch team members after add/edit
+    } catch (error) {
+      message.error('Error saving team member');
+    } finally {
+      setEditTeamMemberData(null);
+      setIsTeamMemberModalVisible(false);
+    }
+  };
+
+  const handleDeleteTeamMember = async (id) => {
+    try {
+      const response = await deleteTeamMember(id);
+      if (response.success) {
+        message.success('Team member deleted successfully');
+        fetchTeamMembers(); // Refetch team members after delete
+      } else {
+        message.error('Failed to delete team member');
+      }
+    } catch (error) {
+      message.error('Error deleting team member');
+    }
+  };
+
+  // Render functions for each section
   const renderClinicOverviewAndContact = () => (
     <section className="mb-8">
       <div className="flex justify-between items-center mb-4">
         <h2 className="text-2xl font-bold">Clinic Overview & Contact Information</h2>
-        <Button type="primary" onClick={() => setIsEditClinicModal(true)}>
+        <Button type="primary" icon={<EditOutlined />} onClick={() => setIsEditClinicModal(true)}>
           Edit
         </Button>
       </div>
@@ -404,40 +341,167 @@ const ClinicInfo = () => {
         <a href={clinicData.socialMedia.facebook} className="text-blue-500">Facebook</a>, 
         <a href={clinicData.socialMedia.instagram} className="text-blue-500">Instagram</a>
       </p>
-      <div className="flex flex-col items-start mt-4 space-y-2">
-        <Button type="primary" onClick={() => setIsEditOperatingHoursModal(true)} style={{ width: 'auto' }}>
-          Edit Operating Hours
-        </Button>
-        <Button type="primary" onClick={() => setIsHolidayModalVisible(true)} style={{ width: 'auto' }}>
-          Add Holiday
-        </Button>
-      </div>
     </section>
   );
 
-  // State for other clinic information
-  const [otherClinicInfo, setOtherClinicInfo] = useState({
-    licenseNumber: '',
-    insuranceProviders: '',
-    emergencyContact: '',
-    languagesSpoken: '',
-    paymentMethods: '',
-    parkingInfo: '',
-    accessibilityFeatures: '',
-    patientReviews: '',
-    appointmentBooking: '',
-    specialServices: '',
-  });
+  const renderOperatingHours = () => (
+    <section className="mb-8">
+      <div className="flex justify-between items-center mb-4">
+        <h2 className="text-2xl font-bold">Operating Hours</h2>
+        <Button type="primary" icon={<EditOutlined />} onClick={() => setIsEditOperatingHoursModal(true)}>
+          Edit
+        </Button>
+      </div>
+      <Table
+        dataSource={clinicData.operatingHours.map((entry, index) => ({
+          key: index,
+          day: capitalize(entry.day),
+          status: entry.status,
+          open: entry.open_time ? entry.open_time.slice(0, 5) : 'N/A',
+          close: entry.close_time ? entry.close_time.slice(0, 5) : 'N/A',
+        }))}
+        columns={[
+          { title: 'Day', dataIndex: 'day', key: 'day' },
+          { title: 'Status', dataIndex: 'status', key: 'status' },
+          { title: 'Open', dataIndex: 'open', key: 'open' },
+          { title: 'Close', dataIndex: 'close', key: 'close' },
+        ]}
+        pagination={false}
+      />
+    </section>
+  );
 
-  // State for modal visibility
-  const [isEditOtherInfoModal, setIsEditOtherInfoModal] = useState(false);
+  const renderHolidays = () => (
+    <section className="mb-8">
+      <div className="flex justify-between items-center mb-4">
+        <h2 className="text-2xl font-bold">Holidays</h2>
+        <Button type="primary" icon={<PlusOutlined />} onClick={() => setIsHolidayModalVisible(true)}>
+          Add Holiday
+        </Button>
+      </div>
+      <Table
+        dataSource={specialHolidays.map((holiday, index) => ({
+          key: index,
+          reason: holiday.reason,
+          date: moment(holiday.date).format('MMMM Do, YYYY'),
+        }))}
+        columns={[
+          { title: 'Reason', dataIndex: 'reason', key: 'reason' },
+          { title: 'Date', dataIndex: 'date', key: 'date' },
+          {
+            title: 'Action',
+            key: 'action',
+            render: (_, record) => (
+              <Button type="link" icon={<EditOutlined />} onClick={() => handleEditHoliday(record)}>
+                Edit
+              </Button>
+            ),
+          },
+        ]}
+        pagination={false}
+      />
+    </section>
+  );
 
-  // Render other clinic information section
+  const renderDentalTeam = () => (
+    <section className="mb-8">
+      <div className="flex justify-between items-center mb-4">
+        <h2 className="text-2xl font-bold">Dental Team</h2>
+        <Button type="primary" icon={<PlusOutlined />} onClick={handleAddTeamMember}>
+          Add Team Member
+        </Button>
+      </div>
+      <Table
+        dataSource={teamMembers}
+        columns={[
+          { title: 'Name', dataIndex: 'name', key: 'name' },
+          { title: 'Qualifications', dataIndex: 'qualifications', key: 'qualifications' },
+          { title: 'Experience', dataIndex: 'experience', key: 'experience' },
+          {
+            title: 'Action',
+            key: 'action',
+            render: (_, record) => (
+              <Button type="link" onClick={() => handleEditTeamMember(record)}>
+                Edit
+              </Button>
+            ),
+          },
+        ]}
+        pagination={false}
+      />
+    </section>
+  );
+
+  const renderTreatments = () => (
+    <section className="mb-8">
+      <div className="flex justify-between items-center mb-4">
+        <h2 className="text-2xl font-bold">Treatment Procedures & Fees</h2>
+        <Button type="primary" icon={<PlusOutlined />} onClick={() => setIsTreatmentModalVisible(true)}>
+          Add Treatment
+        </Button>
+      </div>
+      <Table
+        dataSource={treatments}
+        columns={[
+          { title: 'Category', dataIndex: 'category', key: 'category' },
+          { title: 'Procedure Name', dataIndex: 'procedure_name', key: 'name' },
+          { title: 'Cost', dataIndex: 'cost', key: 'cost' },
+          { title: 'Duration', dataIndex: 'duration', key: 'duration' },
+          {
+            title: 'Action',
+            key: 'action',
+            render: (_, record) => (
+              <Button type="link" icon={<EditOutlined />} onClick={() => handleEditTreatment(record)}>
+                Edit
+              </Button>
+            ),
+          },
+        ]}
+        pagination={false}
+      />
+    </section>
+  );
+  const renderMedications = () => (
+    <section className="mb-8">
+      <div className="flex justify-between items-center mb-4">
+        <h2 className="text-2xl font-bold">Medication Preferences</h2>
+        <Button type="primary" icon={<PlusOutlined />} onClick={() => setIsMedicationModal(true)}>
+          Add Medication
+        </Button>
+      </div>
+      <Table
+        dataSource={medications}
+        columns={[
+          { title: 'Condition', dataIndex: 'condition', key: 'condition' },
+          { title: 'Medication Name', dataIndex: 'name', key: 'name' },
+          { title: 'Brand Preference', dataIndex: 'brand', key: 'brand' },
+          { title: 'Dosage', dataIndex: 'dosage', key: 'dosage', render: (dosage) => (
+            <>
+              <strong>Adult:</strong> {dosage.adult}<br />
+              <strong>Child:</strong> {dosage.child}<br />
+              <strong>Infant:</strong> {dosage.infant}
+            </>
+          ) },
+          {
+            title: 'Action',
+            key: 'action',
+            render: (_, record) => (
+              <Button type="link" icon={<EditOutlined />} onClick={() => handleEditMedication(record)}>
+                Edit
+              </Button>
+            ),
+          },
+        ]}
+        pagination={false}
+      />
+    </section>
+  );
+
   const renderOtherClinicInfo = () => (
     <section className="mb-8">
       <div className="flex justify-between items-center mb-4">
         <h2 className="text-2xl font-bold">Other Clinic Information</h2>
-        <Button type="primary" onClick={() => setIsEditOtherInfoModal(true)}>
+        <Button type="primary" icon={<EditOutlined />} onClick={() => setIsEditOtherInfoModal(true)}>
           Edit
         </Button>
       </div>
@@ -454,59 +518,7 @@ const ClinicInfo = () => {
     </section>
   );
 
-  // Edit Other Clinic Information Modal
-  const EditOtherInfoModal = () => (
-    <Modal
-      title="Edit Other Clinic Information"
-      open={isEditOtherInfoModal}
-      onCancel={() => setIsEditOtherInfoModal(false)}
-      footer={null}
-    >
-      <Form
-        initialValues={otherClinicInfo}
-        onFinish={(values) => {
-          setOtherClinicInfo(values);
-          setIsEditOtherInfoModal(false);
-        }}
-      >
-        <Form.Item name="licenseNumber" label="License Number">
-          <Input />
-        </Form.Item>
-        <Form.Item name="insuranceProviders" label="Insurance Providers">
-          <Input />
-        </Form.Item>
-        <Form.Item name="emergencyContact" label="Emergency Contact">
-          <Input />
-        </Form.Item>
-        <Form.Item name="languagesSpoken" label="Languages Spoken">
-          <Input />
-        </Form.Item>
-        <Form.Item name="paymentMethods" label="Payment Methods">
-          <Input />
-        </Form.Item>
-        <Form.Item name="parkingInfo" label="Parking Information">
-          <Input />
-        </Form.Item>
-        <Form.Item name="accessibilityFeatures" label="Accessibility Features">
-          <Input />
-        </Form.Item>
-        <Form.Item name="patientReviews" label="Patient Reviews">
-          <Input.TextArea />
-        </Form.Item>
-        <Form.Item name="appointmentBooking" label="Appointment Booking">
-          <Input />
-        </Form.Item>
-        <Form.Item name="specialServices" label="Special Services">
-          <Input />
-        </Form.Item>
-        <Button type="primary" htmlType="submit">
-          Save
-        </Button>
-      </Form>
-    </Modal>
-  );
-
-  // Edit Clinic Modal
+  // Modal components for editing and adding
   const EditClinicModal = () => (
     <Modal
       title="Edit Clinic Information"
@@ -545,211 +557,341 @@ const ClinicInfo = () => {
         <Form.Item name={['socialMedia', 'instagram']} label="Instagram">
           <Input />
         </Form.Item>
-        <Button type="primary" htmlType="submit">
-          Save
-        </Button>
+        <div className="flex justify-end space-x-2">
+          <Button onClick={() => setIsEditClinicModal(false)}>Cancel</Button>
+          <Button type="primary" htmlType="submit">Save</Button>
+        </div>
       </Form>
     </Modal>
   );
 
-  // Edit Operating Hours Modal
-  const EditOperatingHoursModal = () => {
-    const [form] = Form.useForm();
-
-    return (
-      <Modal
-        title="Edit Operating Hours"
-        open={isEditOperatingHoursModal}
-        onCancel={() => setIsEditOperatingHoursModal(false)}
-        footer={null}
+  const EditOperatingHoursModal = () => (
+    <Modal
+      title="Edit Operating Hours"
+      open={isEditOperatingHoursModal}
+      onCancel={() => setIsEditOperatingHoursModal(false)}
+      footer={null}
+    >
+      <Form
+        initialValues={clinicData.operatingHours.reduce((acc, { day, status, open_time, close_time }) => {
+          acc[day] = { status, open: open_time, close: close_time };
+          return acc;
+        }, {})}
+        onFinish={handleSaveOperatingHours}
+        layout="vertical"
       >
-        <Form
-          form={form}
-          initialValues={clinicData.operatingHours}
-          onFinish={(values) => {
-            setClinicData(prev => ({ ...prev, operatingHours: values }));
-            setIsEditOperatingHoursModal(false);
-          }}
-          layout="vertical"
-        >
-          {Object.keys(clinicData.operatingHours).map(day => (
-            <div key={day} className="flex items-center space-x-4 mb-4">
-              <Form.Item
-                name={[day, 'status']}
-                label={`${capitalize(day)} Status`}
-                className="flex-1"
-              >
-                <Select defaultValue={clinicData.operatingHours[day].status}>
-                  <Select.Option value="open">Open</Select.Option>
-                  <Select.Option value="closed">Closed</Select.Option>
-                </Select>
-              </Form.Item>
-              <Form.Item
-                name={[day, 'open']}
-                label={`${capitalize(day)} Open`}
-                className="flex-1"
-              >
-                <Input type="time" defaultValue={clinicData.operatingHours[day].open} />
-              </Form.Item>
-              <Form.Item
-                name={[day, 'close']}
-                label={`${capitalize(day)} Close`}
-                className="flex-1"
-              >
-                <Input type="time" defaultValue={clinicData.operatingHours[day].close} />
-              </Form.Item>
-            </div>
-          ))}
-          <div className="flex justify-end">
-            <Button type="primary" htmlType="submit">
-              Save
-            </Button>
+        {['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'].map(day => (
+          <div key={day} className="flex items-center space-x-4 mb-4">
+            <Form.Item
+              name={[day, 'status']}
+              label={`${capitalize(day)} Status`}
+              className="flex-1"
+            >
+              <Select>
+                <Option value="open">Open</Option>
+                <Option value="closed">Closed</Option>
+              </Select>
+            </Form.Item>
+            <Form.Item
+              name={[day, 'open']}
+              label={`${capitalize(day)} Open`}
+              className="flex-1"
+            >
+              <Input type="time" />
+            </Form.Item>
+            <Form.Item
+              name={[day, 'close']}
+              label={`${capitalize(day)} Close`}
+              className="flex-1"
+            >
+              <Input type="time" />
+            </Form.Item>
           </div>
-        </Form>
-      </Modal>
-    );
-  };
+        ))}
+        <div className="flex justify-end space-x-2">
+          <Button onClick={() => setIsEditOperatingHoursModal(false)}>Cancel</Button>
+          <Button type="primary" htmlType="submit">Save</Button>
+        </div>
+      </Form>
+    </Modal>
+  );
 
-  // Helper function to capitalize day names
-  const capitalize = (str) => str.charAt(0).toUpperCase() + str.slice(1);
+  // Render the Add/Edit Holiday Modal
+  const renderAddHolidayModal = () => (
+    <Modal
+      title={editHoliday ? "Edit Holiday" : "Add Holiday"}
+      visible={isHolidayModalVisible}
+      onCancel={() => {
+        setEditHoliday(null);
+        setIsHolidayModalVisible(false);
+      }}
+      footer={null}
+    >
+      <Form
+        initialValues={editHoliday || { reason: '', date: null }}
+        onFinish={(values) => {
+          if (editHoliday) {
+            // Update existing holiday
+            setSpecialHolidays((prev) =>
+              prev.map((holiday) =>
+                holiday.key === editHoliday.key ? { ...holiday, ...values } : holiday
+              )
+            );
+          } else {
+            // Add new holiday
+            setSpecialHolidays([...specialHolidays, { ...values, key: Date.now() }]);
+          }
+          setEditHoliday(null);
+          setIsHolidayModalVisible(false);
+        }}
+        layout="vertical"
+      >
+        <Form.Item
+          name="reason"
+          label="Reason for Holiday"
+          rules={[{ required: true, message: 'Please enter a reason!' }]}
+        >
+          <Input />
+        </Form.Item>
+        <Form.Item
+          name="date"
+          label="Date"
+          rules={[{ required: true, message: 'Please select a date!' }]}
+        >
+          <DatePicker style={{ width: '100%' }} />
+        </Form.Item>
+        <div className="flex justify-end space-x-2">
+          <Button onClick={() => setIsHolidayModalVisible(false)}>Cancel</Button>
+          <Button type="primary" htmlType="submit">{editHoliday ? "Save" : "Add"}</Button>
+        </div>
+      </Form>
+    </Modal>
+  );
+
+  const EditOtherInfoModal = () => (
+    <Modal
+      title="Edit Other Clinic Information"
+      open={isEditOtherInfoModal}
+      onCancel={() => setIsEditOtherInfoModal(false)}
+      footer={null}
+    >
+      <Form
+        initialValues={otherClinicInfo}
+        onFinish={(values) => {
+          setOtherClinicInfo(values);
+          setIsEditOtherInfoModal(false);
+        }}
+        layout="vertical"
+      >
+        <Form.Item name="licenseNumber" label="License Number">
+          <Input />
+        </Form.Item>
+        <Form.Item name="insuranceProviders" label="Insurance Providers">
+          <Input />
+        </Form.Item>
+        <Form.Item name="emergencyContact" label="Emergency Contact">
+          <Input />
+        </Form.Item>
+        <Form.Item name="languagesSpoken" label="Languages Spoken">
+          <Input />
+        </Form.Item>
+        <Form.Item name="paymentMethods" label="Payment Methods">
+          <Input />
+        </Form.Item>
+        <Form.Item name="parkingInfo" label="Parking Information">
+          <Input />
+        </Form.Item>
+        <Form.Item name="accessibilityFeatures" label="Accessibility Features">
+          <Input />
+        </Form.Item>
+        <Form.Item name="patientReviews" label="Patient Reviews">
+          <Input.TextArea />
+        </Form.Item>
+        <Form.Item name="appointmentBooking" label="Appointment Booking">
+          <Input />
+        </Form.Item>
+        <Form.Item name="specialServices" label="Special Services">
+          <Input />
+        </Form.Item>
+        <div className="flex justify-end space-x-2">
+          <Button onClick={() => setIsEditOtherInfoModal(false)}>Cancel</Button>
+          <Button type="primary" htmlType="submit">Save</Button>
+        </div>
+      </Form>
+    </Modal>
+  );
+
+  const TreatmentForm = () => (
+    <Modal
+      title={editTreatmentData ? "Edit Treatment Procedure" : "Add Treatment Procedure"}
+      open={isTreatmentModalVisible}
+      onCancel={() => {
+        setEditTreatmentData(null);
+        setIsTreatmentModalVisible(false);
+      }}
+      footer={null}
+    >
+      <Form
+        initialValues={editTreatmentData || { category: '', procedure_name: '', cost: '', duration: '' }}
+        onFinish={handleAddOrEditTreatment}
+        layout="vertical"
+      >
+        <Form.Item name="category" label="Category" rules={[{ required: true, message: 'Please select a category!' }]}>
+          <Input />
+        </Form.Item>
+        <Form.Item name="procedure_name" label="Procedure Name" rules={[{ required: true, message: 'Please enter a procedure name!' }]}>
+          <Input />
+        </Form.Item>
+        <Form.Item name="cost" label="Cost" rules={[{ required: true, message: 'Please enter a cost!' }]}>
+          <InputNumber prefix="$" />
+        </Form.Item>
+        <Form.Item name="duration" label="Duration" rules={[{ required: true, message: 'Please select a duration!' }]}>
+          <Select placeholder="Select duration">
+            <Option value="30 mins">30 mins</Option>
+            <Option value="45 mins">45 mins</Option>
+            <Option value="1 hr">1 hr</Option>
+            <Option value="1.30 hr">1.30 hr</Option>
+            <Option value="2 hr">2 hr</Option>
+            <Option value="2.5 hr">2.5 hr</Option>
+            <Option value="3 hr">3 hr</Option>
+            {/* Add more options as needed */}
+          </Select>
+        </Form.Item>
+        <div className="flex justify-end space-x-2">
+          <Button onClick={() => setIsTreatmentModalVisible(false)}>Cancel</Button>
+          <Button type="primary" htmlType="submit">Save</Button>
+          {editTreatmentData && (
+            <Button type="danger" onClick={() => handleDeleteTreatment(editTreatmentData.id)}>Delete</Button>
+          )}
+        </div>
+      </Form>
+    </Modal>
+  );
+
+  const MedicationForm = () => (
+    <Modal
+      title={editMedicationData ? "Edit Medication Preference" : "Add Medication Preference"}
+      open={isMedicationModal}
+      onCancel={() => {
+        setEditMedicationData(null);
+        setIsMedicationModal(false);
+      }}
+      footer={null}
+    >
+      <Form
+        initialValues={editMedicationData || { condition: '', name: '', brand: '', dosage: { adult: '', child: '', infant: '' } }}
+        onFinish={handleAddOrEditMedication}
+        layout="vertical"
+      >
+        <Form.Item name="condition" label="Medical Condition" rules={[{ required: true, message: 'Please enter a medical condition!' }]}>
+          <Input />
+        </Form.Item>
+        <Form.Item name="name" label="Medication Name" rules={[{ required: true, message: 'Please enter a medication name!' }]}>
+          <Input />
+        </Form.Item>
+        <Form.Item name="brand" label="Preferred Brand" rules={[{ required: true, message: 'Please enter a preferred brand!' }]}>
+          <Input />
+        </Form.Item>
+        <Form.Item label="Dosage by Age Group">
+          <Form.Item name={['dosage', 'adult']} label="Adult" rules={[{ required: true, message: 'Please enter dosage for adults!' }]}>
+            <Input />
+          </Form.Item>
+          <Form.Item name={['dosage', 'child']} label="Child" rules={[{ required: true, message: 'Please enter dosage for children!' }]}>
+            <Input />
+          </Form.Item>
+          <Form.Item name={['dosage', 'infant']} label="Infant" rules={[{ required: true, message: 'Please enter dosage for infants!' }]}>
+            <Input />
+          </Form.Item>
+        </Form.Item>
+        <div className="flex justify-end space-x-2">
+          <Button onClick={() => setIsMedicationModal(false)}>Cancel</Button>
+          <Button type="primary" htmlType="submit">Save</Button>
+          {editMedicationData && (
+            <Button type="danger" onClick={() => handleDeleteMedication(editMedicationData.id)}>Delete</Button>
+          )}
+        </div>
+      </Form>
+    </Modal>
+  );
+
+  const TeamMemberForm = () => (
+    <Modal
+      title={editTeamMemberData ? "Edit Team Member" : "Add Team Member"}
+      visible={isTeamMemberModalVisible}
+      onCancel={() => setIsTeamMemberModalVisible(false)}
+      footer={null}
+    >
+      <Form
+        initialValues={editTeamMemberData || { name: '', qualifications: '', experience: '', image: '' }}
+        onFinish={handleAddOrEditTeamMember}
+        layout="vertical"
+      >
+        <Form.Item name="name" label="Name" rules={[{ required: true, message: 'Please enter a name!' }]}>
+          <Input />
+        </Form.Item>
+        <Form.Item name="qualifications" label="Qualifications" rules={[{ required: true, message: 'Please enter qualifications!' }]}>
+          <Input />
+        </Form.Item>
+        <Form.Item name="experience" label="Experience" rules={[{ required: true, message: 'Please enter experience!' }]}>
+          <Input />
+        </Form.Item>
+        <div className="flex justify-end space-x-2">
+          <Button onClick={() => setIsTeamMemberModalVisible(false)}>Cancel</Button>
+          <Button type="primary" htmlType="submit">Save</Button>
+          {editTeamMemberData && (
+            <Button type="danger" onClick={() => confirmDeleteTeamMember(editTeamMemberData.id)}>Delete</Button>
+          )}
+        </div>
+      </Form>
+    </Modal>
+  );
+
+  // Function to confirm and handle deletion
+  const confirmDeleteTeamMember = (id) => {
+    Modal.confirm({
+      title: 'Are you sure you want to delete this team member?',
+      content: 'This action cannot be undone.',
+      okText: 'Yes, delete it',
+      okType: 'danger',
+      cancelText: 'No, cancel',
+      onOk: async () => {
+        try {
+          const response = await deleteTeamMember(id);
+          if (response.success) {
+            message.success('Team member deleted successfully');
+            fetchTeamMembers(); // Refresh the list after deletion
+            setIsTeamMemberModalVisible(false);
+          } else {
+            message.error('Failed to delete team member');
+          }
+        } catch (error) {
+          message.error('Error deleting team member');
+        }
+      },
+      onCancel() {
+        console.log('Cancel deletion');
+      },
+    });
+  };
 
   return (
     <div className="max-w-full mx-auto p-6 bg-white dark:bg-boxdark shadow-md rounded-lg">
-      {/* Combined Clinic Overview and Contact Information */}
       {renderClinicOverviewAndContact()}
-
-      {/* Dental Team */}
-      <section className="mb-8 relative">
-        <h2 className="text-2xl font-bold mb-4">Dental Team</h2>
-        <Button
-          type="primary"
-          onClick={() => setIsModalVisible(true)}
-          className="absolute top-0 right-0"
-        >
-          Add Team Member
-        </Button>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {teamMembers.map((member, index) => (
-            <div key={index} className="flex flex-col items-center bg-gray-100 p-4 rounded-lg shadow-sm">
-              <img src={member.image} alt={member.name} className="w-24 h-24 rounded-full mb-4" />
-              <div className="text-center">
-                <p className="font-bold">{member.name}</p>
-                <p className="text-sm text-gray-600">{member.qualifications}</p>
-                <p className="text-sm text-gray-600">{member.experience}</p>
-              </div>
-            </div>
-          ))}
-        </div>
-
-        {/* Add Team Member Modal */}
-        <Modal
-          title="Add Team Member"
-          open={isModalVisible}
-          onOk={addTeamMember}
-          onCancel={() => setIsModalVisible(false)}
-          okText="Add"
-          cancelText="Cancel"
-        >
-          <div className="flex flex-col space-y-4">
-            <Select
-              placeholder="Select Title"
-              value={newMember.title}
-              onChange={(value) => setNewMember({ ...newMember, title: value })}
-            >
-              <Select.Option value="mr">Mr.</Select.Option>
-              <Select.Option value="ms">Ms.</Select.Option>
-              <Select.Option value="dr">Dr.</Select.Option>
-            </Select>
-            <Input
-              placeholder="Name"
-              value={newMember.name}
-              onChange={(e) => setNewMember({ ...newMember, name: e.target.value })}
-            />
-            <Select
-              placeholder="Select Role"
-              value={newMember.role}
-              onChange={(value) => setNewMember({ ...newMember, role: value })}
-            >
-              <Select.Option value="doctor">Doctor</Select.Option>
-              <Select.Option value="visiting_doctor">Visiting Doctor</Select.Option>
-              <Select.Option value="admin_staff">Admin Staff</Select.Option>
-            </Select>
-            <Input
-              placeholder="Specialization (e.g., Orthodontist)"
-              value={newMember.specialization}
-              onChange={(e) => setNewMember({ ...newMember, specialization: e.target.value })}
-            />
-            <Input
-              placeholder="Email Address"
-              value={newMember.email}
-              onChange={(e) => setNewMember({ ...newMember, email: e.target.value })}
-            />
-            <Upload
-              name="file"
-              listType="picture-card"
-              showUploadList={false}
-              beforeUpload={() => false} // Prevent automatic upload
-              onChange={handleImageUpload}
-            >
-              {newMember.image ? (
-                <img
-                  src={newMember.image}
-                  alt="Uploaded"
-                  style={{ width: "100%" }}
-                />
-              ) : (
-                <div>
-                  <PlusOutlined />
-                  <div style={{ marginTop: 8 }}>Upload</div>
-                </div>
-              )}
-            </Upload>
-          </div>
-        </Modal>
-      </section>
-
-      {/* Add Treatment Procedures Section */}
+      {renderOperatingHours()}
+      {renderHolidays()}
+      {renderDentalTeam()}
       {renderTreatments()}
-
-      {/* Add Medication Preferences Section */}
-      <section className="mb-8">
-        <div className="flex justify-between items-center mb-4">
-          <h2 className="text-2xl font-bold text-black dark:text-white">Medication Preferences</h2>
-          <Button type="primary" onClick={() => setIsMedicationModal(true)}>
-            Add Medication
-          </Button>
-        </div>
-        {/* Render medication preferences... */}
-      </section>
-
-      {/* Special Holidays */}
-      {/* {renderSpecialHolidays()} */}
-
-      {/* Other Clinic Information */}
+      {renderMedications()}
       {renderOtherClinicInfo()}
 
       {/* Modals */}
       <EditClinicModal />
       <EditOperatingHoursModal />
-      <EditOtherInfoModal />
-      <Modal
-        title="Add Treatment Procedure"
-        open={isTreatmentModal}
-        onCancel={() => setIsTreatmentModal(false)}
-        footer={null}
-      >
-        <TreatmentForm />
-      </Modal>
-
-      <Modal
-        title="Add Medication Preference"
-        open={isMedicationModal}
-        onCancel={() => setIsMedicationModal(false)}
-        footer={null}
-      >
-        <MedicationForm />
-      </Modal>
       {renderAddHolidayModal()}
+      <EditOtherInfoModal />
+      <TreatmentForm />
+      <MedicationForm />
+      <TeamMemberForm />
     </div>
   );
 };

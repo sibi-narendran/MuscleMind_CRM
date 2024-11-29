@@ -7,58 +7,58 @@ const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
 const supabase = createClient(supabaseUrl, supabaseKey);
 
-const createPatient = async (patientData) => {
+const createTeamMember = async (memberData) => {
   const { data, error } = await supabase
-    .from('patients')
-    .insert([patientData]);
+    .from('dental_team')
+    .insert([memberData]);
 
   if (error) {
-    console.error("Error creating patient:", error);
-    throw error;
+    console.error("Error creating team member:", error);
+    throw new Error(`Supabase error: ${error.message || JSON.stringify(error)}`);
   }
   return data;
 };
 
-const getPatientsByUserId = async (userId) => {
+const getTeamMembers = async (userId) => {
   const { data, error } = await supabase
-    .from('patients')
+    .from('dental_team')
     .select('*')
     .eq('user_id', userId);
 
   if (error) {
-    console.error("Error fetching patients:", error);
+    console.error("Error fetching team members:", error);
     throw error;
   }
 
   return data;
 };
 
-const updatePatient = async (id, patientData) => {
+const updateTeamMember = async (id, memberData) => {
   const { data, error } = await supabase
-    .from('patients')
-    .update(patientData)
+    .from('dental_team')
+    .update(memberData)
     .eq('id', id);
 
   if (error) {
-    console.error("Error updating patient:", error);
+    console.error("Error updating team member:", error);
     throw error;
   }
 
   return data;
 };
 
-const deletePatient = async (id) => {
+const deleteTeamMember = async (id) => {
   const { data, error } = await supabase
-    .from('patients')
+    .from('dental_team')
     .delete()
     .eq('id', id);
 
   if (error) {
-    console.error("Error deleting patient:", error);
+    console.error("Error deleting team member:", error);
     throw error;
   }
 
   return data;
 };
 
-module.exports = { createPatient, getPatientsByUserId, updatePatient, deletePatient }; 
+module.exports = { createTeamMember, getTeamMembers, updateTeamMember, deleteTeamMember };
