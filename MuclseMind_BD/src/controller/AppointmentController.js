@@ -4,7 +4,9 @@ const { createResponse } = require('../utils/responseUtil');
 const addAppointmentController = async (req, res) => {
   try {
     const appointmentData = req.body;
-    const newAppointment = await addAppointment(appointmentData);
+    const doctor_id = req.user.userId;
+    console.log("DOCTOR ID",doctor_id);
+    const newAppointment = await addAppointment(appointmentData, doctor_id);
     res.status(201).json(createResponse(true, 'Appointment added successfully', newAppointment));
   } catch (error) {
     res.status(500).json(createResponse(false, 'Failed to add appointment', null, error.message));

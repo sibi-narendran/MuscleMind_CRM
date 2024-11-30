@@ -25,7 +25,7 @@ const AddAppointmentModal = ({ visible, onClose, onAdd }) => {
         setPatients(response.data);
       }
     } catch (error) {
-      console.error('Failed to fetch patients:', error);
+      message.error('Failed to fetch patients: ' + error.message);
     }
   };
 
@@ -36,27 +36,41 @@ const AddAppointmentModal = ({ visible, onClose, onAdd }) => {
         setTreatments(response.data);
       }
     } catch (error) {
-      console.error('Failed to fetch treatments:', error);
+      message.error('Failed to fetch treatments: ' + error.message);
     }
   };
 
   const handleAdd = async (values) => {
     try {
+      const selectedPatient = patients.find(patient => patient.id === values.patient);
+      const patientName = selectedPatient ? selectedPatient.name : '';
+
+      const selectedTreatment = treatments.find(treatment => treatment.id === values.treatment);
+      const treatmentName = selectedTreatment ? `${selectedTreatment.category} - ${selectedTreatment.procedure_name}` : '';
+
       const appointmentData = {
-        ...values,
+        patient_id: values.patient,
+        patient_name: patientName,
         date: values.date.format('YYYY-MM-DD'),
         time: values.time.format('HH:mm'),
+        treatment_id: values.treatment,
+        treatment_name: treatmentName,
       };
+
+      if (!appointmentData.treatment_id) {
+        throw new Error('Treatment ID is required');
+      }
+
       const response = await addAppointment(appointmentData);
       if (response.success) {
         message.success('Appointment added successfully');
         onAdd(response.data);
         onClose();
       } else {
-        message.error('Failed to add appointment');
+        message.error(response.message);
       }
     } catch (error) {
-      message.error('Failed to add appointment: ' + error.message);
+      message.error(error.error);
     }
   };
 
@@ -73,6 +87,11 @@ const AddAppointmentModal = ({ visible, onClose, onAdd }) => {
     } catch (error) {
       message.error('Failed to add patient: ' + error.message);
     }
+  };
+
+  // Disable past dates
+  const disabledDate = (current) => {
+    return current && current < moment().startOf('day');
   };
 
   return (
@@ -151,14 +170,14 @@ const AddAppointmentModal = ({ visible, onClose, onAdd }) => {
             name="date"
             rules={[{ required: true, message: 'Please select the date' }]}
           >
-            <DatePicker style={{ width: '100%' }} />
+            <DatePicker style={{ width: '100%' }} disabledDate={disabledDate} />
           </Form.Item>
           <Form.Item
             label={<span style={{ fontWeight: 'bold' }}>Time</span>}
             name="time"
             rules={[{ required: true, message: 'Please select the time' }]}
           >
-            <TimePicker style={{ width: '100%' }} format="HH:mm" />
+            <TimePicker style={{ width: '100%' }} format="h:mm a" use12Hours />
           </Form.Item>
           <Form.Item>
             <Button type="primary" htmlType="submit" style={{ width: '100%' }}>

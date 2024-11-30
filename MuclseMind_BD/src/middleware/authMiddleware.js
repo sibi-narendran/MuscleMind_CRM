@@ -22,13 +22,13 @@ const authenticateJWTUserID = (req, res, next) => {
   if (!token) {
     return res.status(401).json({ message: 'Access token is missing or invalid' });
   }
-  console.log(token);
 
   jwt.verify(token, JWT_SECRET, (err, decoded) => {
     if (err) {
       return res.status(403).json({ message: 'Token is not valid' });
     }
-    req.user = { userId: decoded.id }; // Ensure userId is extracted and set
+    req.user = { userId: decoded.id }; 
+   
     next();
   });
 };

@@ -6,24 +6,26 @@ import 'react-datepicker/dist/react-datepicker.css';
 import AddAppointmentModal from './AddAppointmentModal';
 import EditAppointmentModal from './EditAppointmentModal';
 import { Modal, Button, message } from 'antd';
-import { getAppointments, deleteAppointment } from '../api.services/services'; // Import services
+import { getAppointments, deleteAppointment, addAppointment, updateAppointment } from '../api.services/services'; // Import services
 
 const Appointments = () => {
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [selectedAppointment, setSelectedAppointment] = useState(null);
   const [appointments, setAppointments] = useState([]);
+  const [filteredAppointments, setFilteredAppointments] = useState([]);
   const [showAddModal, setShowAddModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [dateRange, setDateRange] = useState([null, null]);
   const [startDate, endDate] = dateRange;
   const [showDetailsModal, setShowDetailsModal] = useState(false);
 
-  // Define headerText
-  const headerText = "Appointments"; // or any other dynamic value
-
   useEffect(() => {
     fetchAppointments();
   }, []);
+
+  useEffect(() => {
+    filterAppointments();
+  }, [appointments, dateRange]);
 
   const fetchAppointments = async () => {
     try {
@@ -31,25 +33,53 @@ const Appointments = () => {
       if (response.success) {
         setAppointments(response.data);
       } else {
-        message.error('Failed to fetch appointments');
+        message.error(response.message || 'Failed to fetch appointments');
       }
     } catch (error) {
       message.error('Failed to fetch appointments: ' + error.message);
     }
   };
 
-  const handleAddAppointment = (newAppointment) => {
-    setAppointments([...appointments, newAppointment]);
-    setShowAddModal(false);
+  const filterAppointments = () => {
+    if (startDate && endDate) {
+      const filtered = appointments.filter((apt) => {
+        const appointmentDate = new Date(apt.date);
+        return appointmentDate >= startDate && appointmentDate <= endDate;
+      });
+      setFilteredAppointments(filtered);
+    } else {
+      setFilteredAppointments(appointments);
+    }
   };
 
-  const handleEditAppointment = (updatedAppointment) => {
-    setAppointments((prev) =>
-      prev.map((apt) =>
-        apt.id === updatedAppointment.id ? updatedAppointment : apt
-      )
-    );
-    setShowEditModal(false);
+  const handleAddAppointment = async (newAppointment) => {
+    try {
+      const response = await addAppointment(newAppointment);
+      if (response.success) {
+        fetchAppointments(); // Refetch appointments
+        setShowAddModal(false); // Close modal
+        message.success('Appointment added successfully');
+      } else {
+        message.error(response.message || 'Failed to add appointment');
+      }
+    } catch (error) {
+      message.error('Failed to add appointment: ' + error.message);
+    }
+  };
+
+  const handleEditAppointment = async (updatedAppointment) => {
+    try {
+      const response = await updateAppointment(updatedAppointment.id, updatedAppointment);
+      if (response.success) {
+        fetchAppointments(); // Refetch appointments
+        setShowEditModal(false); // Close modal
+        message.success('Appointment updated successfully');
+      } else {
+        message.error(response.message || 'Failed to update appointment');
+      }
+    } catch (error) {
+      message.error('Failed to update appointment: ' + error.message);
+    }
   };
 
   const handleAppointmentClick = (appointment) => {
@@ -59,12 +89,14 @@ const Appointments = () => {
 
   const handleDeleteAppointment = async () => {
     try {
-      await deleteAppointment(selectedAppointment.id);
-      setAppointments((prev) =>
-        prev.filter((apt) => apt.id !== selectedAppointment.id)
-      );
-      setShowDetailsModal(false);
-      message.success('Appointment deleted successfully');
+      const response = await deleteAppointment(selectedAppointment.id);
+      if (response.success) {
+        fetchAppointments(); // Refetch appointments
+        setShowDetailsModal(false); // Close modal
+        message.success('Appointment deleted successfully');
+      } else {
+        message.error(response.message || 'Failed to delete appointment');
+      }
     } catch (error) {
       message.error('Failed to delete appointment: ' + error.message);
     }
@@ -75,14 +107,21 @@ const Appointments = () => {
     setShowEditModal(true);
   };
 
+  const getHeaderText = () => {
+    if (startDate && endDate) {
+      return `Appointments from ${format(startDate, 'MMM dd')} to ${format(endDate, 'MMM dd')}`;
+    }
+    return "Appointments";
+  };
+
   return (
-    <div className="p-6 grid grid-cols-1 lg:grid-cols-3 gap-6 dark:bg-boxdark">
+    <div className="p-6 grid grid-cols-1 lg:grid-cols-3 gap-6 dark:bg-boxdark" style={{ height: '100vh' }}>
       {/* Left Side - Appointments List */}
-      <div className="lg:col-span-2">
+      <div className="lg:col-span-2 overflow-y-auto" style={{ maxHeight: '100vh' }}>
         <div className="bg-white dark:bg-boxdark rounded-xl shadow-sm border border-gray-100 dark:border-strokedark p-6 mb-6">
           <div className="flex justify-between items-center mb-6">
             <h1 className="text-2xl font-bold text-black dark:text-white">
-              {headerText}
+              {getHeaderText()}
             </h1>
             <button
               onClick={() => setShowAddModal(true)}
@@ -92,7 +131,7 @@ const Appointments = () => {
             </button>
           </div>
           <div className="space-y-4">
-            {appointments.map((apt) => (
+            {filteredAppointments.map((apt) => (
               <div
                 key={apt.id}
                 className="flex items-center p-4 bg-meta-9 dark:bg-strokedark rounded-lg hover:bg-gray-100 dark:hover:bg-meta-4 cursor-pointer mb-4"
@@ -102,21 +141,21 @@ const Appointments = () => {
                   <div className="flex items-center">
                     <Clock className="h-4 w-4 text-gray-400 dark:text-meta-2 mr-1" />
                     <span className="text-sm font-medium text-black dark:text-meta-2">
-                      {apt.time}
+                      {format(new Date(apt.date), 'MMM dd')} {format(new Date(`1970-01-01T${apt.time}`), 'hh:mm a')}
                     </span>
                   </div>
                 </div>
                 <div className='ml-2 mr-4'>
                   <span className="text-sm font-medium text-black dark:text-meta-2 ml-4">
-                    {apt.patient_Id}
+                    {apt.appointment_id}
                   </span>
                 </div>
                 <div className="ml-4 flex-grow">
                   <p className="text-sm font-medium text-black dark:text-white">
-                    {apt.patient}
+                    {apt.patient_name}
                   </p>
                   <p className="text-sm text-black dark:text-meta-2">
-                    {apt.treatment}
+                    {apt.treatment_name}
                   </p>
                 </div>
                 <div className="ml-4">
@@ -136,7 +175,7 @@ const Appointments = () => {
                 </div>
               </div>
             ))}
-            {appointments.length === 0 && (
+            {filteredAppointments.length === 0 && (
               <p className="text-black dark:text-meta-2 text-sm">
                 No appointments for the selected date range.
               </p>
@@ -146,7 +185,7 @@ const Appointments = () => {
       </div>
 
       {/* Right Side - Calendar */}
-      <div className="bg-white dark:bg-boxdark rounded-xl shadow-sm border border-s-meta-4 dark:border-strokedark p-6 mb-6">
+      <div className="bg-white dark:bg-boxdark rounded-xl shadow-sm border border-s-meta-4 dark:border-strokedark p-6 mb-6" style={{ position: 'sticky', top: 0, height: 'fit-content' }}>
         <h2 className="text-lg font-semibold text-black dark:text-white mb-4">
           Select Date Range
         </h2>
@@ -177,11 +216,11 @@ const Appointments = () => {
           footer={null}
           bodyStyle={{ padding: '20px' }}
         >
-          <p><strong>Patient ID:</strong> {selectedAppointment.patient_Id}</p>
-          <p><strong>Patient:</strong> {selectedAppointment.patient}</p>
-          <p><strong>Treatment:</strong> {selectedAppointment.treatment}</p>
-          <p><strong>Date:</strong> {format(selectedAppointment.date, 'MMM dd, yyyy')}</p>
-          <p><strong>Time:</strong> {selectedAppointment.time}</p>
+          <p><strong>Appointment ID:</strong> {selectedAppointment.appointment_id}</p>
+          <p><strong>Patient Name:</strong> {selectedAppointment.patient_name}</p>
+          <p><strong>Treatment Name:</strong> {selectedAppointment.treatment_name}</p>
+          <p><strong>Date:</strong> {format(new Date(selectedAppointment.date), 'MMM dd, yyyy')}</p>
+          <p><strong>Time:</strong> {format(new Date(`1970-01-01T${selectedAppointment.time}`), 'hh:mm a')}</p>
           <p><strong>Status:</strong> {selectedAppointment.status}</p>
           <div className="flex justify-end gap-2 mt-4">
             <Button type="primary" onClick={handleEditButtonClick}>Edit</Button>

@@ -1,19 +1,50 @@
-import React from 'react';
-import { Modal, Form, Input, DatePicker, TimePicker, Button, Select, message } from 'antd';
+import React, { useEffect, useState } from 'react';
+import { Modal, Form, DatePicker, TimePicker, Button, Select, message } from 'antd';
 import moment from 'moment';
-import { updateAppointment } from '../api.services/services'; // Import updateAppointment service
+import { updateAppointment, getPatients, getTreatments } from '../api.services/services'; // Import necessary services
 
 const { Option } = Select;
 
 const EditAppointmentModal = ({ visible, onClose, onEdit, appointment }) => {
   const [form] = Form.useForm();
+  const [patients, setPatients] = useState([]);
+  const [treatments, setTreatments] = useState([]);
+
+  useEffect(() => {
+    if (visible) {
+      fetchPatients();
+      fetchTreatments();
+    }
+  }, [visible]);
+
+  const fetchPatients = async () => {
+    try {
+      const response = await getPatients();
+      if (response.success) {
+        setPatients(response.data);
+      }
+    } catch (error) {
+      message.error('Failed to fetch patients: ' + error.message);
+    }
+  };
+
+  const fetchTreatments = async () => {
+    try {
+      const response = await getTreatments();
+      if (response.success) {
+        setTreatments(response.data);
+      }
+    } catch (error) {
+      message.error('Failed to fetch treatments: ' + error.message);
+    }
+  };
 
   const handleFinish = async (values) => {
     try {
       const updatedData = {
         ...values,
         date: values.date.format('YYYY-MM-DD'),
-        time: values.time.format('HH:mm'),
+        time: values.time.format('HH:mm'), // Convert to 24-hour format
       };
       const response = await updateAppointment(appointment.id, updatedData);
       if (response.success) {
@@ -21,11 +52,16 @@ const EditAppointmentModal = ({ visible, onClose, onEdit, appointment }) => {
         onEdit(response.data);
         onClose();
       } else {
-        message.error('Failed to update appointment');
+        message.error(response.message || 'Failed to update appointment');
       }
     } catch (error) {
       message.error('Failed to update appointment: ' + error.message);
     }
+  };
+
+  // Disable past dates
+  const disabledDate = (current) => {
+    return current && current < moment().startOf('day');
   };
 
   return (
@@ -39,8 +75,8 @@ const EditAppointmentModal = ({ visible, onClose, onEdit, appointment }) => {
         form={form}
         layout="vertical"
         initialValues={{
-          patient: appointment.patient,
-          treatment: appointment.treatment,
+          patient: appointment.patient_id,
+          treatment: appointment.treatment_id,
           date: moment(appointment.date),
           time: moment(appointment.time, 'HH:mm'),
           status: appointment.status,
@@ -50,30 +86,58 @@ const EditAppointmentModal = ({ visible, onClose, onEdit, appointment }) => {
         <Form.Item
           label="Patient"
           name="patient"
-          rules={[{ required: true, message: 'Please enter the patient name' }]}
+          rules={[{ required: true, message: 'Please select a patient' }]}
         >
-          <Input />
+          <Select
+            placeholder="Select a patient"
+            style={{ width: '100%' }}
+            showSearch
+            optionFilterProp="children"
+            filterOption={(input, option) =>
+              option.children.toLowerCase().indexOf(input.toLowerCase()) >= 0
+            }
+          >
+            {patients.map((patient) => (
+              <Option key={patient.id} value={patient.id}>
+                {`${patient.patient_id} - ${patient.name}`}
+              </Option>
+            ))}
+          </Select>
         </Form.Item>
         <Form.Item
           label="Treatment"
           name="treatment"
-          rules={[{ required: true, message: 'Please enter the treatment' }]}
+          rules={[{ required: true, message: 'Please select a treatment' }]}
         >
-          <Input />
+          <Select
+            placeholder="Select a treatment"
+            style={{ width: '100%' }}
+            showSearch
+            optionFilterProp="children"
+            filterOption={(input, option) =>
+              option.children.toLowerCase().indexOf(input.toLowerCase()) >= 0
+            }
+          >
+            {treatments.map((treatment) => (
+              <Option key={treatment.id} value={treatment.id}>
+                {`${treatment.category} - ${treatment.procedure_name}`}
+              </Option>
+            ))}
+          </Select>
         </Form.Item>
         <Form.Item
           label="Date"
           name="date"
           rules={[{ required: true, message: 'Please select the date' }]}
         >
-          <DatePicker style={{ width: '100%' }} />
+          <DatePicker style={{ width: '100%' }} disabledDate={disabledDate} />
         </Form.Item>
         <Form.Item
           label="Time"
           name="time"
           rules={[{ required: true, message: 'Please select the time' }]}
         >
-          <TimePicker style={{ width: '100%' }} format="HH:mm" />
+          <TimePicker style={{ width: '100%' }} format="h:mm a" use12Hours />
         </Form.Item>
         <Form.Item
           label="Status"
@@ -82,6 +146,7 @@ const EditAppointmentModal = ({ visible, onClose, onEdit, appointment }) => {
         >
           <Select>
             <Option value="Confirmed">Confirmed</Option>
+            <Option value="Pending">Pending</Option>
             <Option value="Cancelled">Cancelled</Option>
           </Select>
         </Form.Item>

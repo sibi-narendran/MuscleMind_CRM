@@ -35,5 +35,18 @@ const getUserByEmail = async (email) => {
   return data;
 };
 
-module.exports = { createUser, getUserByEmail };
+const getUserById = async (id) => {
+  const { data, error } = await supabase
+    .from('users')
+    .select('*')
+    .eq('id', id);
+
+  if (error) {
+    console.error("Error fetching user by ID:", error);
+    return null;
+  }
+  return data[0]; // Assuming you want a single user object
+};
+
+module.exports = { createUser, getUserByEmail, getUserById };
 

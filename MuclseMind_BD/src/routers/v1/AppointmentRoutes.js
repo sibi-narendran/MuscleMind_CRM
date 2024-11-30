@@ -1,12 +1,12 @@
 const express = require('express');
 const { addAppointmentController, getAppointmentsController, updateAppointmentController, deleteAppointmentController } = require('../../controller/AppointmentController');
-const { authenticateJWT } = require('../../middleware/authMiddleware');
+const { authenticateJWTUserID } = require('../../middleware/authMiddleware');
 
 const router = express.Router();
 
-router.post('/addAppointment', authenticateJWT, addAppointmentController);
-router.get('/getAppointments', authenticateJWT, getAppointmentsController);
-router.put('/updateAppointment/:id', authenticateJWT, updateAppointmentController);
-router.delete('/deleteAppointment/:id', authenticateJWT, deleteAppointmentController);
+router.post('/addAppointment', authenticateJWTUserID, addAppointmentController);
+router.get('/getAppointments', authenticateJWTUserID, getAppointmentsController);
+router.put('/updateAppointment/:id', authenticateJWTUserID, updateAppointmentController);
+router.delete('/deleteAppointment/:id', authenticateJWTUserID, deleteAppointmentController);
 
 module.exports = router; 
