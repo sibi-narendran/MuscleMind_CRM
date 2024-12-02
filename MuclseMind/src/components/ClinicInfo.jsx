@@ -415,8 +415,9 @@ const ClinicInfo = () => {
         dataSource={teamMembers}
         columns={[
           { title: 'Name', dataIndex: 'name', key: 'name' },
-          { title: 'Qualifications', dataIndex: 'qualifications', key: 'qualifications' },
+          { title: 'Role', dataIndex: 'role', key: 'role' },
           { title: 'Experience', dataIndex: 'experience', key: 'experience' },
+          { title: 'Salary Per Month', dataIndex: 'salary', key: 'salary' },
           {
             title: 'Action',
             key: 'action',
@@ -822,17 +823,20 @@ const ClinicInfo = () => {
       footer={null}
     >
       <Form
-        initialValues={editTeamMemberData || { name: '', qualifications: '', experience: '', image: '' }}
+        initialValues={editTeamMemberData || { name: '', role: '', experience: '', salary: '' }}
         onFinish={handleAddOrEditTeamMember}
         layout="vertical"
       >
         <Form.Item name="name" label="Name" rules={[{ required: true, message: 'Please enter a name!' }]}>
           <Input />
         </Form.Item>
-        <Form.Item name="qualifications" label="Qualifications" rules={[{ required: true, message: 'Please enter qualifications!' }]}>
+        <Form.Item name="role" label="Role" rules={[{ required: true, message: 'Please enter a role!' }]}>
           <Input />
         </Form.Item>
         <Form.Item name="experience" label="Experience" rules={[{ required: true, message: 'Please enter experience!' }]}>
+          <Input />
+        </Form.Item>
+        <Form.Item name="salary" label="Salary Per Month" rules={[{ required: true, message: 'Please enter salary!' }]}>
           <Input />
         </Form.Item>
         <div className="flex justify-end space-x-2">

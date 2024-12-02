@@ -8,6 +8,8 @@ const OperatingHoursRoute = require("./OperatingHoursRoutes.js");
 const TreatmentRoute = require("./TreatmentRoutes.js");
 const MedicationRoute = require("./MedicationRoutes.js");
 const DentalTeamRoute = require("./DentalTeamRoutes.js");
+const StaffRoute = require("./StaffRoutes.js");
+
 const Routes = [
   {
     path: "/user",
@@ -40,6 +42,10 @@ const Routes = [
   {
     path: "/dental-team",
     route: DentalTeamRoute,
+  },
+  {
+    path: "/staff",
+    route: StaffRoute,
   },
 ];
 
