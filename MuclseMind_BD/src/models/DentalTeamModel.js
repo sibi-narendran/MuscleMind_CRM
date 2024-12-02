@@ -10,7 +10,9 @@ const supabase = createClient(supabaseUrl, supabaseKey);
 const createTeamMember = async (memberData) => {
   const { data, error } = await supabase
     .from('dental_team')
-    .insert([memberData]);
+    .insert([{
+      ...memberData,
+    }]);
 
   if (error) {
     console.error("Error creating team member:", error);

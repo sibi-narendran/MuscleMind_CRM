@@ -117,7 +117,7 @@ const Appointments = () => {
   return (
     <div className="p-6 grid grid-cols-1 lg:grid-cols-3 gap-6 dark:bg-boxdark" style={{ height: '100vh' }}>
       {/* Left Side - Appointments List */}
-      <div className="lg:col-span-2 overflow-y-auto" style={{ maxHeight: '100vh' }}>
+      <div className="lg:col-span-2 overflow-y-auto hide-scrollbar" style={{ maxHeight: '100vh' }}>
         <div className="bg-white dark:bg-boxdark rounded-xl shadow-sm border border-gray-100 dark:border-strokedark p-6 mb-6">
           <div className="flex justify-between items-center mb-6">
             <h1 className="text-2xl font-bold text-black dark:text-white">

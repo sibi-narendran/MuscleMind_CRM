@@ -10,3 +10,4 @@ router.put('/editTeamMember/:id', authenticateJWT, editTeamMemberController);
 router.delete('/deleteTeamMember/:id', authenticateJWT, deleteTeamMemberController);
 
 module.exports = router;
+    
