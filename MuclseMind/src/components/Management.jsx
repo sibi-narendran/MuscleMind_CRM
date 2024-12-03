@@ -1,105 +1,80 @@
 import React, { useState, useEffect } from 'react';
 import { Users, Clock, DollarSign, Calendar } from 'lucide-react';
-import axios from 'axios';
-import { Modal, DatePicker, Alert, message,Input, Switch } from 'antd';
+import { Modal, DatePicker, Alert, message, Input, Switch, Select } from 'antd';
 import moment from 'moment';
+import { fetchAttendances, updateAttendanceStatus } from '../api.services/services';
+
+const { Option } = Select;
 
 const Management = () => {
-  const [staff, setStaff] = useState([
-    { id: 1,date: '2023-12-01', name: 'John Doe', role: 'Developer', experience: '5 years', salary: 5000, status: 'Present', day_off: false },
-    { id: 2,date: '2023-12-01', name: 'Jane Doe', role: 'Designer', experience: '3 years', salary: 4000, status: 'Absent', day_off: true },
-    { id: 3,date: '2023-12-02', name: 'Bob Smith', role: 'Manager', experience: '10 years', salary: 7000, status: 'Present', day_off: false },
-    { id: 4,date: '2023-12-02', name: 'Alice Johnson', role: 'Developer', experience: '2 years', salary: 3500, status: 'Present', day_off: false },
-    { id: 5,date: '2023-12-03', name: 'Charlie Brown', role: 'Designer', experience: '4 years', salary: 4000, status: 'Absent', day_off: true },
-  ]);
+  const [staff, setStaff] = useState([]);
   const [showAddModal, setShowAddModal] = useState(false);
   const [selectedMember, setSelectedMember] = useState(null);
-  const [selectedDate, setSelectedDate] = useState(null);
+  const [selectedDate, setSelectedDate] = useState(moment().format('YYYY-MM-DD'));
   const [showAlert, setShowAlert] = useState(false);
   const [alertMessage, setAlertMessage] = useState('');
   const [searchText, setSearchText] = useState('');
 
   useEffect(() => {
-    const fetchStaff = async () => {
-      try {
-        const response = await getTeamMembers();
-        setStaff(response.data);
-      } catch (error) {
-        console.error('Error fetching staff:', error);
-      }
-    };
-
-    fetchStaff();
-  }, []);
-
-  const handleAddStaff = async (newMember) => {
-    try {
-      await axios.post('/api/staff/addStaffMember', newMember);
-      fetchStaff();
-    } catch (error) {
-      console.error('Error adding staff member:', error);
-    }
-  };
-
-  const handleMemberClick = (member) => {
-    setSelectedMember(member);
-  };
+    fetchAttendances(selectedDate)
+      .then(response => {
+        if (response.success) {
+          setStaff(response.data);
+        } else {
+          console.error('Error fetching staff:', response.error);
+        }
+      })
+      .catch(error => {
+        console.error('Error fetching attendances:', error);
+      });
+  }, [selectedDate]);
 
   const handleDateChange = (date, dateString) => {
     setSelectedDate(dateString);
   };
 
-  const handleButtonClick = (messageText) => {
-    Modal.confirm({
-      title: 'Confirm',
-      content: messageText,
-      onOk() {
-        // Handle OK button click
-      },
-      onCancel() {
-        // Handle Cancel button click
-      },
-    });
-  };
   const handleSearchTextChange = (event) => {
     setSearchText(event.target.value);
   };
 
-  // Filtered staff data based on search text and selected date
   const filteredStaff = staff.filter(member => {
     const nameMatches = member.name.toLowerCase().includes(searchText.toLowerCase());
     const dateMatches = selectedDate ? moment(member.date).isSame(moment(selectedDate), 'day') : true;
-    console.log(`Comparing: ${member.date} with ${selectedDate} - Result: ${dateMatches}`);
     return nameMatches && dateMatches;
   });
 
-  // Function to format the title based on the selected date
+  const handleStatusChange = (id, status) => {
+    updateAttendanceStatus(id, status).then(response => {
+      console.log('Update response:', response);
+      fetchAttendances(selectedDate).then(response => {
+        if (response.success) {
+          setStaff(response.data);
+          console.log('Fetched data after updating:', response.data);
+        } else {
+          console.error('Error fetching staff:', response.error);
+        }
+      });
+    }).catch(error => {
+      console.error('Error updating attendance status:', error);
+    });
+  };
+
   const getTitle = () => {
-    if (selectedDate) {
-      return `${moment(selectedDate).format("MMMM Do YYYY")} Attendances`;
-    }
-    return "Today's Attendances";
+    const isToday = moment().format('YYYY-MM-DD') === selectedDate;
+    return isToday ? "Today's Attendances" : `Attendances for ${selectedDate}`;
   };
 
-  // Function to handle status change
-  const handleStatusChange = (id, newStatus) => {
-    // Update logic for changing status
-    console.log(`Status for ${id} changed to ${newStatus}`);
-  };
-
-  // Function to handle remark change
-  const handleRemarkChange = (id, newRemark) => {
-    // Update logic for changing remark
-    console.log(`Remark for ${id} changed to ${newRemark}`);
+  const handleMemberClick = (member) => {
+    setSelectedMember(member);
+    setShowAddModal(true);
   };
 
   return (
     <div className="p-6 dark:bg-boxdark">
       <div className="flex justify-between items-center mb-6">
         <h2 className="text-2xl font-bold">
-          {selectedDate ? `Attendances for ${selectedDate}` : "Today's Attendances"}
+          {getTitle()}
         </h2>
-       
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
@@ -146,7 +121,7 @@ const Management = () => {
               <table className="min-w-full divide-y divide-gray-200 dark:divide-strokedark">
                 <thead>
                   <tr className="bg-gray-50 dark:bg-strokedark">
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-meta-2 uppercase tracking-wider">
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-meta-2 uppercase tracking-wider">
                       Date
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-meta-2 uppercase tracking-wider">
@@ -156,7 +131,7 @@ const Management = () => {
                       Role
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-meta-2 uppercase tracking-wider">
-                      Experience
+                      Date of Joining
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-meta-2 uppercase tracking-wider">
                       Salary
@@ -164,31 +139,23 @@ const Management = () => {
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-meta-2 uppercase tracking-wider">
                       Status
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-meta-2 uppercase tracking-wider">
-                      Day Off
-                    </th>
                   </tr>
                 </thead>
                 <tbody className="bg-white dark:bg-boxdark divide-y divide-gray-200 dark:divide-strokedark">
-                  {filteredStaff.length > 0 ? filteredStaff.map((member) => (
+                  {staff.length > 0 ? staff.map((member) => (
                     <tr key={member.id} className="hover:bg-gray-50 dark:hover:bg-meta-4" onClick={() => handleMemberClick(member)}>
                       <td className="px-6 py-4 whitespace-nowrap">{moment(member.date).format("YYYY-MM-DD")}</td>
                       <td className="px-6 py-4 whitespace-nowrap">{member.name}</td>
                       <td className="px-6 py-4 whitespace-nowrap">{member.role}</td>
-                      <td className="px-6 py-4 whitespace-nowrap">{member.experience}</td>
+                      <td className="px-6 py-4 whitespace-nowrap">{member.doj }</td>
                       <td className="px-6 py-4 whitespace-nowrap">{member.salary}</td>
                       <td className="px-6 py-4 whitespace-nowrap">
-                        <button onClick={() => handleStatusChange(member.id, member.status === 'Present' ? 'Absent' : 'Present')}>
-                          {member.status || 'Pending'}
-                        </button>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <button onClick={() => handleDayOffChange(member.id, !member.day_off)}>
-                          {member.day_off ? 'Day Off' : 'Working'}
+                        <button onClick={() => handleStatusChange(member.id, member.attendance_status === 'Present' ? 'Working' : 'Absent')}>
+                          {member.attendance_status || 'Pending'}
                         </button>
                       </td>
                     </tr>
-                  )) : <tr><td colSpan="2" className="text-center py-4">No data available</td></tr>}
+                  )) : <tr><td colSpan="6" className="text-center py-4">No data available</td></tr>}
                 </tbody>
               </table>
             </div>
@@ -206,31 +173,18 @@ const Management = () => {
           <div className="flex flex-col items-center">
             <p>Role: {selectedMember.role}</p>
             <div className="flex justify-between w-full px-4">
-              <span>Status:</span>
-              <Switch
-                checkedChildren="Present"
-                unCheckedChildren="Absent"
-                checked={selectedMember.status === 'Present'}
-                onChange={() => handleStatusChange(selectedMember.id, selectedMember.status === 'Present' ? 'Absent' : 'Present')}
-              />
+              <span>Attendances:</span>
+              <Select
+                defaultValue={selectedMember.status}
+                style={{ width: 120 }}
+                onChange={(newStatus) => handleStatusChange(selectedMember.id, newStatus)}
+              >
+                <Option value="Working" className='text-meta-3'>Working</Option>
+                <Option value="Day Off" className='text-meta-6'>Day Off</Option>
+                <Option value="Absent" className='text-meta-1'>Absent</Option>
+              </Select>
             </div>
-            <div className="flex justify-between w-full px-4">
-              <span>Remark:</span>
-              <div>
-                <Switch
-                  checkedChildren="Working"
-                  unCheckedChildren="Day Off"
-                  checked={selectedMember.day_off}
-                  onChange={() => handleRemarkChange(selectedMember.id, selectedMember.day_off ? 'Working' : 'Day Off')}
-                />
-                <Switch
-                  checkedChildren="Not Informed"
-                  unCheckedChildren="Informed"
-                  checked={!selectedMember.informed}
-                  onChange={() => handleRemarkChange(selectedMember.id, !selectedMember.informed ? 'Informed' : 'Not Informed')}
-                />
-              </div>
-            </div>
+           
           </div>
         </Modal>
       )}

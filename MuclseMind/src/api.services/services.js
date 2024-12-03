@@ -185,7 +185,7 @@ export const updateOperatingHours = async (data) => {
 // Holidays
 export const addHoliday = async (data) => {
   try {
-    const res = await interceptors.post("v1/holidays", data);
+    const res = await interceptors.post("v1/holidays/addHoliday", data);
     return res.data;
   } catch (error) {
     throw error.response?.data || error;
@@ -194,7 +194,7 @@ export const addHoliday = async (data) => {
 
 export const getHolidays = async () => {
   try {
-    const res = await interceptors.get("v1/holidays");
+    const res = await interceptors.get("v1/holidays/getHolidays");
     return res.data;
   } catch (error) {
     throw error.response?.data || error;
@@ -203,16 +203,16 @@ export const getHolidays = async () => {
 
 export const updateHoliday = async (id, data) => {
   try {
-    const res = await interceptors.put(`v1/holidays/${id}`, data);
+    const res = await interceptors.put(`v1/holidays/updateHoliday/${id}`, data);
     return res.data;
   } catch (error) {
     throw error.response?.data || error;
-  }
+  }ect 
 };
 
 export const deleteHoliday = async (id) => {
   try {
-    const res = await interceptors.delete(`v1/holidays/${id}`);
+    const res = await interceptors.delete(`v1/holidays/deleteHoliday/${id}`);
     return res.data;
   } catch (error) {
     throw error.response?.data || error;
@@ -324,6 +324,24 @@ export const editTeamMember = async (id, data) => {
 export const deleteTeamMember = async (id) => {
   try {
     const res = await interceptors.delete(`v1/dental-team/deleteTeamMember/${id}`);
+    return res.data;
+  } catch (error) {
+    throw error.response?.data || error;
+  }
+};
+
+export const fetchAttendances = async (date) => {
+  try {
+    const res = await interceptors.get(`v1/staff-attendances/attendances/${date}`);
+    return res.data;
+  } catch (error) {
+    throw error.response?.data || error;
+  }
+};
+
+export const updateAttendanceStatus = async (id, status) => {
+  try {
+    const res = await interceptors.put(`v1/staff-attendances/attendance/${id}`, { status });
     return res.data;
   } catch (error) {
     throw error.response?.data || error;

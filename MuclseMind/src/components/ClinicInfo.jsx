@@ -5,6 +5,8 @@ import moment from 'moment';
 import { getOperatingHours, updateOperatingHours,getTreatments, addTreatment, editTreatment, deleteTreatment  } from '../api.services/services';
 import { getMedications, addMedication, editMedication, deleteMedication } from '../api.services/services';
 import { getTeamMembers, addTeamMember, editTeamMember, deleteTeamMember } from '../api.services/services';
+import { addHoliday, getHolidays, updateHoliday, deleteHoliday } from '../api.services/services';
+
 
 const { Option } = Select;
 
@@ -18,6 +20,7 @@ const generateGoogleMapsLink = (address) => {
   const encodedAddress = encodeURIComponent(address);
   return `https://www.google.com/maps/search/?api=1&query=${encodedAddress}`;
 };
+
 
 const ClinicInfo = () => {
   const [clinicData, setClinicData] = useState({
@@ -65,6 +68,7 @@ const ClinicInfo = () => {
   const [editHoliday, setEditHoliday] = useState(null);
   const [editTreatmentData, setEditTreatmentData] = useState(null);
   const [editTeamMemberData, setEditTeamMemberData] = useState(null);
+  
 
   useEffect(() => {
     const fetchOperatingHours = async () => {
@@ -83,6 +87,26 @@ const ClinicInfo = () => {
     fetchOperatingHours();
   }, []);
 
+
+  const fetchHolidays = async () => {
+    try {
+      const response = await getHolidays();
+      if (response.success) {
+        setSpecialHolidays(response.data);
+      } else {
+        message.error('Error fetching holidays');
+      }
+    } catch (error) {
+      message.error('Error fetching holidays');
+    }
+  };
+
+  useEffect(() => {
+    fetchHolidays();
+  }, []);
+
+
+
   const fetchTreatments = async () => {
     try {
       const response = await getTreatments();
@@ -99,6 +123,7 @@ const ClinicInfo = () => {
   useEffect(() => {
     fetchTreatments();
   }, []);
+  
 
   const handleSaveOperatingHours = async (values) => {
     try {
@@ -250,8 +275,18 @@ const ClinicInfo = () => {
   };
 
   const handleEditTeamMember = (member) => {
-    setEditTeamMemberData(member);
-    setIsTeamMemberModalVisible(true);
+    console.log("Received team member data for editing:", member);
+    if (member && member.id) {
+      const formattedMember = {
+        ...member,
+        doj: member.doj ? moment(member.doj, "YYYY-MM-DD") : null
+      };
+      setEditTeamMemberData(formattedMember);
+      setIsTeamMemberModalVisible(true);
+    } else {
+      console.error("Invalid team member data or missing identifier:", member);
+      message.error('Invalid team member data or missing identifier');
+    }
   };
 
   const fetchTeamMembers = async () => {
@@ -273,16 +308,22 @@ const ClinicInfo = () => {
 
   const handleAddOrEditTeamMember = async (values) => {
     try {
+      // Ensure the date is formatted correctly before sending
+      const payload = {
+        ...values,
+        doj: values.doj ? values.doj.format("YYYY-MM-DD") : null
+      };
+
       let response;
       if (editTeamMemberData) {
-        response = await editTeamMember(editTeamMemberData.id, values);
+        response = await editTeamMember(editTeamMemberData.id, payload);
         if (response.success) {
           message.success('Team member updated successfully');
         } else {
           message.error('Failed to update team member');
         }
       } else {
-        response = await addTeamMember(values);
+        response = await addTeamMember(payload);
         if (response.success) {
           message.success('Team member added successfully');
         } else {
@@ -371,38 +412,104 @@ const ClinicInfo = () => {
     </section>
   );
 
-  const renderHolidays = () => (
-    <section className="mb-8">
-      <div className="flex justify-between items-center mb-4">
-        <h2 className="text-2xl font-bold">Holidays</h2>
-        <Button type="primary" icon={<PlusOutlined />} onClick={() => setIsHolidayModalVisible(true)}>
-          Add Holiday
-        </Button>
-      </div>
-      <Table
-        dataSource={specialHolidays.map((holiday, index) => ({
-          key: index,
-          reason: holiday.reason,
-          date: moment(holiday.date).format('MMMM Do, YYYY'),
-        }))}
-        columns={[
-          { title: 'Reason', dataIndex: 'reason', key: 'reason' },
-          { title: 'Date', dataIndex: 'date', key: 'date' },
-          {
-            title: 'Action',
-            key: 'action',
-            render: (_, record) => (
-              <Button type="link" icon={<EditOutlined />} onClick={() => handleEditHoliday(record)}>
-                Edit
-              </Button>
-            ),
-          },
-        ]}
-        pagination={false}
-      />
-    </section>
-  );
+  const handleDeleteHoliday = async () => {
+    if (editHoliday && editHoliday.id) {
+      console.log("Deleting holiday with ID:", editHoliday.id); // Debugging line to check the ID
+      try {
+        const response = await deleteHoliday(editHoliday.id);
+        if (response.success) {
+          message.success('Holiday deleted successfully');
+          fetchHolidays(); // Refresh the list after deletion
+          setIsHolidayModalVisible(false);
+          setEditHoliday(null); // Reset the edit state
+        } else {
+          message.error('Failed to delete holiday');
+        }
+      } catch (error) {
+        message.error('Error deleting holiday');
+      }
+    } else {
+      message.error('No holiday selected or missing ID');
+    }
+  };
+  
+// Assuming you fetch or set `editHoliday` somewhere in your code:
+const handleEditHoliday = (holiday) => {
+  console.log("Received holiday data for editing:", holiday);
+  if (holiday && holiday.id) {
+    const formattedHoliday = {
+      ...holiday,
+      date: holiday.date ? moment(holiday.date, "YYYY-MM-DD") : null
+    };
+    setEditHoliday(formattedHoliday);
+    setIsHolidayModalVisible(true);
+  } else {
+    console.error("Invalid holiday data or missing identifier:", holiday);
+    message.error('Invalid holiday data or missing identifier');
+  }
+};
 
+
+const handleFinish = async (values) => {
+  try {
+    // Ensure the date is formatted correctly before sending
+    const payload = {
+      ...values,
+      date: values.date.format("YYYY-MM-DD")
+    };
+
+    if (editHoliday) {
+      const response = await updateHoliday(editHoliday.id, payload);
+      console.log(response);
+      if (response.success) {
+        message.success('Holiday updated successfully');
+      } else {
+        message.error('Failed to update holiday');
+      }
+    } else {
+      const response = await addHoliday(payload);
+      if (response.success) {
+        message.success('Holiday added successfully');
+      } else {
+        message.error('Failed to add holiday');
+      }
+    }
+    fetchHolidays();
+  } catch (error) {
+    message.error('Error saving holiday');
+  } finally {
+    setEditHoliday(null);
+    setIsHolidayModalVisible(false);
+  }
+};
+
+const renderHolidays = () => (
+  <section className="mb-8">
+    <div className="flex justify-between items-center mb-4">
+      <h2 className="text-2xl font-bold">Holidays</h2>
+      <Button type="primary" onClick={() => setIsHolidayModalVisible(true)}>
+        Add Holiday
+      </Button>
+    </div>
+    <Table
+      dataSource={specialHolidays}
+      columns={[
+        { title: 'Reason', dataIndex: 'name', key: 'name' },
+        { title: 'Date', dataIndex: 'date', key: 'date' },
+        {
+          title: 'Action',
+          key: 'action',
+          render: (_, record) => (
+            <Button type="link" onClick={() => handleEditHoliday(record)}>
+              Edit
+            </Button>
+          ),
+        }
+      ]}
+      pagination={false}
+    />
+  </section>
+);
   const renderDentalTeam = () => (
     <section className="mb-8">
       <div className="flex justify-between items-center mb-4">
@@ -416,7 +523,7 @@ const ClinicInfo = () => {
         columns={[
           { title: 'Name', dataIndex: 'name', key: 'name' },
           { title: 'Role', dataIndex: 'role', key: 'role' },
-          { title: 'Experience', dataIndex: 'experience', key: 'experience' },
+          { title: 'Date of joining', dataIndex: 'doj', key: 'doj' },
           { title: 'Salary Per Month', dataIndex: 'salary', key: 'salary' },
           {
             title: 'Action',
@@ -618,7 +725,16 @@ const ClinicInfo = () => {
   );
 
   // Render the Add/Edit Holiday Modal
-  const renderAddHolidayModal = () => (
+const renderAddHolidayModal = () => {
+  const formattedInitialValues = editHoliday ? {
+    ...editHoliday,
+    date: editHoliday.date ? moment(editHoliday.date, "YYYY-MM-DD") : null
+  } : {
+    name: '',
+    date: null,
+  };
+
+  return (
     <Modal
       title={editHoliday ? "Edit Holiday" : "Add Holiday"}
       visible={isHolidayModalVisible}
@@ -629,28 +745,15 @@ const ClinicInfo = () => {
       footer={null}
     >
       <Form
-        initialValues={editHoliday || { reason: '', date: null }}
-        onFinish={(values) => {
-          if (editHoliday) {
-            // Update existing holiday
-            setSpecialHolidays((prev) =>
-              prev.map((holiday) =>
-                holiday.key === editHoliday.key ? { ...holiday, ...values } : holiday
-              )
-            );
-          } else {
-            // Add new holiday
-            setSpecialHolidays([...specialHolidays, { ...values, key: Date.now() }]);
-          }
-          setEditHoliday(null);
-          setIsHolidayModalVisible(false);
-        }}
+        initialValues={formattedInitialValues}
+        onFinish={handleFinish}
         layout="vertical"
+        key={editHoliday ? editHoliday.id : 'new'}
       >
         <Form.Item
-          name="reason"
-          label="Reason for Holiday"
-          rules={[{ required: true, message: 'Please enter a reason!' }]}
+          name="name"
+          label="Name of Holiday"
+          rules={[{ required: true, message: 'Please enter the name of the holiday!' }]}
         >
           <Input />
         </Form.Item>
@@ -664,10 +767,14 @@ const ClinicInfo = () => {
         <div className="flex justify-end space-x-2">
           <Button onClick={() => setIsHolidayModalVisible(false)}>Cancel</Button>
           <Button type="primary" htmlType="submit">{editHoliday ? "Save" : "Add"}</Button>
+          {editHoliday && (
+            <Button type="danger" onClick={() => handleDeleteHoliday(editHoliday.id)}>Delete</Button>
+          )}
         </div>
       </Form>
     </Modal>
   );
+};
 
   const EditOtherInfoModal = () => (
     <Modal
@@ -822,19 +929,32 @@ const ClinicInfo = () => {
       onCancel={() => setIsTeamMemberModalVisible(false)}
       footer={null}
     >
-      <Form
-        initialValues={editTeamMemberData || { name: '', role: '', experience: '', salary: '' }}
-        onFinish={handleAddOrEditTeamMember}
-        layout="vertical"
-      >
+     <Form
+  initialValues={{
+    name: editTeamMemberData ? editTeamMemberData.name : '',
+    role: editTeamMemberData ? editTeamMemberData.role : '',
+    doj: editTeamMemberData && editTeamMemberData.doj ? moment(editTeamMemberData.doj) : null,
+    salary: editTeamMemberData ? editTeamMemberData.salary : ''
+  }}
+  onFinish={handleAddOrEditTeamMember}
+  layout="vertical"
+>
         <Form.Item name="name" label="Name" rules={[{ required: true, message: 'Please enter a name!' }]}>
           <Input />
         </Form.Item>
         <Form.Item name="role" label="Role" rules={[{ required: true, message: 'Please enter a role!' }]}>
           <Input />
         </Form.Item>
-        <Form.Item name="experience" label="Experience" rules={[{ required: true, message: 'Please enter experience!' }]}>
-          <Input />
+        <Form.Item
+            name="doj"
+          label="Date of Joining"
+          rules={[{ required: true, message: 'Please enter date of joining!' }]}
+        >
+          <DatePicker
+            style={{ width: '100%' }}
+            format="YYYY-MM-DD"
+              placeholder="Select date"
+          />
         </Form.Item>
         <Form.Item name="salary" label="Salary Per Month" rules={[{ required: true, message: 'Please enter salary!' }]}>
           <Input />

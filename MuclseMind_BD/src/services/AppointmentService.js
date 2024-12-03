@@ -1,15 +1,13 @@
 const { createAppointment, getAppointments, getAppointmentsByDate, updateAppointment, deleteAppointment } = require('../models/AppointmentModels');
 const { getOperatingHoursByDay } = require('../models/OperatingHoursModels');
 const { getTreatmentById } = require('../models/TreatmentModel');
+const { findAllHolidays } = require('../models/holidayModel');
 
 const addAppointment = async (appointmentData, doctorId) => {
   const { date, time, treatment_id, treatment_name, patient_id, patient_name } = appointmentData;
   const appointmentTime = new Date(`${date}T${time}:00`);
   const day = appointmentTime.toLocaleString('en-US', { weekday: 'long' }).toLowerCase();
 
-  console.log("Appointment Date:", date);
-  console.log("Appointment Time:", time);
-  console.log("Appointment Start Time:", appointmentTime);
 
   // Check operating hours
   const operatingHoursList = await getOperatingHoursByDay(day);
@@ -56,6 +54,15 @@ const addAppointment = async (appointmentData, doctorId) => {
         throw new Error('Appointment time overlaps with another appointment for the same doctor');
       }
     }
+  }
+
+  // Fetch holidays
+  const holidays = await findAllHolidays();
+  const holidayDates = holidays.map(holiday => holiday.date);
+
+  // Check if appointment date is a holiday
+  if (holidayDates.includes(date)) {
+    throw new Error('Appointment cannot be scheduled on a holiday');
   }
 
   // Use doctorId from the request
