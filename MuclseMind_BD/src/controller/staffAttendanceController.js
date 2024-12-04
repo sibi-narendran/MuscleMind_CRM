@@ -25,14 +25,4 @@ const editAttendanceStatus = async (req, res) => {
     }
 };
 
-const createAttendanceData = async (req, res) => {
-    const userId = req.user.userId;
-    const result = await StaffAttendancesServices.createAttendanceData(userId);
-    if (result.error) {
-        res.status(500).json(createResponse(false, 'Failed to create attendance data', null, result.error));
-    } else {
-        res.status(200).json(createResponse(true, 'Attendance data created successfully', null));
-    }
-};
-
-module.exports = { fetchAttendances, editAttendanceStatus, createAttendanceData };
+module.exports = { fetchAttendances, editAttendanceStatus };

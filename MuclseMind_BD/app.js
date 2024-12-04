@@ -8,6 +8,9 @@ const ApiError = require("./src/utils/apiError");
 const { authLimiter } = require("./src/middlwares/rateLimiter");
 const routes = require('./src/routers/v1')
 
+
+require('./src/utils/cronJobs');
+
 const app = express();
 app.use(express.urlencoded({ extended: true }));
 app.use(bodyParser.urlencoded({ extended: true }));

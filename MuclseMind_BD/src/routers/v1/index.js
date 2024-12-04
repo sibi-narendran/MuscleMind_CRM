@@ -10,6 +10,7 @@ const MedicationRoute = require("./MedicationRoutes.js");
 const DentalTeamRoute = require("./DentalTeamRoutes.js");
 const StaffAttendanceRoute = require("./staffAttendanceRoutes.js");
 const HolidayRoute = require("./holidayRoutes.js");
+const DashboardStatsRoute = require("./dashboardStatsRoutes.js");
 const Routes = [
   {
     path: "/user",
@@ -50,6 +51,10 @@ const Routes = [
   {
     path: "/holidays",
     route: HolidayRoute,
+  },
+  {
+    path: "/dashboard",
+    route: DashboardStatsRoute,
   },
 
 ];

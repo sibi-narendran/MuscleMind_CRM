@@ -41,15 +41,25 @@ const Appointments = () => {
   };
 
   const filterAppointments = () => {
+    let filtered = appointments;
     if (startDate && endDate) {
-      const filtered = appointments.filter((apt) => {
+      filtered = appointments.filter((apt) => {
         const appointmentDate = new Date(apt.date);
         return appointmentDate >= startDate && appointmentDate <= endDate;
       });
-      setFilteredAppointments(filtered);
-    } else {
-      setFilteredAppointments(appointments);
     }
+
+    // Sort appointments to move 'Completed' ones to the bottom
+    filtered.sort((a, b) => {
+      if (a.status === 'Completed' && b.status !== 'Completed') {
+        return 1; // Move 'Completed' down
+      } else if (a.status !== 'Completed' && b.status === 'Completed') {
+        return -1; // Move 'Completed' up
+      }
+      return 0; // Keep original order if both have the same status
+    });
+
+    setFilteredAppointments(filtered);
   };
 
   const handleAddAppointment = async (newAppointment) => {
@@ -161,12 +171,12 @@ const Appointments = () => {
                 <div className="ml-4">
                   <span
                     className={`px-2 py-1 text-xs font-medium rounded-full ${
-                      apt.status === 'Confirmed'
-                        ? 'text-meta-3 bg-green-100 dark:bg-green-900'
-                        : apt.status === 'Pending'
-                        ? 'text-meta-6 bg-yellow-100 dark:bg-yellow-900'
+                      apt.status === 'Scheduled'
+                        ? 'text-meta-6 bg-meta-4 dark:bg-green-900'
+                        : apt.status === 'Completed'
+                        ? 'text-meta-3 bg-meta-4 dark:bg-yellow-900'
                         : apt.status === 'Cancelled'
-                        ? 'text-meta-1 bg-red-100 dark:bg-red-900'
+                        ? 'text-meta-1 bg-meta-4 dark:bg-red-900'
                         : ''
                     }`}
                   >

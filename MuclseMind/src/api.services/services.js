@@ -207,7 +207,7 @@ export const updateHoliday = async (id, data) => {
     return res.data;
   } catch (error) {
     throw error.response?.data || error;
-  }ect 
+  }
 };
 
 export const deleteHoliday = async (id) => {
@@ -342,6 +342,25 @@ export const fetchAttendances = async (date) => {
 export const updateAttendanceStatus = async (id, status) => {
   try {
     const res = await interceptors.put(`v1/staff-attendances/attendance/${id}`, { status });
+    return res.data;
+  } catch (error) {
+    throw error.response?.data || error;
+  }
+};
+
+export const getDashboardStats = async () => {
+  try {
+    const res = await interceptors.get("v1/dashboard/dashboard-stats");
+    return res.data;
+  } catch (error) {
+    throw error.response?.data || error;
+  }
+};
+
+
+export const getDashboardPatientGrowth = async () => {
+  try {
+    const res = await interceptors.get("v1/dashboard/dashboard-patient-growth");
     return res.data;
   } catch (error) {
     throw error.response?.data || error;

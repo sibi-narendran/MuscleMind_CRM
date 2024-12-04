@@ -1,69 +1,133 @@
-import React from 'react';
-import { Users, Calendar, Activity, TrendingUp, PieChart, CheckCircle, LineChart, BarChart } from 'lucide-react';
+import { Users, Calendar, Activity, TrendingUp, PieChart, CheckCircle, LineChart, BarChart, Clock } from 'lucide-react';
 import { Line, Bar } from 'react-chartjs-2';
 import 'chart.js/auto';
+import React, { useEffect, useState } from 'react';
+import { getDashboardStats, getAppointments, getDashboardPatientGrowth } from '../api.services/services';
+import { format } from 'date-fns';
 
 const Dashboard = () => {
-  const stats = [
-    { icon: Calendar, label: "Today's Appointments", value: '12', change: '3 pending' },
-    { icon: Users, label: 'New Patients This Month', value: '30', change: '+10%' },
-    { icon: Activity, label: 'Patient Retention Rate', value: '87%', change: '+4%' },
-    { icon: PieChart, label: 'Expected Revenue', value: '$3,500', change: 'from booked appointments' },
-  ];
+  const [stats, setStats] = useState([]);
+  const [upcomingAppointments, setUpcomingAppointments] = useState([]);
+  const [appointments, setAppointments] = useState([]);
+  const [patientGrowthData, setPatientGrowthData] = useState({
+    labels: [],
+    datasets: [
+      {
+        label: 'Patient Growth',
+        data: [],
+        fill: false,
+        borderColor: 'rgb(75, 192, 192)',
+        tension: 0.1,
+      },
+    ],
+  });
 
-  const upcomingAppointments = [
-    { time: '09:00 AM', patient: 'Sarah Johnson', treatment: 'Dental Cleaning' },
-    { time: '10:30 AM', patient: 'Michael Chen', treatment: 'Root Canal' },
-    { time: '11:00 AM', patient: 'David Brown', treatment: 'Tooth Extraction' },
-    { time: '01:00 PM', patient: 'Emily Davis', treatment: 'Consultation' },
-    { time: '03:00 PM', patient: 'James Wilson', treatment: 'Teeth Whitening' },
-  ];
+  useEffect(() => {
+    const fetchDashboardStats = async () => {
+      try {
+        const response = await getDashboardStats();
+        if (response.success) {
+          setStats([
+            { icon: Calendar, label: "Today's Appointments", value: response.data.todayAppointments || 0, change: '3 pending' },
+            { icon: Users, label: 'New Patients', value: response.data.newPatients || 0, change: '+10%' },
+            { icon: Activity, label: 'Present Staff Members', value: response.data.presentStaff || 0, change: '3 on leave' },
+            { icon: CheckCircle, label: 'Appointments Completed', value: response.data.completedAppointments || 0, change: '+5% from last month' },
+          ]);
+        } else {
+          console.error('Failed to fetch stats:', response.message);
+        }
+      } catch (error) {
+        console.error('Error fetching dashboard stats:', error);
+      }
+    };
+
+    fetchDashboardStats();
+  }, []);
+
+  useEffect(() => {
+    fetchAppointments();
+  }, []);
+
+  useEffect(() => {
+    fetchPatientGrowthData();
+  }, []);
+
+  const fetchAppointments = async () => {
+    try {
+      const response = await getAppointments();
+      if (response.success) {
+        const today = new Date().toISOString().split('T')[0]; // Get today's date in YYYY-MM-DD format
+        const todayAppointments = response.data.filter(apt => apt.date === today);
+        setUpcomingAppointments(todayAppointments);
+        setAppointments(response.data);
+      } else {
+        console.error('Failed to fetch appointments:', response.message);
+      }
+    } catch (error) {
+      console.error('Failed to fetch appointments:', error);
+    }
+  };
+
+  const fetchPatientGrowthData = async () => {
+    try {
+      const response = await getDashboardPatientGrowth();
+      if (response.success) {
+        // Assuming the response data is an object with months as keys and counts as values
+        const sortedMonths = Object.keys(response.data).sort(); // Sort months
+        const counts = sortedMonths.map(month => response.data[month]);
+
+        setPatientGrowthData(prevData => ({
+          ...prevData,
+          labels: sortedMonths,
+          datasets: [{
+            ...prevData.datasets[0],
+            data: counts
+          }]
+        }));
+      } else {
+        console.error('Failed to fetch patient growth data:', response.message);
+      }
+    } catch (error) {
+      console.error('Failed to fetch patient growth data:', error);
+    }
+  };
+
+  // Calculate the counts of each appointment status
+  const statusCounts = appointments.reduce((acc, apt) => {
+    acc[apt.status] = (acc[apt.status] || 0) + 1;
+    return acc;
+  }, {});
+
+  const appointmentsOverviewData = {
+    labels: ['Scheduled', 'Completed', 'Cancelled'],
+    datasets: [
+      {
+        label: 'Appointments Overview',
+        data: [
+          statusCounts['Scheduled'] || 0,
+          statusCounts['Completed'] || 0,
+          statusCounts['Cancelled'] || 0
+        ],
+        backgroundColor: [
+          'rgba(75, 192, 192, 0.2)',
+          'rgba(54, 162, 235, 0.2)',
+          'rgba(255, 99, 132, 0.2)'
+        ],
+        borderColor: [
+          'rgba(75, 192, 192, 1)',
+          'rgba(54, 162, 235, 1)',
+          'rgba(255, 99, 132, 1)'
+        ],
+        borderWidth: 1,
+      },
+    ],
+  };
 
   const predictiveInsights = [
     { patient: 'John Doe', insight: 'Follow-up required', action: 'Schedule follow-up' },
     { patient: 'Jane Smith', insight: 'Churn risk', action: 'Send engagement email' },
     { patient: 'Alice White', insight: 'High treatment success', action: 'Offer loyalty program' },
   ];
-
-  const actionsRequired = [
-    { task: 'Approve Appointment', detail: 'Michael Chen - Root Canal at 10:30 AM' },
-    { task: 'Review Inventory', detail: 'Low on dental impression material' },
-    { task: 'Confirm Follow-Up', detail: 'John Doe - Follow-up needed' },
-  ];
-
-  const patientGrowthData = {
-    labels: ['January', 'February', 'March', 'April', 'May', 'June'],
-    datasets: [
-      {
-        label: 'Patient Growth',
-        data: [30, 45, 50, 70, 80, 95],
-        fill: false,
-        borderColor: 'rgb(75, 192, 192)',
-        tension: 0.1,
-      },
-    ],
-  };
-
-  const appointmentsOverviewData = {
-    labels: ['Scheduled', 'Completed', 'Canceled'],
-    datasets: [
-      {
-        label: 'Appointments Overview',
-        data: [50, 40, 10],
-        backgroundColor: [
-          'rgba(75, 192, 192, 0.2)',
-          'rgba(54, 162, 235, 0.2)',
-          'rgba(255, 99, 132, 0.2)',
-        ],
-        borderColor: [
-          'rgba(75, 192, 192, 1)',
-          'rgba(54, 162, 235, 1)',
-          'rgba(255, 99, 132, 1)',
-        ],
-        borderWidth: 1,
-      },
-    ],
-  };
 
   return (
     <div className="p-6 space-y-6 dark:bg-boxdark">
@@ -89,8 +153,27 @@ const Dashboard = () => {
         })}
       </div>
 
+       {/* Patient Growth Trend and Appointments Overview */}
+       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div className="bg-meta-2 dark:bg-meta-4 dark:border-strokedark dark:text-white p-6 rounded-xl shadow-sm border border-gray-100">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Patient Growth Trend</h2>
+            <LineChart className="h-5 w-5 text-gray-400 dark:text-white" />
+          </div>
+          <Line data={patientGrowthData} />
+        </div>
+
+        <div className="bg-meta-2 dark:bg-meta-4 dark:border-strokedark dark:text-white p-6 rounded-xl shadow-sm border border-gray-100">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Appointments Overview</h2>
+            <BarChart className="h-5 w-5 text-gray-400 dark:text-white" />
+          </div>
+          <Bar data={appointmentsOverviewData} />
+        </div>
+      </div>
+
       {/* Actions Required */}
-      <div className="bg-white dark:bg-meta-4 dark:border-strokedark p-6 rounded-xl shadow-sm border border-gray-100">
+      {/* <div className="bg-white dark:bg-meta-4 dark:border-strokedark p-6 rounded-xl shadow-sm border border-gray-100">
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-lg font-semibold text-black dark:text-white">Actions Required</h2>
           <CheckCircle className="h-5 w-5 text-gray-400 dark:text-white" />
@@ -103,7 +186,7 @@ const Dashboard = () => {
             </div>
           ))}
         </div>
-      </div>
+      </div> */}
 
       {/* Today's Schedule and Predictive Insights */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -113,17 +196,53 @@ const Dashboard = () => {
             <Calendar className="h-5 w-5 text-gray-400 dark:text-white" />
           </div>
           <div className="space-y-4">
-            {upcomingAppointments.map((apt, index) => (
-              <div key={index} className="flex items-center p-3 bg-gray-50 dark:bg-boxdark rounded-lg">
+            {upcomingAppointments.map((apt) => (
+              <div
+                key={apt.id}
+                className="flex items-center p-4 bg-meta-9 dark:bg-boxdark rounded-lg dark:hover:bg-meta-3  mb-4"
+                onClick={() => handleAppointmentClick(apt)}
+              >
                 <div className="flex-shrink-0 w-20">
-                  <p className="text-sm font-medium text-black dark:text-white">{apt.time}</p>
+                  <div className="flex items-center">
+                    <Clock className="h-4 w-4 text-gray-400 dark:text-meta-2 mr-1" />
+                    <span className="text-sm font-medium text-black dark:text-meta-2">
+                      {format(new Date(apt.date), 'MMM dd')} {format(new Date(`1970-01-01T${apt.time}`), 'hh:mm a')}
+                    </span>
+                  </div>
+                </div>
+                <div className='ml-2 mr-4'>
+                  <span className="text-sm font-medium text-black dark:text-meta-2 ml-4">
+                    {apt.appointment_id}
+                  </span>
+                </div>
+                <div className="ml-4 flex-grow">
+                  <p className="text-sm font-medium text-black dark:text-white">
+                    {apt.patient_name}
+                  </p>
+                  <p className="text-sm text-black dark:text-meta-2">
+                    {apt.treatment_name}
+                  </p>
                 </div>
                 <div className="ml-4">
-                  <p className="text-sm font-medium text-black dark:text-white">{apt.patient}</p>
-                  <p className="text-sm text-meta-3 dark:text-white">{apt.treatment}</p>
+                  <span
+                    className={`px-2 py-1 text-xs font-medium rounded-full ${
+                      apt.status === 'Scheduled'
+                        ? 'text-meta-6 bg-meta-4 dark:bg-green-900'
+                        : apt.status === 'Completed'
+                        ? 'text-meta-3 bg-meta-4 dark:bg-yellow-900'
+                        : apt.status === 'Cancelled'
+                        ? 'text-meta-1 bg-meta-4 dark:bg-red-900'
+                        : ''
+                    }`}
+                  >
+                    {apt.status}
+                  </span>
                 </div>
               </div>
             ))}
+            {upcomingAppointments.length === 0 && (
+              <p className="text-sm text-black dark:text-meta-2">No appointments for today.</p>
+            )}
           </div>
         </div>
 
@@ -141,29 +260,12 @@ const Dashboard = () => {
                   <p className="text-sm text-black dark:text-white">{insight.action}</p>
                 </div>
               </div>
-            ))}
+            ))} 
           </div>
         </div>
       </div>
 
-      {/* Patient Growth Trend and Appointments Overview */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <div className="bg-meta-2 dark:bg-meta-4 dark:border-strokedark dark:text-white p-6 rounded-xl shadow-sm border border-gray-100">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Patient Growth Trend</h2>
-            <LineChart className="h-5 w-5 text-gray-400 dark:text-white" />
-          </div>
-          <Line data={patientGrowthData} />
-        </div>
-
-        <div className="bg-meta-2 dark:bg-meta-4 dark:border-strokedark dark:text-white p-6 rounded-xl shadow-sm border border-gray-100">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Appointments Overview</h2>
-            <BarChart className="h-5 w-5 text-gray-400 dark:text-white" />
-          </div>
-          <Bar data={appointmentsOverviewData} />
-        </div>
-      </div>
+     
     </div>
   );
 };

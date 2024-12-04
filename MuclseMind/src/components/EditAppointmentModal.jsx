@@ -41,10 +41,18 @@ const EditAppointmentModal = ({ visible, onClose, onEdit, appointment }) => {
 
   const handleFinish = async (values) => {
     try {
+      // Find the selected treatment and format the treatment name
+      const selectedTreatment = treatments.find(treatment => treatment.id === values.treatment);
+      const treatmentName = selectedTreatment ? `${selectedTreatment.category} - ${selectedTreatment.procedure_name}` : '';
+
       const updatedData = {
-        ...values,
         date: values.date.format('YYYY-MM-DD'),
         time: values.time.format('HH:mm'), // Convert to 24-hour format
+        patient_id: values.patient,
+        patient_name: patients.find(p => p.id === values.patient).name, // Assuming you have patient name in the patients state
+        treatment_id: values.treatment,
+        treatment_name: treatmentName, // Use the formatted treatment name
+        status: values.status // Include status in the payload
       };
       const response = await updateAppointment(appointment.id, updatedData);
       if (response.success) {
@@ -145,8 +153,8 @@ const EditAppointmentModal = ({ visible, onClose, onEdit, appointment }) => {
           rules={[{ required: true, message: 'Please select the status' }]}
         >
           <Select>
-            <Option value="Confirmed">Confirmed</Option>
-            <Option value="Pending">Pending</Option>
+            <Option value="Scheduled">Scheduled</Option>
+            <Option value="Completed">Completed</Option>
             <Option value="Cancelled">Cancelled</Option>
           </Select>
         </Form.Item>

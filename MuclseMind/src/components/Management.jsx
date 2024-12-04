@@ -16,17 +16,16 @@ const Management = () => {
   const [searchText, setSearchText] = useState('');
 
   useEffect(() => {
-    fetchAttendances(selectedDate)
-      .then(response => {
-        if (response.success) {
-          setStaff(response.data);
-        } else {
-          console.error('Error fetching staff:', response.error);
-        }
-      })
-      .catch(error => {
-        console.error('Error fetching attendances:', error);
-      });
+    const fetchData = async () => {
+      const data = await fetchAttendances(selectedDate);
+      if (data.success) {
+        setStaff(data.data);
+      } else {
+        console.error('Error fetching staff:', data.error);
+      }
+    };
+
+    fetchData();
   }, [selectedDate]);
 
   const handleDateChange = (date, dateString) => {
@@ -179,7 +178,7 @@ const Management = () => {
                 style={{ width: 120 }}
                 onChange={(newStatus) => handleStatusChange(selectedMember.id, newStatus)}
               >
-                <Option value="Working" className='text-meta-3'>Working</Option>
+                <Option value="Present" className='text-meta-3'>Present</Option>
                 <Option value="Day Off" className='text-meta-6'>Day Off</Option>
                 <Option value="Absent" className='text-meta-1'>Absent</Option>
               </Select>
