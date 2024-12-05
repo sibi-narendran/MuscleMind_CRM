@@ -1,10 +1,9 @@
-const { getPatientGrowth } = require('../models/DashboardStatsModel');
-const DashboardStatsService = require('../services/DashboardStatsService');
+const { getDashboardStatsModel, getPatientGrowth } = require('../models/DashboardStatsModel');
 const { createResponse } = require('../utils/responseUtil');
 
 const getDashboardStats = async (req, res) => {
   try {
-    const stats = await DashboardStatsService.getDashboardStats(req.user);
+    const stats = await getDashboardStatsModel(req.user);
     res.status(200).json(createResponse(true, 'Stats fetched successfully', stats));
   } catch (error) {
     console.error('Error fetching dashboard stats:', error);
@@ -14,24 +13,21 @@ const getDashboardStats = async (req, res) => {
 
 const getDashboardData = async (req, res) => {
   if (!req.user) {
-    return res.status(401).json({ success: false, message: "User not authenticated" });
+    return res.status(401).json(createResponse(false, "User not authenticated"));
   }
 
   try {
-    const stats = await getDashboardStats(req.user);
-    const patientGrowth = await getPatientGrowth();
+    const stats = await getDashboardStatsModel(req.user);
+    const patientGrowth = await getPatientGrowth(req.user.id);
 
-    res.json({
-      success: true,
-      data: {
-        stats,
-        patientGrowth
-      }
-    });
+    res.status(200).json(createResponse(true, 'Dashboard data fetched successfully', {
+      stats,
+      patientGrowth
+    }));
   } catch (error) {
     console.error('Error fetching dashboard data:', error);
-    res.status(500).json({ success: false, message: error.message });
+    res.status(500).json(createResponse(false, 'Failed to fetch dashboard data', null, error.message));
   }
 };
 
-module.exports = { getDashboardStats,getDashboardData }; 
+module.exports = { getDashboardStats, getDashboardData }; 

@@ -72,23 +72,22 @@ const Dashboard = () => {
     try {
       const response = await getDashboardPatientGrowth();
       if (response.success) {
-        // Assuming the response data is an object with months as keys and counts as values
-        const sortedMonths = Object.keys(response.data).sort(); // Sort months
-        const counts = sortedMonths.map(month => response.data[month]);
+        // Extract months and counts from the response data
+        const months = Object.keys(response.data.patientGrowth).sort();
+        const counts = months.map(month => response.data.patientGrowth[month]);
 
-        setPatientGrowthData(prevData => ({
-          ...prevData,
-          labels: sortedMonths,
+        setPatientGrowthData({
+          labels: months,
           datasets: [{
-            ...prevData.datasets[0],
+            ...patientGrowthData.datasets[0],
             data: counts
           }]
-        }));
+        });
       } else {
         console.error('Failed to fetch patient growth data:', response.message);
       }
     } catch (error) {
-      console.error('Failed to fetch patient growth data:', error);
+      console.error('Error fetching patient growth data:', error);
     }
   };
 
@@ -160,7 +159,7 @@ const Dashboard = () => {
             <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Patient Growth Trend</h2>
             <LineChart className="h-5 w-5 text-gray-400 dark:text-white" />
           </div>
-          <Line data={patientGrowthData} />
+          <Line data={patientGrowthData} options={{ responsive: true }} />
         </div>
 
         <div className="bg-meta-2 dark:bg-meta-4 dark:border-strokedark dark:text-white p-6 rounded-xl shadow-sm border border-gray-100">

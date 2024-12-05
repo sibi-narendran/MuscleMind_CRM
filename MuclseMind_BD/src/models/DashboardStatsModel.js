@@ -1,5 +1,6 @@
 const { createClient } = require("@supabase/supabase-js");
 const dotenv = require("dotenv");
+const { format, startOfWeek } = require('date-fns');
 dotenv.config();
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -7,7 +8,7 @@ const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
 const supabase = createClient(supabaseUrl, supabaseKey);
 
-const getDashboardStats = async (user) => {
+const getDashboardStatsModel = async (user) => {
   const today = new Date().toISOString().split("T")[0];
 
   // Get the first and last day of the current month
@@ -52,22 +53,26 @@ const getDashboardStats = async (user) => {
   };
 };
 
-const getPatientGrowth = async () => {
+const getPatientGrowth = async (userId) => {
   const { data, error } = await supabase
     .from('patients')
     .select('created_at')
+    .eq('user_id', userId)
     .order('created_at', { ascending: true });
 
   if (error) throw new Error(error.message);
 
-  // Group data by month and year
-  const monthlyCounts = data.reduce((acc, { created_at }) => {
-    const monthYear = new Date(created_at).toISOString().substring(0, 7); // YYYY-MM
-    acc[monthYear] = (acc[monthYear] || 0) + 1;
+  // Group data by week of the year
+  const weeklyCounts = data.reduce((acc, { created_at }) => {
+    // Use date-fns to find the start of the week for the created_at date
+    const weekStart = startOfWeek(new Date(created_at), { weekStartsOn: 1 }); // Configured for weeks starting on Monday
+    const weekYear = format(weekStart, 'yyyy-wo'); // Format as 'YYYY-W' (ISO week and year)
+
+    acc[weekYear] = (acc[weekYear] || 0) + 1;
     return acc;
   }, {});
 
-  return monthlyCounts;
+  return weeklyCounts;
 };
 
-module.exports = { getDashboardStats, getPatientGrowth };
+module.exports = { getDashboardStatsModel, getPatientGrowth };
