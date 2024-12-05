@@ -247,7 +247,7 @@ const Patients = () => {
           <Spin size="large" />
         </div>
       ) : (
-        <table {...getTableProps()} className="min-w-full bg-white dark:bg-black rounded-lg shadow-md">
+        <table {...getTableProps()} className="min-w-full bg-white dark:bg-boxdark rounded-lg shadow-md">
           <thead>
             {headerGroups.map(headerGroup => (
               <tr {...headerGroup.getHeaderGroupProps()} className="border-b dark:border-gray-700">

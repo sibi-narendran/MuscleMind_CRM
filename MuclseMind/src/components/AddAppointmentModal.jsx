@@ -3,6 +3,7 @@ import { Modal, Form, Input, Button, DatePicker, TimePicker, Select, message } f
 import moment from 'moment';
 import { getPatients, addAppointment, getTreatments } from '../api.services/services';
 import AddPatientModal from './AddPatientModal';
+import { addPatient } from '../api.services/services';
 
 const { Option } = Select;
 
@@ -76,16 +77,12 @@ const AddAppointmentModal = ({ visible, onClose, onAdd }) => {
 
   const handleAddPatient = async (newPatient) => {
     try {
-      const response = await addPatient(newPatient);
-      if (response.success) {
-        message.success('Patient added successfully');
-        setShowAddPatientModal(false);
-        fetchPatients();
-      } else {
-        message.error('Failed to add patient');
-      }
+      const result = await addPatient(newPatient);
+      console.log('Patient added successfully:', result);
+      setShowAddPatientModal(false);
+      fetchPatients();
     } catch (error) {
-      message.error('Failed to add patient: ' + error.message);
+      console.error('Error adding patient:', error.message);
     }
   };
 

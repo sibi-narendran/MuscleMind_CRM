@@ -40,6 +40,7 @@ const Appointments = () => {
     }
   };
 
+
   const filterAppointments = () => {
     let filtered = appointments;
     if (startDate && endDate) {
@@ -48,17 +49,24 @@ const Appointments = () => {
         return appointmentDate >= startDate && appointmentDate <= endDate;
       });
     }
-
-    // Sort appointments to move 'Completed' ones to the bottom
+  
+    // Enhanced sorting: First by date, then prioritize 'Scheduled', move 'Completed' and 'Cancelled' to the bottom
     filtered.sort((a, b) => {
-      if (a.status === 'Completed' && b.status !== 'Completed') {
-        return 1; // Move 'Completed' down
-      } else if (a.status !== 'Completed' && b.status === 'Completed') {
-        return -1; // Move 'Completed' up
-      }
+      const dateA = new Date(a.date), dateB = new Date(b.date);
+      if (dateA < dateB) return -1;
+      if (dateA > dateB) return 1;
+  
+      // Prioritize 'Scheduled' status
+      if (a.status === 'Scheduled' && b.status !== 'Scheduled') return -1;
+      if (a.status !== 'Scheduled' && b.status === 'Scheduled') return 1;
+  
+      // Deprioritize 'Completed' and 'Cancelled' statuses
+      if ((a.status === 'Completed' || a.status === 'Cancelled') && (b.status !== 'Completed' && b.status !== 'Cancelled')) return 1;
+      if ((a.status !== 'Completed' && a.status !== 'Cancelled') && (b.status === 'Completed' || b.status === 'Cancelled')) return -1;
+  
       return 0; // Keep original order if both have the same status
     });
-
+  
     setFilteredAppointments(filtered);
   };
 
@@ -66,8 +74,6 @@ const Appointments = () => {
     try {
       const response = await addAppointment(newAppointment);
       if (response.success) {
-        fetchAppointments(); // Refetch appointments
-        setShowAddModal(false); // Close modal
         message.success('Appointment added successfully');
       } else {
         message.error(response.message || 'Failed to add appointment');
@@ -75,14 +81,13 @@ const Appointments = () => {
     } catch (error) {
       message.error('Failed to add appointment: ' + error.message);
     }
+    fetchAppointments(); // Refetch appointments regardless of success or failure
   };
 
   const handleEditAppointment = async (updatedAppointment) => {
     try {
       const response = await updateAppointment(updatedAppointment.id, updatedAppointment);
       if (response.success) {
-        fetchAppointments(); // Refetch appointments
-        setShowEditModal(false); // Close modal
         message.success('Appointment updated successfully');
       } else {
         message.error(response.message || 'Failed to update appointment');
@@ -90,6 +95,7 @@ const Appointments = () => {
     } catch (error) {
       message.error('Failed to update appointment: ' + error.message);
     }
+    fetchAppointments(); // Refetch appointments regardless of success or failure
   };
 
   const handleAppointmentClick = (appointment) => {
@@ -101,8 +107,6 @@ const Appointments = () => {
     try {
       const response = await deleteAppointment(selectedAppointment.id);
       if (response.success) {
-        fetchAppointments(); // Refetch appointments
-        setShowDetailsModal(false); // Close modal
         message.success('Appointment deleted successfully');
       } else {
         message.error(response.message || 'Failed to delete appointment');
@@ -110,6 +114,7 @@ const Appointments = () => {
     } catch (error) {
       message.error('Failed to delete appointment: ' + error.message);
     }
+    fetchAppointments(); // Refetch appointments regardless of success or failure
   };
 
   const handleEditButtonClick = () => {

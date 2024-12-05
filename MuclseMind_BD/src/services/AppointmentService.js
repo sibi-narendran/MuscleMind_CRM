@@ -3,7 +3,7 @@ const { getOperatingHoursByDay } = require('../models/OperatingHoursModels');
 const { getTreatmentById } = require('../models/TreatmentModel');
 const { findAllHolidays } = require('../models/holidayModel');
 
-const addAppointment = async (appointmentData, doctorId) => {
+const addAppointment = async (appointmentData, userId) => {
   const { date, time, treatment_id, treatment_name, patient_id, patient_name } = appointmentData;
   const appointmentTime = new Date(`${date}T${time}:00`);
   const day = appointmentTime.toLocaleString('en-US', { weekday: 'long' }).toLowerCase();
@@ -42,7 +42,7 @@ const addAppointment = async (appointmentData, doctorId) => {
   console.log("Existing Appointments on Date:", date, appointments);
 
   for (const apt of appointments) {
-    if (apt.doctor_id === doctorId) { // Check only for the same doctor
+    if (apt.user_id === userId) { // Check only for the same doctor
       const aptStartTime = new Date(`${apt.date}T${apt.time}`);
       const aptEndTime = new Date(aptStartTime.getTime() + apt.duration * 60000);
       console.log("Checking against Appointment ID:", apt.id);
@@ -56,8 +56,8 @@ const addAppointment = async (appointmentData, doctorId) => {
     }
   }
 
-  // Fetch holidays
-  const holidays = await findAllHolidays();
+  // Fetch holidays with user_id
+  const holidays = await findAllHolidays(userId);
   const holidayDates = holidays.map(holiday => holiday.date);
 
   // Check if appointment date is a holiday
@@ -65,15 +65,18 @@ const addAppointment = async (appointmentData, doctorId) => {
     throw new Error('Appointment cannot be scheduled on a holiday');
   }
 
-  // Use doctorId from the request
-  return await createAppointment({ ...appointmentData, duration, doctor_id: doctorId });
+  // Include user_id in the appointment data before creating the appointment
+  return await createAppointment({ ...appointmentData, duration, user_id: userId });
 };
 
-const fetchAppointments = async () => {
-  return await getAppointments();
+const fetchAppointments = async (userId) => {
+  return await getAppointments(userId);
 };
 
 const modifyAppointment = async (id, updatedData) => {
+  if (updatedData.user_id) {
+    delete updatedData.user_id;
+  }
   return await updateAppointment(id, updatedData);
 };
 

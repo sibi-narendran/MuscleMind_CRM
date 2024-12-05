@@ -46,12 +46,16 @@ const createAppointment = async (appointmentData) => {
   return data;
 };
 
-const getAppointments = async () => {
+const getAppointments = async (userId) => {
   const { data, error } = await supabase
     .from('appointments')
-    .select('*');
+    .select('*')
+    .eq('user_id', userId);  // Filter appointments by user_id
 
-  if (error) throw error;
+  if (error) {
+    throw new Error(error.message);
+  }
+
   return data;
 };
 

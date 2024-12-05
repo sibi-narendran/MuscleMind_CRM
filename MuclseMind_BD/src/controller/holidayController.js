@@ -15,9 +15,11 @@ exports.addHoliday = async (req, res) => {
 
 exports.getHolidays = async (req, res) => {
     try {
-        const holidays = await findAllHolidays();
+        const userId = req.user.id;
+        const holidays = await findAllHolidays(userId);
         res.status(200).json(createResponse(true, 'Holidays retrieved successfully', holidays));
     } catch (error) {
+        console.error('Error retrieving holidays:', error);
         res.status(500).json(createResponse(false, 'Error retrieving holidays', error));
     }
 };

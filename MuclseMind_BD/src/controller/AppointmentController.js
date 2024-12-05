@@ -4,21 +4,29 @@ const { createResponse } = require('../utils/responseUtil');
 const addAppointmentController = async (req, res) => {
   try {
     const appointmentData = req.body;
-    const doctor_id = req.user.userId;
-    console.log("DOCTOR ID",doctor_id);
-    const newAppointment = await addAppointment(appointmentData, doctor_id);
-    res.status(201).json(createResponse(true, 'Appointment added successfully', newAppointment));
+    const userId = req.user.userId; // Extract user ID from JWT
+
+    if (!userId) {
+      return res.status(400).json(createResponse(false, 'User ID is undefined'));
+    }
+
+    const result = await addAppointment(appointmentData, userId);
+    res.status(201).json(createResponse(true, 'Appointment added successfully', result));
   } catch (error) {
+    console.error('Failed to add appointment:', error);
     res.status(500).json(createResponse(false, 'Failed to add appointment', null, error.message));
   }
 };
 
 const getAppointmentsController = async (req, res) => {
   try {
-    const appointments = await fetchAppointments();
+    const userId = req.user.userId; // Extracted from JWT
+
+    const appointments = await fetchAppointments(userId);
     res.status(200).json(createResponse(true, 'Appointments retrieved successfully', appointments));
   } catch (error) {
-    res.status(500).json(createResponse(false, 'Failed to retrieve appointments', null, error.message));
+    console.error('Failed to retrieve appointments:', error);
+    res.status(500).json(createResponse(false, 'Failed to retrieve appointments', error.message));
   }
 };
 

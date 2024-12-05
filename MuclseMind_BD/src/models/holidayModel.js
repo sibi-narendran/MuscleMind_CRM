@@ -18,12 +18,17 @@ exports.createHoliday = async ({ name, date, user_id }) => {
   return data;
 };
 
-exports.findAllHolidays = async () => {
-  const { data: rows, error } = await supabase
+exports.findAllHolidays = async (userId) => {
+  const { data, error } = await supabase
     .from('holidays')
-    .select('*');
-  if (error) throw error;
-  return rows;
+    .select('*')
+    .eq('user_id', userId);
+
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  return data;
 };
 
 exports.updateHoliday = async (id, data) => {
