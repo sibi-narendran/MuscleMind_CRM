@@ -2,6 +2,8 @@ require('dotenv').config();
 const { registerUser, sendOtp, verifyOtp, loginUser, sendPasswordResetOtp, resetPassword } = require('../services/UserService.js');
 const { createResponse } = require('../utils/responseUtil.js');
 const jwt = require('jsonwebtoken');
+const { getUserById } = require('../models/UserModels.js');
+
 
 const JWT_SECRET = process.env.JWT_SECRET;
 
@@ -36,7 +38,7 @@ const verifyOtpController = async (req, res) => {
 };
 
 const registerUserController = async (req, res) => {
-  const { username, email, phoneNumber, password, otp } = req.body;
+  const { username, email, phoneNumber,clinicName, password, otp } = req.body;
   try {
     const userData = { username, email, phoneNumber, password, otp, clinicName };
     const newUser = await registerUser(userData);
@@ -80,4 +82,17 @@ const resetPasswordController = async (req, res) => {
   }
 };
 
-module.exports = { sendOtpController, verifyOtpController, registerUserController, loginUserController, forgotPasswordController, resetPasswordController };
+const getUserProfileController = async (req, res) => {
+  try {
+    const user = await getUserById(req.user.id);
+    if (!user) {
+      return res.status(404).json(createResponse(false, 'User not found'));
+    }
+    res.status(200).json(createResponse(true, 'User data fetched successfully', user));
+  } catch (error) {
+    res.status(500).json(createResponse(false, 'Failed to fetch user data', null, error.message));
+  }
+};
+
+
+module.exports = { sendOtpController, verifyOtpController, registerUserController, loginUserController, forgotPasswordController, resetPasswordController,getUserProfileController };

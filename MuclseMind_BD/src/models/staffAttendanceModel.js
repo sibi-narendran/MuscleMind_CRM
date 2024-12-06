@@ -51,8 +51,7 @@ const getAttendances = async (date, userId) => {
   }
 
   // Check if the operating hours status is closed or if the day is a holiday
-  if (operatingHoursData[0].status === 'closed' || holidayData.some(holiday => moment(holiday.date).isSame(moment(date), 'day'))) {
-    return { message: 'The clinic is closed today.' };
+  if (operatingHoursData && operatingHoursData.length > 0 && operatingHoursData[0].status === 'closed' || holidayData.some(holiday => moment(holiday.date).isSame(moment(date), 'day'))) {    return { message: 'The clinic is closed today.' };
   }
 
   // Create attendance data for each staff member if it doesn't exist

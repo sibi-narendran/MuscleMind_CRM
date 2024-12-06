@@ -1,7 +1,5 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import RandomImageGrid from "../components/RandomImageGrid";
-import { useBreakpoint } from "../customHooks";
 import { message } from "antd";
 import { Formik, Form, Field, ErrorMessage } from "formik";
 import * as Yup from "yup";
@@ -12,7 +10,6 @@ const { Option } = Select;
 
 const CreateAccount = () => {
   const navigate = useNavigate();
-  const currentBreakPoint = useBreakpoint();
   const [loading, setLoading] = useState(false);
   const [isEmailVerified, setIsEmailVerified] = useState(false);
   const [otpSent, setOtpSent] = useState(false);
@@ -105,6 +102,7 @@ const CreateAccount = () => {
       const response = await userRegister({
         username: values.username,
         email: values.email,
+        clinicName:values.clinicName,
         phoneNumber: values.phoneNumber,
         password: values.password,
         otp: otp.join(""),
@@ -125,11 +123,7 @@ const CreateAccount = () => {
 
   return (
     <div className="relative w-full h-screen flex items-center justify-center bg-gray-100">
-      {currentBreakPoint !== "sm" && (
-        <div className="absolute inset-0 z-0">
-          <RandomImageGrid />
-        </div>
-      )}
+    
       <div className="relative z-10 w-full max-w-md p-8 space-y-6 bg-white rounded shadow-md">
         <h2 className="text-2xl font-bold text-center text-gray-900">
           Create Account

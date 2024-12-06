@@ -9,7 +9,11 @@ const fetchAttendances = async (req, res) => {
     if (result.error) {
         res.status(500).json(createResponse(false, 'Failed to fetch attendances', null, result.error));
     } else {
-        res.status(200).json(createResponse(true, 'Attendances fetched successfully', result.data));
+        if (result.data && result.data.length > 0) {
+            res.status(200).json(createResponse(true, 'Attendances fetched successfully', result.data));
+        } else {
+            res.status(200).json(createResponse(true, 'No attendances data for the given date', []));
+        }
     }
 };
 
