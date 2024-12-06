@@ -8,11 +8,11 @@ const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 const supabase = createClient(supabaseUrl, supabaseKey);
 
 const createUser = async (userData) => {
-  const { username, email, phoneNumber, password } = userData;
+  const { username, email, phoneNumber, password,clinicName } = userData;
 
   const { data, error } = await supabase
     .from('users')
-    .insert([{ username, email, phoneNumber, password }]);
+    .insert([{ username, email, phoneNumber, password,clinicName }]);
 
   if (error) {
     console.error("Error creating user:", error);

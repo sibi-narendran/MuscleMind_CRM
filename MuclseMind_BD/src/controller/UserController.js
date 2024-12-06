@@ -38,7 +38,7 @@ const verifyOtpController = async (req, res) => {
 const registerUserController = async (req, res) => {
   const { username, email, phoneNumber, password, otp } = req.body;
   try {
-    const userData = { username, email, phoneNumber, password, otp };
+    const userData = { username, email, phoneNumber, password, otp, clinicName };
     const newUser = await registerUser(userData);
     
     res.json(createResponse(true, 'User registered successfully', newUser, null, 201));

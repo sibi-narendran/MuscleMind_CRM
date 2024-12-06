@@ -1,6 +1,6 @@
 const model = require('../models/staffAttendanceModel');
 const { createResponse } = require('../utils/responseUtil');
-const StaffAttendancesServices = require('../services/StaffAttendancesServices');
+const { fetchEmployeeAttendance } = require('../models/staffAttendanceModel');
 
 const fetchAttendances = async (req, res) => {
     const { date } = req.params;
@@ -19,10 +19,33 @@ const editAttendanceStatus = async (req, res) => {
     const userId = req.user.userId;
     const result = await model.updateAttendanceStatus(id, status, userId);
     if (result.error) {
-        res.status(500).send(result.error);
+        res.status(500).json(createResponse(false, 'Failed to update attendance status', null, result.error));
     } else {
-        res.status(200).send(result.data);
+        res.status(200).json(createResponse(true, 'Attendance status updated successfully', result.data));
     }
 };
 
-module.exports = { fetchAttendances, editAttendanceStatus };
+const getEmployeeAttendance = async (req, res) => {
+    const dentalTeamId = req.params.dental_team_id;  // Corrected to match the route parameter
+    const userId = req.user.userId;
+
+    console.log("Dental Team ID:", dentalTeamId);
+    console.log("User ID:", userId);
+
+    try {
+        const data = await fetchEmployeeAttendance(dentalTeamId, userId);
+        if (data.length === 0) {
+            res.status(404).json({ success: false, message: 'No attendance records found' });
+        } else {
+            res.status(200).json({ success: true, data: data });
+        }
+    } catch (error) {
+        console.error('Error fetching attendance data:', error);
+        res.status(500).json({ success: false, message: 'Failed to fetch attendance data' });
+    }
+};
+
+
+
+
+module.exports = { fetchAttendances, editAttendanceStatus, getEmployeeAttendance };

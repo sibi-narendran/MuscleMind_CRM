@@ -10,7 +10,7 @@ const Clinic = lazy(() => import('../components/ClinicInfo'));
 const Login = lazy(() => import('../components/login'));
 const createAccount = lazy(() => import('../components/CreateAccount'));
 const ForgotPassword = lazy(() => import('../components/ForgotPassword'));
-const MyProfile = lazy(() => import('../components/myprofile'));
+const MyProfile = lazy(() => import('../components/Profile'));
 const coreRoutes = [
   { path: '/', title: 'Login', component: Login },
   { path: '/dashboard', title: 'Dashboard', component: Dashboard },
