@@ -1,4 +1,5 @@
 import interceptors from "../interceptors/axios";
+import axios from "axios";
 
 // User authentication services
 export const userLogin = async (data) => {
@@ -361,6 +362,25 @@ export const getDashboardStats = async () => {
 export const getDashboardPatientGrowth = async () => {
   try {
     const res = await interceptors.get("v1/dashboard/dashboard-patient-growth");
+    return res.data;
+  } catch (error) {
+    throw error.response?.data || error;
+  }
+};
+
+export const fetchEmployeeAttendance = async (dentalTeamId) => {
+  console.log("Fetching attendance data for ID:", dentalTeamId);
+  try {
+    const response = await interceptors.get(`v1/staff-attendances/monthly-attendance/${dentalTeamId}`);
+    return response.data;
+  } catch (error) {
+    throw error;
+  }
+};
+
+export const getUserProfile = async () => {
+  try {
+    const res = await interceptors.get("v1/user/profile");
     return res.data;
   } catch (error) {
     throw error.response?.data || error;

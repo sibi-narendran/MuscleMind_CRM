@@ -5,6 +5,7 @@ import { Toaster } from 'react-hot-toast';
 import routes from './routes';
 import Login from './components/login';
 import CreateAccount from './components/CreateAccount';
+import ForgotPassword from './components/ForgotPassword';
 
 const DefaultLayout = lazy(() => import('./layout/DefaultLayout'));
 
@@ -30,6 +31,14 @@ function App() {
           element={
             <Suspense fallback={<div>Loading...</div>}>
             <CreateAccount/>
+            </Suspense>
+          }
+        />
+            <Route
+          path="/forgot-password"
+          element={
+            <Suspense fallback={<div>Loading...</div>}>
+            <ForgotPassword/>
             </Suspense>
           }
         />

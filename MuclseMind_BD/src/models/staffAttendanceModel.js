@@ -51,8 +51,7 @@ const getAttendances = async (date, userId) => {
   }
 
   // Check if the operating hours status is closed or if the day is a holiday
-  if (operatingHoursData[0].status === 'closed' || holidayData.some(holiday => moment(holiday.date).isSame(moment(date), 'day'))) {
-    return { message: 'The clinic is closed today.' };
+  if (operatingHoursData && operatingHoursData.length > 0 && operatingHoursData[0].status === 'closed' || holidayData.some(holiday => moment(holiday.date).isSame(moment(date), 'day'))) {    return { message: 'The clinic is closed today.' };
   }
 
   // Create attendance data for each staff member if it doesn't exist
@@ -87,4 +86,32 @@ const updateAttendanceStatus = async (id, status, userId) => {
     return { data, error };
 };
 
-module.exports = { getAttendances, updateAttendanceStatus };
+const fetchEmployeeAttendance = async (dental_team_id, user_id) => {
+  const today = new Date();
+  const startOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
+  const endOfMonth = new Date(today.getFullYear(), today.getMonth() + 1, 0);
+
+  try {
+    const { data, error } = await supabase
+      .from('staff_attendances')
+      .select('*')
+      .eq('dental_team_id', dental_team_id)
+      .eq('user_id', user_id)  // Ensure that the data fetched is specific to the user
+      .gte('date', startOfMonth.toISOString().split('T')[0])
+      .lte('date', endOfMonth.toISOString().split('T')[0]);
+
+    if (error) {
+      console.error('Error fetching monthly attendance data:', error);
+      throw new Error('Failed to fetch monthly attendance data');
+    }
+
+    return data;
+  } catch (error) {
+    console.error('Error during fetching monthly attendance data:', error.message);
+    throw new Error('Error in fetching monthly attendance data');
+  }
+};
+
+
+
+module.exports = { getAttendances, updateAttendanceStatus, fetchEmployeeAttendance };

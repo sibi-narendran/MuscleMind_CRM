@@ -40,7 +40,6 @@ const Appointments = () => {
     }
   };
 
-
   const filterAppointments = () => {
     let filtered = appointments;
     if (startDate && endDate) {
@@ -50,21 +49,22 @@ const Appointments = () => {
       });
     }
   
-    // Enhanced sorting: First by date, then prioritize 'Scheduled', move 'Completed' and 'Cancelled' to the bottom
+    // Enhanced sorting: First by status ('Scheduled' first, 'Completed' last), then by date
     filtered.sort((a, b) => {
-      const dateA = new Date(a.date), dateB = new Date(b.date);
-      if (dateA < dateB) return -1;
-      if (dateA > dateB) return 1;
-  
       // Prioritize 'Scheduled' status
       if (a.status === 'Scheduled' && b.status !== 'Scheduled') return -1;
       if (a.status !== 'Scheduled' && b.status === 'Scheduled') return 1;
   
-      // Deprioritize 'Completed' and 'Cancelled' statuses
-      if ((a.status === 'Completed' || a.status === 'Cancelled') && (b.status !== 'Completed' && b.status !== 'Cancelled')) return 1;
-      if ((a.status !== 'Completed' && a.status !== 'Cancelled') && (b.status === 'Completed' || b.status === 'Cancelled')) return -1;
+      // Deprioritize 'Completed' status
+      if (a.status === 'Completed' && b.status !== 'Completed') return 1;
+      if (a.status !== 'Completed' && b.status === 'Completed') return -1;
   
-      return 0; // Keep original order if both have the same status
+      // If statuses are the same, sort by date
+      const dateA = new Date(a.date), dateB = new Date(b.date);
+      if (dateA < dateB) return -1;
+      if (dateA > dateB) return 1;
+  
+      return 0; // Keep original order if both have the same status and date
     });
   
     setFilteredAppointments(filtered);

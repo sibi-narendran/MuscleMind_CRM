@@ -1,14 +1,27 @@
 import { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { FaUser, FaAddressBook, FaCog } from 'react-icons/fa'; 
-import UserOne from '../assets/user/user-01.png';
+import UserOne from '../Images/Profile.jpg';
 import { Lock } from 'lucide-react';
+import { getUserProfile } from '../api.services/services';
 
 const DropdownUser = () => {
   const [dropdownOpen, setDropdownOpen] = useState(false);
 
   const trigger = useRef(null);
   const dropdown = useRef(null);
+
+  const [user, setUser] = useState(null);
+
+  useEffect(() => {
+    const fetchUserProfile = async () => {
+      const userProfile = await getUserProfile();
+      setUser(userProfile.data);
+    };
+
+    fetchUserProfile();
+  }, []);
+
 
   useEffect(() => {
     const clickHandler = ({ target }) => {
@@ -44,13 +57,13 @@ const DropdownUser = () => {
       >
         <span className="hidden text-right lg:block">
           <span className="block text-sm font-medium text-black dark:text-white">
-            Vicky S
+          {user?.username}
           </span>
-          <span className="block text-xs">CRM</span>
+          <span className="block text-xs">{user?.clinicName}</span>
         </span>
 
         <span className="h-12 w-12 rounded-full">
-          <img src={UserOne} alt="User" />
+          <img src={UserOne} alt="User" className='h-12 w-12 rounded-full' />
         </span>
 
         <svg
@@ -99,7 +112,7 @@ const DropdownUser = () => {
           </li>
           <li>
             <Link
-              to="#"
+              to="/settings"
               className="flex items-center gap-3.5 text-sm font-medium duration-300 ease-in-out hover:text-primary lg:text-base"
             >
               <FaCog className="text-lg" />

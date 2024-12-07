@@ -1,13 +1,11 @@
 import React, { useState } from "react";
-import RandomImageGrid from "../components/RandomImageGrid";
 import { useNavigate } from "react-router-dom";
-import { useBreakpoint } from '../customHooks';
 import { message } from 'antd';
 import Loader from '../styles/Loader';
 import { sendPasswordResetOtp, resetPassword } from '../api.services/services';
+import cover from '../Images/background.jpg'
 
 const ForgotPassword = () => {
-  const currentBreakPoint = useBreakpoint();
   const navigate = useNavigate();
   const [email, setEmail] = useState('');
   const [otp, setOtp] = useState('');
@@ -56,19 +54,22 @@ const ForgotPassword = () => {
   };
 
   return (
-    <div className="w-full h-screen overflow-hidden mx-auto font-roboto bg-[#FCFCFC]" style={{ userSelect: "none" }}>
-      {loading && (
-        <div className="fixed inset-0 flex items-center justify-center z-50 bg-white bg-opacity-75">
+    <div 
+    className="w-full h-screen overflow-hidden mx-auto font-roboto bg-[#FCFCFC] flex items-center justify-end"     style={{ 
+      userSelect: "none",
+      backgroundImage: `url(${cover})`, 
+   
+   
+      backgroundPosition: "center",
+
+    }}
+  >      {loading && (
+        <div className="fixed inset-0 flex items-center justify-center z-50 backdrop-blur">
           <Loader />
         </div>
       )}
-      <div className="relative grid grid-rows-1 grid-cols-1 min-h-[85vh]">
-        {currentBreakPoint !== "sm" && (
-          <div className="row-start-1 col-start-1 z-0">
-            <RandomImageGrid />
-          </div>
-        )}
-        <div className="row-start-1 col-start-1 z-10 flex flex-col justify-center items-center gap-5">
+    <div className="relative grid grid-rows-1 grid-cols-1 min-h-[85vh] w-1/2 ">
+    <div className="row-start-1 col-start-1 z-10 flex flex-col justify-center items-center gap-5 ">
           <div className="flex min-h-full flex-1 flex-col justify-center px-6 py-12 lg:px-8">
             <div className="sm:mx-auto sm:w-full sm:max-w-sm">
               <img className="mx-auto h-10 w-auto" src="https://tailwindui.com/plus/img/logos/mark.svg?color=indigo&shade=600" alt="Your Company" />

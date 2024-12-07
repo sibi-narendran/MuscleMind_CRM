@@ -28,11 +28,12 @@ const getDashboardStatsModel = async (user) => {
     .gte("created_at", firstDayOfMonth)
     .lt("created_at", firstDayOfNextMonth)
     .eq("user_id", user.id);
-  const presentStaffResponse = await supabase
+    const presentStaffResponse = await supabase
     .from("staff_attendances")
     .select("id")
     .eq("attendance_status", "Present")
-    .eq("user_id", user.id);
+    .eq("user_id", user.id)
+    .eq("date", today);
   const completedAppointmentsResponse = await supabase
     .from("appointments")
     .select("id")
