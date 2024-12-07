@@ -11,6 +11,7 @@ const Login = lazy(() => import('../components/login'));
 const createAccount = lazy(() => import('../components/CreateAccount'));
 const ForgotPassword = lazy(() => import('../components/ForgotPassword'));
 const MyProfile = lazy(() => import('../components/myprofile'));
+const Prescriptions = lazy(() => import('../components/prescriptions'));
 const coreRoutes = [
   { path: '/', title: 'Login', component: Login },
   { path: '/dashboard', title: 'Dashboard', component: Dashboard },
@@ -19,6 +20,7 @@ const coreRoutes = [
   { path: '/billing', title: 'Billing', component: Billing },
   { path: '/management', title: 'Management', component: Management },
   { path: '/reminders', title: 'Reminders', component: Reminders },
+  { path: '/prescriptions', title: 'Prescriptions', component: Prescriptions },
   { path: '/clinic', title: 'Clinic', component: Clinic },
   { path: '/create-account', title: 'Clinic', component: createAccount },
   { path: '/forgot-password', title: 'Forgot Password', component: ForgotPassword },

@@ -3,7 +3,7 @@ import { NavLink, useLocation } from 'react-router-dom';
 import Logo from '../assets/logo/logo.png';
 import { FaTachometerAlt, FaTable, FaArrowLeft } from 'react-icons/fa'; 
 import SidebarLinkGroup from './SidebarLinkGroup';
-import { Bell, Briefcase, Calendar, Receipt, Users, Stethoscope } from 'lucide-react';
+import { Bell, Briefcase, Calendar, Receipt, Users, Stethoscope, BellDot } from 'lucide-react';
 
 const Sidebar = ({ sidebarOpen, setSidebarOpen }) => {
   const location = useLocation();
@@ -59,6 +59,7 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }) => {
     { id: 'billing', icon: Receipt, label: 'Billing' },
     { id: 'management', icon: Briefcase, label: 'Management' },
     { id: 'reminders', icon: Bell, label: 'Reminders' },
+    { id: 'prescriptions', icon: BellDot, label: 'Prescriptions' },
   ];
 
   return (
