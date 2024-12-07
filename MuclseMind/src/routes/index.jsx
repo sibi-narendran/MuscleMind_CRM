@@ -10,7 +10,7 @@ const Clinic = lazy(() => import('../components/ClinicInfo'));
 const Login = lazy(() => import('../components/login'));
 const createAccount = lazy(() => import('../components/CreateAccount'));
 const ForgotPassword = lazy(() => import('../components/ForgotPassword'));
-const MyProfile = lazy(() => import('../components/myprofile'));
+const MyProfile = lazy(() => import('../components/Profile'));
 const Prescriptions = lazy(() => import('../components/prescriptions'));
 const Settings = lazy(() => import('../components/Settings'));
 

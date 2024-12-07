@@ -1,30 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { DollarSign, Download, Filter } from 'lucide-react';
-import { createClient } from '@supabase/supabase-js'; // Import Supabase client
 
-const supabaseUrl = 'https://your-supabase-url.supabase.co';
-const supabaseAnonKey = 'your-anon-key';
-const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
 const Billing = () => {
   const [appointments, setAppointments] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
 
-  useEffect(() => {
-    const fetchAppointments = async () => {
-      const { data, error } = await supabase
-        .from('appointments')
-        .select('treatment_name, patient_name, date, status, total_amount');
-
-      if (error) {
-        console.error('Error fetching appointments:', error);
-      } else {
-        setAppointments(data);
-      }
-    };
-
-    fetchAppointments();
-  }, []);
 
   const handleAppointmentStatusChange = (index, newStatus) => {
     setAppointments((prevAppointments) =>
