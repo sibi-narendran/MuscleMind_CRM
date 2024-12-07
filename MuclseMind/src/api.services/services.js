@@ -386,3 +386,41 @@ export const getUserProfile = async () => {
     throw error.response?.data || error;
   }
 };
+
+// Billing services
+export const getBillings = async () => {
+  try {
+    const res = await interceptors.get("v1/billing/get-billing");
+    return res.data;
+  } catch (error) {
+    throw error.response?.data || error;
+  }
+};
+
+export const createBilling = async (data) => {
+  try {
+    const res = await interceptors.post("v1/billing/add-billing", data);
+    return res.data;
+  } catch (error) {
+    throw error.response?.data || error;
+  }
+};
+
+export const updateBilling = async (id, data) => {
+  try {
+    const res = await interceptors.put(`v1/billing/update-billing/${id}`, data);
+    return res.data;
+  } catch (error) {
+    throw error.response?.data || error;
+  }
+};
+
+export const deleteBilling = async (id) => {
+  try {
+    const res = await interceptors.delete(`v1/billing/delete-billing/${id}`);
+    return res.data;
+  } catch (error) {
+    throw error.response?.data || error;
+  }
+};
+

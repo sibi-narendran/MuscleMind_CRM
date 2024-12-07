@@ -62,13 +62,21 @@
      return data;
    };
 
-   const getTreatmentById = async (id) => {
+   const getTreatmentById = async (treatment_id) => {
      const { data, error } = await supabase
        .from('treatments')
        .select('*')
-       .eq('id', id);
+       .eq('treatment_id', treatment_id);
 
-     if (error) throw error;
+     if (error) {
+       console.error("Error fetching treatment details:", error);
+       throw new Error('Failed to fetch treatment details');
+     }
+
+     if (!data || data.length === 0) {
+       throw new Error('No treatment found with the given ID');
+     }
+
      return data;
    };
 

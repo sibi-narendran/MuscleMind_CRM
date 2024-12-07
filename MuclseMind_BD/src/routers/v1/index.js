@@ -11,6 +11,7 @@ const DentalTeamRoute = require("./DentalTeamRoutes.js");
 const StaffAttendanceRoute = require("./staffAttendanceRoutes.js");
 const HolidayRoute = require("./holidayRoutes.js");
 const DashboardStatsRoute = require("./dashboardStatsRoutes.js");
+const BillingRoute = require("./billingRoutes.js");
 const Routes = [
   {
     path: "/user",
@@ -56,7 +57,10 @@ const Routes = [
     path: "/dashboard",
     route: DashboardStatsRoute,
   },
-
+  {
+    path: "/billing",
+    route: BillingRoute,
+  },
 ];
 
 Routes.forEach((route) => {

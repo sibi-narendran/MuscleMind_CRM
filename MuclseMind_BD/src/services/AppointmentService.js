@@ -5,6 +5,8 @@ const { findAllHolidays } = require('../models/holidayModel');
 
 const addAppointment = async (appointmentData, userId) => {
   const { date, time, treatment_id, treatment_name, patient_id, patient_name } = appointmentData;
+  console.log("Appointment Data:", appointmentData);
+  console.log("Treatment ID:", treatment_id);
   const appointmentTime = new Date(`${date}T${time}:00`);
   const day = appointmentTime.toLocaleString('en-US', { weekday: 'long' }).toLowerCase();
 
@@ -65,8 +67,8 @@ const addAppointment = async (appointmentData, userId) => {
     throw new Error('Appointment cannot be scheduled on a holiday');
   }
 
-  // Include user_id in the appointment data before creating the appointment
-  return await createAppointment({ ...appointmentData, duration, user_id: userId });
+  // Include user_id and treatment_name in the appointment data before creating the appointment
+  return await createAppointment({ ...appointmentData, duration, user_id: userId, treatment_name });
 };
 
 const fetchAppointments = async (userId) => {

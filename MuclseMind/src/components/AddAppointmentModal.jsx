@@ -46,7 +46,7 @@ const AddAppointmentModal = ({ visible, onClose, onAdd }) => {
       const selectedPatient = patients.find(patient => patient.id === values.patient);
       const patientName = selectedPatient ? selectedPatient.name : '';
 
-      const selectedTreatment = treatments.find(treatment => treatment.id === values.treatment);
+      const selectedTreatment = treatments.find(treatment => treatment.treatment_id === values.treatment);
       const treatmentName = selectedTreatment ? `${selectedTreatment.category} - ${selectedTreatment.procedure_name}` : '';
 
       const appointmentData = {
@@ -71,7 +71,7 @@ const AddAppointmentModal = ({ visible, onClose, onAdd }) => {
         message.error(response.message);
       }
     } catch (error) {
-      message.error(error.error);
+      message.error(error.message);
     }
   };
 
@@ -134,11 +134,14 @@ const AddAppointmentModal = ({ visible, onClose, onAdd }) => {
                 </>
               )}
             >
-              {patients.map((patient) => (
+              {patients.slice(0, 3).map((patient) => (
                 <Option key={patient.id} value={patient.id}>
                   {`${patient.patient_id} - ${patient.name}`}
                 </Option>
               ))}
+              {patients.length > 3 && (
+                <Option disabled>--- More available on search ---</Option>
+              )}
             </Select>
           </Form.Item>
           <Form.Item
@@ -156,7 +159,7 @@ const AddAppointmentModal = ({ visible, onClose, onAdd }) => {
               }
             >
               {treatments.map((treatment) => (
-                <Option key={treatment.id} value={treatment.id}>
+                <Option key={treatment.treatment_id} value={treatment.treatment_id}>
                   {`${treatment.category} - ${treatment.procedure_name}`}
                 </Option>
               ))}

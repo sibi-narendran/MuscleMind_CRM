@@ -89,13 +89,14 @@ const Appointments = () => {
       const response = await updateAppointment(updatedAppointment.id, updatedAppointment);
       if (response.success) {
         message.success('Appointment updated successfully');
+        fetchAppointments(); // Refetch appointments to update the list
       } else {
         message.error(response.message || 'Failed to update appointment');
       }
     } catch (error) {
       message.error('Failed to update appointment: ' + error.message);
     }
-    fetchAppointments(); // Refetch appointments regardless of success or failure
+    fetchAppointments();
   };
 
   const handleAppointmentClick = (appointment) => {

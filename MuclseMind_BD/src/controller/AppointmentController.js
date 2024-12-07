@@ -4,11 +4,10 @@ const { createResponse } = require('../utils/responseUtil');
 const addAppointmentController = async (req, res) => {
   try {
     const appointmentData = req.body;
+    console.log(appointmentData);
     const userId = req.user.userId; // Extract user ID from JWT
 
-    if (!userId) {
-      return res.status(400).json(createResponse(false, 'User ID is undefined'));
-    }
+  
 
     const result = await addAppointment(appointmentData, userId);
     res.status(201).json(createResponse(true, 'Appointment added successfully', result));

@@ -41,19 +41,19 @@ const EditAppointmentModal = ({ visible, onClose, onEdit, appointment }) => {
 
   const handleFinish = async (values) => {
     try {
-      // Find the selected treatment and format the treatment name
-      const selectedTreatment = treatments.find(treatment => treatment.id === values.treatment);
+      const selectedTreatment = treatments.find(treatment => treatment.treatment_id === values.treatment);
       const treatmentName = selectedTreatment ? `${selectedTreatment.category} - ${selectedTreatment.procedure_name}` : '';
 
       const updatedData = {
         date: values.date.format('YYYY-MM-DD'),
-        time: values.time.format('HH:mm'), // Convert to 24-hour format
+        time: values.time.format('HH:mm'),
         patient_id: values.patient,
-        patient_name: patients.find(p => p.id === values.patient).name, // Assuming you have patient name in the patients state
+        patient_name: patients.find(p => p.id === values.patient).name,
         treatment_id: values.treatment,
-        treatment_name: treatmentName, // Use the formatted treatment name
-        status: values.status // Include status in the payload
+        treatment_name: treatmentName,
+        status: values.status
       };
+
       const response = await updateAppointment(appointment.id, updatedData);
       if (response.success) {
         message.success('Appointment updated successfully');
