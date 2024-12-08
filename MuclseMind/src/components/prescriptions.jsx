@@ -1,13 +1,51 @@
 import React, { useState, useEffect } from 'react';
-import { Filter } from 'lucide-react';
+import { Download, Filter, Trash2 } from 'lucide-react';
+import { GetPrescription, deleteprescriptions } from '../api.services/services'; 
+import { message } from 'antd';
+
+
+
 
 const Prescriptions = () => {
   const [prescriptions, setPrescriptions] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
 
+  const fetchPrescriptions = async () => {
+    try {
+      const response = await GetPrescription(); // Use GetPrescription function to fetch data
+      setPrescriptions(response.data || []);
+    } catch (error) {
+      console.error('Failed to fetch prescriptions:', error);
+    }
+  };
+
+  useEffect(() => {
+    fetchPrescriptions();
+  }, []);
+
   const filteredPrescriptions = prescriptions.filter(prescription =>
     prescription.patient_name.toLowerCase().includes(searchTerm.toLowerCase())
   );
+
+  const handleGenerateInvoice = (prescription) => {
+    // Implement your logic to generate an invoice for the given prescription
+    console.log('Generate invoice for:', prescription);
+  };
+
+  const handleDeletePrescription = async(prescriptionId) => {
+    console.log('Delete prescription with ID:', prescriptionId);
+    if (!prescriptionId) {
+      console.error("Invalid prescriptionId:", prescriptionId);
+      return;
+    }
+    try {
+      await deleteprescriptions(prescriptionId);
+      fetchPrescriptions();
+      message.success("Prescription deleted successfully");
+    } catch (error) {
+      message.error("Failed to delete prescription: " + error.message);
+    }
+  };
 
   return (
     <div className="p-6 dark:bg-boxdark">
@@ -78,20 +116,36 @@ const Prescriptions = () => {
                     {prescription.patient_name}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-meta-2">
-                    {prescription.medication_name}
+                    {prescription.treatment_name}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-meta-2">
-                    {prescription.date}
+                    {(() => {
+                      if (prescription.date) {
+                        const date = new Date(prescription.date);
+                        if (!isNaN(date)) {
+                          const isoDate = date.toISOString().split("T")[0];
+                          const [year, month, day] = isoDate.split("-");
+                          return `${day}-${month}-${year}`;
+                        }
+                      }
+                      return "N/A";
+                    })()}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-white">
-                    ${prescription.total_amount?.toFixed(2) || 'N/A'}
+                    ${prescription.cost?.toFixed(2) || 'N/A'}
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
+                  <td className="px-6 py-4 whitespace-nowrap flex items-center">
                     <button
-                      onClick={() => console.log('View details for:', prescription)}
-                      className="text-blue-600 dark:text-meta-2 hover:text-blue-800 dark:hover:text-meta-3"
+                      onClick={() => handleGenerateInvoice(prescription)}
+                      className="text-blue-600 dark:text-meta-2 hover:text-blue-800 dark:hover:text-meta-3 mr-2"
                     >
-                      View Details
+                      <Download className="h-5 w-5" />
+                    </button>
+                    <button
+                      onClick={() => handleDeletePrescription(prescription.id)}
+                      className="text-red-600 dark:text-meta-2 hover:text-meta-1 dark:hover:text-meta-1"
+                    >
+                      <Trash2 className="h-5 w-5" />
                     </button>
                   </td>
                 </tr>

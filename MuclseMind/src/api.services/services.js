@@ -424,3 +424,20 @@ export const deleteBilling = async (id) => {
   }
 };
 
+export const GetPrescription = async (id) => {
+  try {
+    const res = await interceptors.get(`v1/prescription/get-prescription`); // Use .get instead of .delete
+    return res.data;
+  } catch (error) {
+    throw error.response?.data || error;
+  }
+};
+
+export const deleteprescriptions = async (id) => {
+  try {
+    const res = await interceptors.delete(`v1/prescription/delete-prescription/${id}`); // Use .get instead of .delete
+    return res.data;
+  } catch (error) {
+    throw error.response?.data || error;
+  }
+};

@@ -8,7 +8,7 @@ const supabase = createClient(supabaseUrl, supabaseKey);
 
 const getBillings = async (userId) => {
   const { data, error } = await supabase
-    .from('billing')
+    .from('billings')
     .select('*')
     .eq('user_id', userId);
 
@@ -17,7 +17,7 @@ const getBillings = async (userId) => {
 
 const createBilling = async (billingData) => {
   const { data, error } = await supabase
-    .from('billing')
+    .from('billings')
     .insert([billingData]);
 
   return { data, error };
@@ -25,18 +25,18 @@ const createBilling = async (billingData) => {
 
 const updateBilling = async (billingId, billingData, userId) => {
   const { data, error } = await supabase
-    .from('billing')
+    .from('billings')
     .update(billingData)
-    .match({ billing_id: billingId, user_id: userId });
+    .match({ id: billingId, user_id: userId });
 
   return { data, error };
 };
 
 const deleteBilling = async (billingId, userId) => {
   const { data, error } = await supabase
-    .from('billing')
+    .from('billings')
     .delete()
-    .match({ billing_id: billingId, user_id: userId });
+    .match({ id: billingId, user_id: userId });
 
   return { data, error };
 };

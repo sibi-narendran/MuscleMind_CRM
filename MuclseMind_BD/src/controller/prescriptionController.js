@@ -1,31 +1,47 @@
+const prescriptionService = require('../services/PrescriptionServices');
+const { createResponse } = require('../utils/responseUtil');
+
+const getPrescriptions = async (req, res) => {
+  const userId = req.user.userId;
+  const result = await prescriptionService.fetchPrescriptions(userId);
+  if (result.error) {
+    res.status(500).json(createResponse(false, 'Failed to fetch prescriptions', null, result.error));
+  } else {
+    res.status(200).json(createResponse(true, 'Prescriptions fetched successfully', result.data));
+  }
+};
+
 const createPrescription = async (req, res) => {
-  const { patient_id, doctor_id, medication_id, dosage, frequency, start_date, end_date, notes, appointment_id, treatment_name, prescription_details } = req.body;
-  const user_id = req.user.userId; // Assuming user ID is available from the authenticated session
-
-  if (!user_id) {
-    return res.status(400).json({ success: false, message: 'User ID is required' });
+  const prescriptionData = req.body;
+  const result = await prescriptionService.addPrescription(prescriptionData);
+  if (result.error) {
+    res.status(500).json(createResponse(false, 'Failed to create prescription', null, result.error));
+  } else {
+    res.status(201).json(createResponse(true, 'Prescription created successfully', result.data));
   }
+};
 
-  const { data, error } = await supabase
-    .from('prescriptions')
-    .insert([{
-      patient_id,
-      doctor_id,
-      medication_id,
-      dosage,
-      frequency,
-      start_date,
-      end_date,
-      notes,
-      appointment_id,
-      treatment_name,
-      prescription_details,
-      user_id // Ensure user_id is included
-    }]);
-
-  if (error) {
-    return res.status(500).json({ success: false, message: 'Failed to create prescription', error });
+const updatePrescription = async (req, res) => {
+  const { id: prescriptionId } = req.params;
+  const prescriptionData = req.body;
+  const userId = req.user.userId;
+  const result = await prescriptionService.editPrescription(prescriptionId, prescriptionData, userId);
+  if (result.error) {
+    res.status(500).json(createResponse(false, 'Failed to update prescription', null, result.error));
+  } else {
+    res.status(200).json(createResponse(true, 'Prescription updated successfully', result.data));
   }
+};
 
-  return res.status(201).json({ success: true, data });
-}; 
+const deletePrescription = async (req, res) => {
+  const { id: prescriptionId } = req.params;
+  const userId = req.user.userId;
+  const result = await prescriptionService.removePrescription(prescriptionId, userId);
+  if (result.error) {
+    res.status(500).json(createResponse(false, 'Failed to delete prescription', null, result.error));
+  } else {
+    res.status(200).json(createResponse(true, 'Prescription deleted successfully', result.data));
+  }
+};
+
+module.exports = { getPrescriptions, createPrescription, updatePrescription, deletePrescription };
