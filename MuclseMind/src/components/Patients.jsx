@@ -4,18 +4,11 @@ import { PlusOutlined, EditOutlined, DeleteOutlined, DownloadOutlined, FileTextO
 import { jsPDF } from 'jspdf';
 import AddPatientModal from './AddPatientModal';
 import EditPatientModal from './EditPatientModal';
-import { getPatients, addPatient, editPatient, deletePatient } from '../api.services/services';
+import { getPatients, addPatient, editPatient, deletePatient,getTeamMembers } from '../api.services/services';
 import { useTable } from 'react-table';
 
 const { confirm } = Modal;
 const { Option } = Select;
-
-const CARE_PERSONS = [
-  "Dr. John Smith",
-  "Dr. Sarah Wilson",
-  "Dr. Michael Brown",
-  "Dr. Emily Davis"
-];
 
 const Patients = () => {
   const [patients, setPatients] = useState([]);
@@ -26,6 +19,7 @@ const Patients = () => {
   const [loading, setLoading] = useState(false);
   const [noteModalVisible, setNoteModalVisible] = useState(false);
   const [currentNote, setCurrentNote] = useState('');
+  const [teamMembers, setTeamMembers] = useState([]);
 
   const fetchPatients = async () => {
     setLoading(true);
@@ -41,6 +35,19 @@ const Patients = () => {
 
   useEffect(() => {
     fetchPatients();
+  }, []);
+
+  useEffect(() => {
+    const fetchTeamMembers = async () => {
+      try {
+        const response = await getTeamMembers();
+        setTeamMembers(response.data);
+      } catch (error) {
+        message.error('Failed to fetch team members: ' + error.message);
+      }
+    };
+
+    fetchTeamMembers();
   }, []);
 
   const handleDownloadPDF = (patient) => {
@@ -151,8 +158,8 @@ const Patients = () => {
             value={row.original.care_person}
             onChange={(value) => handleCarePersonChange(row.original.id, value)}
           >
-            {CARE_PERSONS.map(doctor => (
-              <Option key={doctor} value={doctor}>{doctor}</Option>
+            {teamMembers.map((member) => (
+              <Option key={member.id} value={member.name}>{member.name}</Option>
             ))}
           </Select>
         ),
@@ -205,7 +212,7 @@ const Patients = () => {
         ),
       },
     ],
-    [patients]
+    [patients, teamMembers]
   );
 
   const filteredPatients = useMemo(() => {
