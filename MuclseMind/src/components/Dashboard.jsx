@@ -131,7 +131,7 @@ const Dashboard = () => {
   return (
     <div className="p-6 space-y-6 dark:bg-boxdark">
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-6">
         {stats.map((stat, index) => {
           const Icon = stat.icon;
           return (
@@ -171,22 +171,6 @@ const Dashboard = () => {
         </div>
       </div>
 
-      {/* Actions Required */}
-      {/* <div className="bg-white dark:bg-meta-4 dark:border-strokedark p-6 rounded-xl shadow-sm border border-gray-100">
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="text-lg font-semibold text-black dark:text-white">Actions Required</h2>
-          <CheckCircle className="h-5 w-5 text-gray-400 dark:text-white" />
-        </div>
-        <div className="space-y-4">
-          {actionsRequired.map((action, index) => (
-            <div key={index} className="p-3 bg-red-50 dark:bg-boxdark rounded-lg">
-              <p className="text-sm font-medium text-black dark:text-white">{action.task}</p>
-              <p className="text-sm text-gray-500 dark:text-white">{action.detail}</p>
-            </div>
-          ))}
-        </div>
-      </div> */}
-
       {/* Today's Schedule and Predictive Insights */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <div className="bg-white dark:bg-meta-4 dark:border-strokedark dark:text-white p-6 rounded-xl shadow-sm border border-gray-100">
@@ -198,10 +182,10 @@ const Dashboard = () => {
             {upcomingAppointments.map((apt) => (
               <div
                 key={apt.id}
-                className="flex items-center p-4 bg-meta-9 dark:bg-boxdark rounded-lg dark:hover:bg-meta-3  mb-4"
+                className="flex flex-col sm:flex-row items-start sm:items-center p-4 bg-meta-9 dark:bg-boxdark rounded-lg dark:hover:bg-meta-3 mb-4"
                 onClick={() => handleAppointmentClick(apt)}
               >
-                <div className="flex-shrink-0 w-20">
+                <div className="flex-shrink-0 w-full sm:w-20 mb-2 sm:mb-0">
                   <div className="flex items-center">
                     <Clock className="h-4 w-4 text-gray-400 dark:text-meta-2 mr-1" />
                     <span className="text-sm font-medium text-black dark:text-meta-2">

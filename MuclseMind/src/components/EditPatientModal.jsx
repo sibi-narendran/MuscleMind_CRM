@@ -12,6 +12,12 @@ const CARE_PERSONS = [
   "Dr. Emily Davis"
 ];
 
+const GENDER_OPTIONS = [
+  "Male",
+  "Female",
+  "Other"
+];
+
 const EditPatientModal = ({ visible, onClose, patient, onSave, onDelete }) => {
   const [formData, setFormData] = useState(patient);
 
@@ -50,6 +56,24 @@ const EditPatientModal = ({ visible, onClose, patient, onSave, onDelete }) => {
             value={formData?.name || ''}
             onChange={(e) => setFormData({ ...formData, name: e.target.value })}
           />
+        </Form.Item>
+        <Form.Item label="Age">
+          <Input
+            type="number"
+            placeholder="Age"
+            value={formData?.age || ''}
+            onChange={(e) => setFormData({ ...formData, age: e.target.value })}
+          />
+        </Form.Item>
+        <Form.Item label="Gender">
+          <Select
+            value={formData?.gender || ''}
+            onChange={(value) => setFormData({ ...formData, gender: value })}
+          >
+            {GENDER_OPTIONS.map(gender => (
+              <Option key={gender} value={gender}>{gender}</Option>
+            ))}
+          </Select>
         </Form.Item>
         <Form.Item label="Email">
           <Input

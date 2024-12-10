@@ -6,6 +6,10 @@ export default defineConfig({
   optimizeDeps: {
     exclude: ['lucide-react'],
   },
+
+  server: {
+    host: '0.0.0.0', // Allows access from any IP address
+  },
   
   server: {
     host: '0.0.0.0' // Listen on all network interfaces
