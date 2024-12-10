@@ -61,7 +61,7 @@ const Billing = () => {
     } catch (error) {
       message.error("Failed to delete billing: " + error.message);
     }
-  };
+  };  
 
   const handleStatusChange = async (billingId, newStatus) => {
     try {
@@ -219,7 +219,7 @@ const Billing = () => {
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap" data-label="Status :">
                     <select
-                      value={billing.billing_status}
+                      value={billing.invoice_status}
                       onChange={(e) =>
                         handleStatusChange(billing.id, e.target.value)
                       }
