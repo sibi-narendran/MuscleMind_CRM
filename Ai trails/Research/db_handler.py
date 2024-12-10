@@ -65,17 +65,24 @@ class DentalAssistant:
             # If we have a completed operation, reset for new query
             if self.context.get("operation_completed"):
                 self.reset_context()
-                self.context["intent"] = self.classify_intent(user_input)
-                return f"I understand you want to {self.context['intent']}. How can I help?"
 
-            # Normal flow for ongoing interaction
+            # Determine intent if not already set
             if "intent" not in self.context:
                 self.context["intent"] = self.classify_intent(user_input)
-                return f"I understand you want to {self.context['intent']}. How can I help?"
+                if self.context["intent"] == "others":
+                    return "I apologize, but I can only help with dental appointments and related services. Could you please rephrase your request?"
 
             # Extract information from input
             extracted_info = self.extract_information(user_input)
+            print(f"Extracted Info: {extracted_info}")  # Debugging line
             self.context.update(extracted_info)
+
+            # Check if patient exists
+            if "patient_name" in self.context and not self.context.get("patient_verified"):
+                patient_check = self.verify_patient(self.context["patient_name"])
+                if not patient_check:
+                    return "I don't see your name in our records. Would you like to register as a new patient? (yes/no)"
+                self.context["patient_verified"] = True
 
             # Get next required information
             next_field, next_question = self.get_next_question(self.context["intent"])
@@ -145,7 +152,9 @@ class DentalAssistant:
         
         try:
             response = self.get_llm_response(system_prompt, user_input)
-            extracted_info = json.loads(response)
+            response_content = response.content if hasattr(response, 'content') else response
+            print(f"Raw LLM Response: {response_content}")  # Debugging line
+            extracted_info = json.loads(response_content)
             
             # Handle natural language dates
             if 'date' in extracted_info:
@@ -157,12 +166,34 @@ class DentalAssistant:
             
             return extracted_info
             
-        except json.JSONDecodeError:
-            print("Error parsing JSON response")
+        except json.JSONDecodeError as e:
+            print(f"Error parsing JSON response: {e}")
             return {}
         except Exception as e:
             print(f"Error extracting information: {str(e)}")
             return {}
+
+    def verify_patient(self, patient_name):
+        """Check if patient exists in the database"""
+        try:
+            query = f"SELECT * FROM core_patient WHERE name LIKE '%{patient_name}%'"
+            results = self.db.run(query)
+            return bool(results)
+        except Exception as e:
+            print(f"Error verifying patient: {e}")
+            return False
+
+    def check_availability(self, date):
+        """Check available time slots for a given date"""
+        try:
+            query = f"SELECT appointment_time FROM core_appointment WHERE appointment_date = '{date}'"
+            booked_slots = self.db.run(query)
+            all_slots = ["09:00", "10:00", "11:00", "12:00", "13:00", "14:00", "15:00", "16:00", "17:00"]
+            available_slots = [slot for slot in all_slots if slot not in booked_slots]
+            return available_slots
+        except Exception as e:
+            print(f"Error checking availability: {e}")
+            return []
 
     def get_next_question(self, intent):
         """Determine the next required information based on intent and context"""
@@ -246,14 +277,11 @@ class DentalAssistant:
         """Generate SQL query using the SQL Chain"""
         query_templates = {
             "new appointment": """
-                Insert a new appointment with:
-                Patient: {patient_name}
-                Date: {date}
-                Time: {time}
-                Procedure: {procedure_type}
+                INSERT INTO core_appointments (patient_name, appointment_date, appointment_time, procedure_type)
+                VALUES ('{patient_name}', '{date}', '{time}', '{procedure_type}')
             """,
-            "view appointments": "Find all appointments for patient {patient_name}",
-            "cancel appointment": "Delete appointment for {patient_name} on {date}",
+            "view appointments": "SELECT * FROM core_appointments WHERE patient_name = '{patient_name}'",
+            "cancel appointment": "DELETE FROM core_appointments WHERE patient_name = '{patient_name}' AND appointment_date = '{date}'",
         }
         
         template = query_templates.get(intent, str(context))
@@ -293,7 +321,8 @@ class DentalAssistant:
         user_prompt = f"Classify this user input: '{user_input}'"
         
         try:
-            intent = self.get_llm_response(system_prompt, user_prompt).lower().strip()
+            response = self.get_llm_response(system_prompt, user_prompt)
+            intent = response.content.strip().lower() if hasattr(response, 'content') else response.strip().lower()
             return intent if intent in self.valid_intents else "others"
         except Exception as e:
             print(f"Error classifying intent: {str(e)}")
@@ -306,9 +335,7 @@ class DentalAssistant:
             HumanMessage(content=user_prompt)
         ]
         response = self.llm.invoke(messages)
-        return response.content
-
-    
+        return response
 
 # Example usage
 if __name__ == "__main__":
@@ -316,10 +343,27 @@ if __name__ == "__main__":
     assistant = DentalAssistant(api_key)
     
     print("Dental Assistant: How can I help you today?")
-    while True:
-        user_input = input("\nUser: ")
-        if user_input.lower() == "exit":
-            break
+    # Test Scenario 1: Booking a New Appointment
+    print("\nTest Scenario 1: Booking a New Appointment")
+    print(assistant.process_user_input("I want to book an appointment for a dental cleaning."))
+    print(assistant.process_user_input("John Doe"))
+    print(assistant.process_user_input("Next Monday"))
+    print(assistant.process_user_input("3:00 PM"))
+
+    # Test Scenario 2: Canceling an Appointment
+    print("\nTest Scenario 2: Canceling an Appointment")
+    print(assistant.process_user_input("I need to cancel my appointment."))
+    print(assistant.process_user_input("John Doe"))
+    print(assistant.process_user_input("27/11/2023"))
+
+    # Test Scenario 3: Viewing Appointments
+    print("\nTest Scenario 3: Viewing Appointments")
+    print(assistant.process_user_input("Show me my upcoming appointments."))
+    print(assistant.process_user_input("John Doe"))
+    # while True:
+    #     user_input = input("\nUser: ")
+    #     if user_input.lower() == "exit":
+    #         break
         
-        response = assistant.process_user_input(user_input)
-        print(f"\nAssistant: {response}")
+        # response = assistant.process_user_input(user_input)
+        # print(f"\nAssistant: {response}")
