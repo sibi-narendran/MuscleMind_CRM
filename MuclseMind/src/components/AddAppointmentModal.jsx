@@ -11,6 +11,7 @@ const AddAppointmentModal = ({ visible, onClose, onAdd }) => {
   const [patients, setPatients] = useState([]);
   const [treatments, setTreatments] = useState([]);
   const [showAddPatientModal, setShowAddPatientModal] = useState(false);
+  const [selectedPatientDetails, setSelectedPatientDetails] = useState(null);
 
   useEffect(() => {
     if (visible) {
@@ -52,6 +53,8 @@ const AddAppointmentModal = ({ visible, onClose, onAdd }) => {
       const appointmentData = {
         patient_id: values.patient,
         patient_name: patientName,
+        age: selectedPatient.age,
+        gender: selectedPatient.gender,
         date: values.date.format('YYYY-MM-DD'),
         time: values.time.format('HH:mm'),
         treatment_id: values.treatment,
@@ -86,6 +89,11 @@ const AddAppointmentModal = ({ visible, onClose, onAdd }) => {
     }
   };
 
+  const handlePatientSelect = (patientId) => {
+    const patient = patients.find(p => p.id === patientId);
+    setSelectedPatientDetails(patient);
+  };
+
   // Disable past dates
   const disabledDate = (current) => {
     return current && current < moment().startOf('day');
@@ -114,6 +122,7 @@ const AddAppointmentModal = ({ visible, onClose, onAdd }) => {
               filterOption={(input, option) =>
                 option.children.toLowerCase().indexOf(input.toLowerCase()) >= 0
               }
+              onChange={handlePatientSelect}
               dropdownRender={menu => (
                 <>
                   {menu}
@@ -144,6 +153,26 @@ const AddAppointmentModal = ({ visible, onClose, onAdd }) => {
               )}
             </Select>
           </Form.Item>
+
+          {selectedPatientDetails && (
+            <>
+              <Form.Item label={<span style={{ fontWeight: 'bold' }}>Age</span>}>
+                <Input 
+                  value={selectedPatientDetails.age}
+                  disabled
+                  style={{ width: '100%' }}
+                />
+              </Form.Item>
+              <Form.Item label={<span style={{ fontWeight: 'bold' }}>Gender</span>}>
+                <Input 
+                  value={selectedPatientDetails.gender}
+                  disabled
+                  style={{ width: '100%' }}
+                />
+              </Form.Item>
+            </>
+          )}
+
           <Form.Item
             label={<span style={{ fontWeight: 'bold' }}>Treatment</span>}
             name="treatment"

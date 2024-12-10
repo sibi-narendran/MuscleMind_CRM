@@ -1,0 +1,59 @@
+@media 
+only screen and (max-width: 760px),
+(min-device-width: 768px) and (max-device-width: 1024px) {
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+
+  thead {
+    display: none; /* Keep headers visible */
+  }
+
+  tr {
+    display: flex;
+    flex-direction: column;
+    margin-bottom: 15px;
+    border: 1px solid #ccc;
+  }
+
+  th, td {
+    display: block;
+    padding: 10px;
+    text-align: left;
+    border-bottom: 1px solid #eee;
+  }
+
+  th {
+    background-color: #f2f2f2;
+    font-weight: bold;
+  }
+
+  td:before {
+    content: attr(data-label);
+    font-weight: bold;
+    display: inline-block;
+    width: 100px; /* Adjust width as needed */
+  }
+
+  .mtb{
+    display: flex;
+  }
+
+  .mtb-btn{
+    font-size: 12px;
+  }
+
+  .small-button {
+    margin-left: 10px;
+    font-size: 12px; /* Smaller font size */
+    border-radius: 4px;
+    height: min-content;
+  }
+
+
+  
+}
+
+/* Add data-label attributes to your HTML for each td */

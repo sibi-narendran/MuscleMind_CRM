@@ -58,7 +58,7 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }) => {
     { id: 'appointments', icon: Calendar, label: 'Appointments' },
     { id: 'billing', icon: Receipt, label: 'Billing' },
     { id: 'management', icon: Briefcase, label: 'Management' },
-    { id: 'reminders', icon: Bell, label: 'Reminders' },
+    { id: 'reminders', icon: Bell, label: 'Actions' },
     { id: 'prescriptions', icon: BellDot, label: 'Prescriptions' },
   ];
 

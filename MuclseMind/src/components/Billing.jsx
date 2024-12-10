@@ -7,6 +7,8 @@ import {
   deleteBilling,
 } from "../api.services/services";
 
+import '../assets/css/Patients.css';
+
 const Billing = () => {
   const [billings, setBillings] = useState([]);
   const [selectedBilling, setSelectedBilling] = useState(null);
@@ -90,8 +92,8 @@ const Billing = () => {
 
   return (
     <div className="p-6 dark:bg-boxdark">
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
+      <div className="flex flex-col md:flex-row justify-between items-center mb-6">
+        <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-4 md:mb-0">
           Billing & Invoices
         </h1>
         <div className="flex space-x-4">
@@ -106,7 +108,7 @@ const Billing = () => {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 mb-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
         {[
           {
             title: "Total Revenue",
@@ -149,8 +151,8 @@ const Billing = () => {
       </div>
 
       <div className="bg-white dark:bg-boxdark rounded-xl shadow-sm border border-gray-100 dark:border-strokedark">
-        <div className="p-6 border-b border-gray-200 dark:border-strokedark flex justify-between items-center">
-          <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
+        <div className="p-6 border-b border-gray-200 dark:border-strokedark flex flex-col md:flex-row justify-between items-center">
+          <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 md:mb-0">
             Recent Billings
           </h2>
           <input
@@ -177,6 +179,7 @@ const Billing = () => {
                   <th
                     key={index}
                     className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-meta-2 uppercase tracking-wider"
+                    
                   >
                     {header}
                   </th>
@@ -189,16 +192,16 @@ const Billing = () => {
                   key={index}
                   className="hover:bg-gray-50 dark:hover:bg-strokedark"
                 >
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white" data-label="Invoice Number :">
                     {billing.invoice_no || "N/A"}
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white" data-label="Patient Name :">
                     {billing.patient_name}
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-meta-2">
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-meta-2" data-label="Treatment Name :">
                     {billing.treatment_name}
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-meta-2">
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-meta-2" data-label="Date :">
                     {(() => {
                       if (billing.date) {
                         const date = new Date(billing.date);
@@ -211,10 +214,10 @@ const Billing = () => {
                       return "N/A";
                     })()}
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-white">
+                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-white" data-label="Total Amount :">
                     ${billing.cost?.toFixed(2) || "N/A"}
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
+                  <td className="px-6 py-4 whitespace-nowrap" data-label="Status :">
                     <select
                       value={billing.billing_status}
                       onChange={(e) =>
@@ -227,7 +230,7 @@ const Billing = () => {
                       <option value="Not Paid">Not Paid</option>
                     </select>
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap flex items-center">
+                  <td className="px-6 py-4 whitespace-nowrap flex items-center" data-label="Actions :">
                     <button
                       onClick={() => handleGenerateInvoice(billing)}
                       className="text-blue-600 dark:text-meta-2 hover:text-blue-800 dark:hover:text-meta-3 mr-2"

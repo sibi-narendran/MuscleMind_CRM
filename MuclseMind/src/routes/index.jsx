@@ -13,7 +13,7 @@ const ForgotPassword = lazy(() => import('../components/ForgotPassword'));
 const MyProfile = lazy(() => import('../components/Profile'));
 const Prescriptions = lazy(() => import('../components/prescriptions'));
 const Settings = lazy(() => import('../components/Settings'));
-
+const Livepdf = lazy(() => import('../components/Livepdf'));
 
 const coreRoutes = [
   { path: '/', title: 'Login', component: Login },
@@ -29,6 +29,7 @@ const coreRoutes = [
   { path: '/forgot-password', title: 'Forgot Password', component: ForgotPassword },
   { path: '/myprofile', title: 'MyProfile', component: MyProfile },
   { path: '/settings', title: 'Settings', component: Settings },
+  { path: '/livepdf', title: 'Livepdf', component: Livepdf },
 
 ];
 

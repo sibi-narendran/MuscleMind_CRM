@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Modal, Form, Input, InputNumber, Select, Button, Table, Upload, DatePicker, List, Typography, message, TimePicker } from 'antd';
+import { Modal, Form, Input, InputNumber, Select, Button, Table, Upload, DatePicker, List, Typography, message, TimePicker, Checkbox } from 'antd';
 import { PlusOutlined, EditOutlined, DeleteOutlined } from '@ant-design/icons';
 import moment from 'moment';
 import { getOperatingHours, updateOperatingHours,getTreatments, addTreatment, editTreatment, deleteTreatment  } from '../api.services/services';
@@ -56,6 +56,7 @@ const ClinicInfo = () => {
     patientReviews: '',
     appointmentBooking: '',
     specialServices: '',
+    gstNumber: '',
   });
 
   // Modal visibility states
@@ -590,6 +591,21 @@ const renderHolidays = () => (
               <strong>Infant:</strong> {dosage.infant}
             </>
           ) },
+          { title: 'Times', dataIndex: 'times', key: 'times', render: (times) => (
+            <div className="flex flex-col">
+              {times.map((time, index) => (
+                <span key={index}>{time}</span>
+              ))}
+            </div>
+          )   },
+          { title: 'Food Instructions', dataIndex: 'foodInstructions', key: 'foodInstructions', render: (instructions) => (
+            <div className="flex flex-col">
+              {instructions.map((instruction, index) => (
+                <span key={index}>{instruction}</span>
+              ))}
+            </div>
+          )  },
+          { title: 'Special Note', dataIndex: 'specialNote', key: 'specialNote' },
           {
             title: 'Action',
             key: 'action',
@@ -623,6 +639,7 @@ const renderHolidays = () => (
       <p><strong>Patient Reviews:</strong> {otherClinicInfo.patientReviews}</p>
       <p><strong>Appointment Booking:</strong> {otherClinicInfo.appointmentBooking}</p>
       <p><strong>Special Services:</strong> {otherClinicInfo.specialServices}</p>
+      <p><strong>GST Number:</strong> {otherClinicInfo.gstNumber}</p>
     </section>
   );
 
@@ -821,6 +838,9 @@ const renderAddHolidayModal = () => {
         <Form.Item name="specialServices" label="Special Services">
           <Input />
         </Form.Item>
+        <Form.Item name="gstNumber" label="GST Number">
+          <Input />
+        </Form.Item>
         <div className="flex justify-end space-x-2">
           <Button onClick={() => setIsEditOtherInfoModal(false)}>Cancel</Button>
           <Button type="primary" htmlType="submit">Save</Button>
@@ -887,7 +907,15 @@ const renderAddHolidayModal = () => {
       footer={null}
     >
       <Form
-        initialValues={editMedicationData || { condition: '', name: '', brand: '', dosage: { adult: '', child: '', infant: '' } }}
+        initialValues={editMedicationData || { 
+          condition: '', 
+          name: '', 
+          brand: '', 
+          dosage: { adult: '', child: '', infant: '' },
+          times: [], // New field for checkboxes
+          foodInstructions: [], // New field for checkboxes
+          specialNote: '' // New field
+        }}
         onFinish={handleAddOrEditMedication}
         layout="vertical"
       >
@@ -910,6 +938,23 @@ const renderAddHolidayModal = () => {
           <Form.Item name={['dosage', 'infant']} label="Infant" rules={[{ required: true, message: 'Please enter dosage for infants!' }]}>
             <Input />
           </Form.Item>
+        </Form.Item>
+        {/* New fields for Day, Evening, Night, After Food, Before Food */}
+        <Form.Item name="times" label="Dosage Times">
+          <Checkbox.Group>
+            <Checkbox value="Day">Day</Checkbox>
+            <Checkbox value="Evening">Evening</Checkbox>
+            <Checkbox value="Night">Night</Checkbox>
+          </Checkbox.Group>
+        </Form.Item>
+        <Form.Item name="foodInstructions" label="Food Instructions">
+          <Checkbox.Group>
+            <Checkbox value="After Food">After Food</Checkbox>
+            <Checkbox value="Before Food">Before Food</Checkbox>
+          </Checkbox.Group>
+        </Form.Item>
+        <Form.Item name="specialNote" label="Special Note">
+          <Input.TextArea />
         </Form.Item>
         <div className="flex justify-end space-x-2">
           <Button onClick={() => setIsMedicationModal(false)}>Cancel</Button>

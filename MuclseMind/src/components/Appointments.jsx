@@ -5,7 +5,7 @@ import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
 import AddAppointmentModal from './AddAppointmentModal';
 import EditAppointmentModal from './EditAppointmentModal';
-import { Modal, Button, message } from 'antd';
+import { Modal, Button, message, Popconfirm } from 'antd';
 import { getAppointments, deleteAppointment, addAppointment, updateAppointment } from '../api.services/services'; // Import services
 
 const Appointments = () => {
@@ -75,6 +75,7 @@ const Appointments = () => {
       const response = await addAppointment(newAppointment);
       if (response.success) {
         message.success('Appointment added successfully');
+        setShowDetailsModal(false);
       } else {
         message.error(response.message || 'Failed to add appointment');
       }
@@ -109,6 +110,7 @@ const Appointments = () => {
       const response = await deleteAppointment(selectedAppointment.id);
       if (response.success) {
         message.success('Appointment deleted successfully');
+        setShowDetailsModal(false);
       } else {
         message.error(response.message || 'Failed to delete appointment');
       }
@@ -135,8 +137,8 @@ const Appointments = () => {
       {/* Left Side - Appointments List */}
       <div className="lg:col-span-2 overflow-y-auto hide-scrollbar" style={{ maxHeight: '100vh' }}>
         <div className="bg-white dark:bg-boxdark rounded-xl shadow-sm border border-gray-100 dark:border-strokedark p-6 mb-6">
-          <div className="flex justify-between items-center mb-6">
-            <h1 className="text-2xl font-bold text-black dark:text-white">
+          <div className="flex flex-col lg:flex-row justify-between items-center mb-6">
+            <h1 className="text-2xl font-bold text-black dark:text-white mb-4 lg:mb-0">
               {getHeaderText()}
             </h1>
             <button
@@ -150,10 +152,10 @@ const Appointments = () => {
             {filteredAppointments.map((apt) => (
               <div
                 key={apt.id}
-                className="flex items-center p-4 bg-meta-9 dark:bg-strokedark rounded-lg hover:bg-gray-100 dark:hover:bg-meta-4 cursor-pointer mb-4"
+                className="flex flex-col lg:flex-row items-center p-4 bg-meta-9 dark:bg-strokedark rounded-lg hover:bg-gray-100 dark:hover:bg-meta-4 cursor-pointer mb-4"
                 onClick={() => handleAppointmentClick(apt)}
               >
-                <div className="flex-shrink-0 w-20">
+                <div className="flex-shrink-0 w-full lg:w-20 mb-2 lg:mb-0">
                   <div className="flex items-center">
                     <Clock className="h-4 w-4 text-gray-400 dark:text-meta-2 mr-1" />
                     <span className="text-sm font-medium text-black dark:text-meta-2">
@@ -234,13 +236,24 @@ const Appointments = () => {
         >
           <p><strong>Appointment ID:</strong> {selectedAppointment.appointment_id}</p>
           <p><strong>Patient Name:</strong> {selectedAppointment.patient_name}</p>
+          <p><strong>Age:</strong> {selectedAppointment.age}</p>
+          <p><strong>Gender:</strong> {selectedAppointment.gender}</p>
           <p><strong>Treatment Name:</strong> {selectedAppointment.treatment_name}</p>
           <p><strong>Date:</strong> {format(new Date(selectedAppointment.date), 'MMM dd, yyyy')}</p>
           <p><strong>Time:</strong> {format(new Date(`1970-01-01T${selectedAppointment.time}`), 'hh:mm a')}</p>
           <p><strong>Status:</strong> {selectedAppointment.status}</p>
           <div className="flex justify-end gap-2 mt-4">
             <Button type="primary" onClick={handleEditButtonClick}>Edit</Button>
-            <Button type="danger" onClick={handleDeleteAppointment}>Delete</Button>
+            <Popconfirm
+              title="Delete Appointment"
+              description="Are you sure you want to delete this appointment?"
+              onConfirm={handleDeleteAppointment}
+              okText="Yes"
+              cancelText="No"
+              okButtonProps={{ danger: true }}  
+            >
+              <Button danger>Delete</Button>
+            </Popconfirm>
           </div>
         </Modal>
       )}

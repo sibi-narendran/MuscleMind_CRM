@@ -1,5 +1,5 @@
 import React from "react";
-import { Modal, Input, Select, Form, Button, Upload, Row, Col } from "antd";
+import { Modal, Input, Select, Form, Button, Upload, Row, Col, Radio } from "antd";
 import { UploadOutlined } from "@ant-design/icons";
 
 const { TextArea } = Input;
@@ -18,6 +18,8 @@ const AddPatientModal = ({ visible, onClose, onAdd }) => {
   const handleAdd = (values) => {
     const newPatient = {
       name: values.name,
+      age: values.age,
+      gender: values.gender,
       phone: `${values.phonePrefix}${values.phone}`,
       email: values.email,
       notes: values.notes,
@@ -49,14 +51,37 @@ const AddPatientModal = ({ visible, onClose, onAdd }) => {
           phonePrefix: localStorage.getItem("phonePrefix") || PHONE_PREFIXES[0],
         }}
       >
+        <Row gutter={16}>
+          <Col span={12}>
+            <Form.Item
+              label="Name"
+              name="name"
+              rules={[{ required: true, message: "Please enter the patient's name" }]}
+            >
+              <Input placeholder="Name" className="dark:text-black" />
+            </Form.Item>
+          </Col>
+          <Col span={12}>
+            <Form.Item
+              label="Age"
+              name="age"
+              rules={[{ required: true, message: "Please enter the patient's age" }]}
+            >
+              <Input type="number" placeholder="Age" className="dark:text-black" />
+            </Form.Item>
+          </Col>
+        </Row>
+
         <Form.Item
-          label="Name"
-          name="name"
-          rules={[
-            { required: true, message: "Please enter the patient's name" },
-          ]}
+          label="Gender"
+          name="gender"
+          rules={[{ required: true, message: "Please select gender" }]}
         >
-          <Input placeholder="Name" className="dark:text-black" />
+          <Radio.Group>
+            <Radio value="male">Male</Radio>
+            <Radio value="female">Female</Radio>
+            <Radio value="other">Other</Radio>
+          </Radio.Group>
         </Form.Item>
         <Form.Item label="Phone" required>
           <Input.Group compact>
