@@ -8,6 +8,12 @@ from langchain_core.output_parsers import StrOutputParser
 from langchain.chat_models import ChatOpenAI
 from langchain_community.utilities import SQLDatabase
 from pyprojroot import here
+from typing import Dict, Optional
+from langchain_core.prompts import ChatPromptTemplate
+from langchain_openai import ChatOpenAI
+from langchain_community.utilities import SQLDatabase
+from sqlalchemy import text
+
 
 db_path = str(here("data")) + "/db.sqlite3"
 db = SQLDatabase.from_uri(f"sqlite:///{db_path}")
@@ -57,28 +63,114 @@ def detect_intent(state: State) -> State:
     return {"intent": intent}
 
 def handle_new_appointment(state: State) -> State:
-    """Handle new appointment requests"""
-    prompt = ChatPromptTemplate.from_template(
-        """Act as a dental receptionist. Collect necessary information for a new appointment.
-        Ask ONE question at a time about:
-        - Patient name
-        - Preferred date
-        - Preferred time
-        - Type of dental service needed
-        
-        Current query: {query}
-        Current details: {details}
-        
-        Respond conversationally and ask the next required piece of information."""
-    )
-    chain = prompt | ChatOpenAI(api_key="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",
+    """Handle new appointment requests with database integration"""
+    try:
+        # Initial prompt to gather appointment information
+        gather_info_prompt = ChatPromptTemplate.from_template(
+            """Act as a dental receptionist. Collect necessary information for a new appointment.
+            Ask ONE question at a time about:
+            - Patient name
+            - Preferred date
+            - Preferred time
+            - Type of dental service needed
+            
+            Current query: {query}
+            Current details: {details}
+            
+            Respond conversationally and ask the next required piece of information."""
+        )
+
+        # Initialize LLM
+        llm = ChatOpenAI(
+            api_key="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",
             model="gpt-4",
-            temperature=0.0)
-    response = chain.invoke({
-        "query": state["query"],
-        "details": state.get("details", {})
-    }).content
-    return {"response": response}
+            temperature=0.0
+        )
+
+        # Setup database
+        db = SQLDatabase.from_uri("sqlite:///dental_crm.db")
+
+        # Check if we have all required information
+        details = state.get("details", {})
+        required_fields = ["patient_name", "preferred_date", "preferred_time", "service_type"]
+        missing_fields = [field for field in required_fields if field not in details]
+
+        if missing_fields:
+            # Create the chain for gathering information
+            chain = gather_info_prompt | llm
+            
+            # Get response from the chain
+            response = chain.invoke({
+                "query": state["query"],
+                "details": details
+            })
+            
+            # Extract content from the response
+            response_text = response.content if hasattr(response, 'content') else str(response)
+            
+            return {"response": response_text, "details": details}
+
+        else:
+            # All information collected, proceed with database operations
+            try:
+                # Execute database operations
+                with db.connect() as conn:
+                    # Check if patient exists
+                    result = conn.execute(text("""
+                        SELECT id FROM patients WHERE name = :name
+                    """), {"name": details["patient_name"]})
+                    
+                    patient = result.fetchone()
+                    
+                    if not patient:
+                        # Insert new patient
+                        result = conn.execute(text("""
+                            INSERT INTO patients (name) VALUES (:name) RETURNING id
+                        """), {"name": details["patient_name"]})
+                        patient_id = result.fetchone()[0]
+                    else:
+                        patient_id = patient[0]
+                    
+                    # Insert appointment
+                    conn.execute(text("""
+                        INSERT INTO appointments 
+                        (patient_id, date, time, treatment_type, status) 
+                        VALUES 
+                        (:patient_id, :date, :time, :treatment_type, 'scheduled')
+                    """), {
+                        "patient_id": patient_id,
+                        "date": details["preferred_date"],
+                        "time": details["preferred_time"],
+                        "treatment_type": details["service_type"]
+                    })
+                    
+                    conn.commit()
+
+                response = f"""Great! I've scheduled your appointment:
+                Patient: {details['patient_name']}
+                Date: {details['preferred_date']}
+                Time: {details['preferred_time']}
+                Service: {details['service_type']}
+                
+                Your appointment has been confirmed. Please arrive 10 minutes early."""
+
+                return {"response": response, "details": details}
+
+            except Exception as e:
+                error_msg = f"Error scheduling appointment: {str(e)}"
+                print(error_msg)
+                return {
+                    "response": "I apologize, but I encountered an error while scheduling your appointment. Please try again.",
+                    "error": error_msg
+                }
+
+    except Exception as e:
+        error_msg = f"Error in appointment handling: {str(e)}"
+        print(error_msg)
+        return {
+            "response": "I apologize, but I encountered an error. Please try again.",
+            "error": error_msg
+        }
 
 def handle_reschedule(state: State) -> State:
     """Handle appointment rescheduling"""
@@ -250,17 +342,58 @@ def handle_availability_check(state: State) -> State:
     return {"response": response}
 
 def handle_others(state: State) -> State:
-    """Handle non-dental queries"""
-    response = """I apologize, but I can only assist with dental-related queries such as:
-    - Booking new appointments
-    - Rescheduling appointments
-    - Canceling appointments
-    - Viewing your appointments
-    - Managing patient information
-    - Checking appointment availability
+    """Handle non-dental queries with natural language responses"""
     
-    Please let me know if you need help with any of these services."""
-    return {"response": response}
+    prompt = ChatPromptTemplate.from_template(
+        """You are a friendly and helpful dental clinic assistant. 
+        The user has made a query that's not directly related to our dental services.
+        
+        Our services include:
+        - Booking new appointments
+        - Rescheduling appointments
+        - Canceling appointments
+        - Viewing appointments
+        - Managing patient information
+        - Checking appointment availability
+        
+        User query: {query}
+        
+        Please respond in a friendly, professional manner:
+        1. Acknowledge their query politely
+        2. Explain what services you can help with
+        3. Invite them to ask about dental services
+        
+        Keep the response conversational and helpful."""
+    )
+
+    try:
+        # Initialize LLM
+        llm = ChatOpenAI(
+            api_key="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",
+            model="gpt-4",
+            temperature=0.3 # Slightly higher temperature for more natural responses
+        )
+
+        # Create and execute the chain
+        chain = prompt | llm
+
+        # Get response
+        response = chain.invoke({
+            "query": state["query"]
+        })
+
+        return {
+            "response": response.content,
+            "details": state.get("details", {})
+        }
+
+    except Exception as e:
+        print(f"Error in handling other queries: {str(e)}")
+        # Fallback response in case of error
+        fallback_response = """I apologize, but I'm having trouble understanding your request. 
+        I'm here to help with dental-related services like appointments, scheduling, and patient information. 
+        How can I assist you with your dental needs today?"""
+        return {"response": fallback_response}
 
 class DentalCRMBot:
     def __init__(self, api_key):
