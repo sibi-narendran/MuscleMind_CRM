@@ -4,7 +4,7 @@ import { PlusOutlined, EditOutlined, DeleteOutlined, DownloadOutlined, FileTextO
 import { jsPDF } from 'jspdf';
 import AddPatientModal from './AddPatientModal';
 import EditPatientModal from './EditPatientModal';
-import { getPatients, addPatient, editPatient, deletePatient,getTeamMembers } from '../api.services/services';
+import { getPatients, addPatient, editPatient, deletePatient } from '../api.services/services';
 import { useTable } from 'react-table';
 import '../assets/css/Patients.css';
 
@@ -43,19 +43,6 @@ const   Patients = () => {
 
   useEffect(() => {
     fetchPatients();
-  }, []);
-
-  useEffect(() => {
-    const fetchTeamMembers = async () => {
-      try {
-        const response = await getTeamMembers();
-        setTeamMembers(response.data);
-      } catch (error) {
-        message.error('Failed to fetch team members: ' + error.message);
-      }
-    };
-
-    fetchTeamMembers();
   }, []);
 
   const handleDownloadPDF = (patient) => {
@@ -167,8 +154,8 @@ const   Patients = () => {
             value={row.original.care_person}
             onChange={(value) => handleCarePersonChange(row.original.id, value)}
           >
-            {teamMembers.map((member) => (
-              <Option key={member.id} value={member.name}>{member.name}</Option>
+            {CARE_PERSONS.map(doctor => (
+              <Option key={doctor} value={doctor}>{doctor}</Option>
             ))}
           </Select>
         ),
@@ -221,7 +208,7 @@ const   Patients = () => {
         ),
       },
     ],
-    [patients, teamMembers]
+    [patients]
   );
 
   const filteredPatients = useMemo(() => {
