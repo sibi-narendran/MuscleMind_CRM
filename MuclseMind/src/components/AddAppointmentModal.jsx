@@ -12,6 +12,7 @@ const AddAppointmentModal = ({ visible, onClose, onAdd }) => {
   const [treatments, setTreatments] = useState([]);
   const [showAddPatientModal, setShowAddPatientModal] = useState(false);
   const [selectedPatientDetails, setSelectedPatientDetails] = useState(null);
+  const [showAll, setShowAll] = useState(false);
 
   useEffect(() => {
     if (visible) {
@@ -99,6 +100,12 @@ const AddAppointmentModal = ({ visible, onClose, onAdd }) => {
     return current && current < moment().startOf('day');
   };
 
+  const handleDropdownVisibleChange = (open) => {
+    if (open && !showAll) {
+      setShowAll(true); // When dropdown is opened, show all patients
+    }
+  };
+
   return (
     <>
       <Modal
@@ -120,9 +127,9 @@ const AddAppointmentModal = ({ visible, onClose, onAdd }) => {
               showSearch
               optionFilterProp="children"
               filterOption={(input, option) =>
-                option.children.toLowerCase().indexOf(input.toLowerCase()) >= 0
+                option.children.toLowerCase().includes(input.toLowerCase())
               }
-              onChange={handlePatientSelect}
+              onDropdownVisibleChange={handleDropdownVisibleChange}
               dropdownRender={menu => (
                 <>
                   {menu}
@@ -135,22 +142,19 @@ const AddAppointmentModal = ({ visible, onClose, onAdd }) => {
                   >
                     <Button
                       type="link"
-                      onClick={() => setShowAddPatientModal(true)}
+                      onClick={() => setShowAll(true)}
                     >
-                      Add Patient
+                      Show All
                     </Button>
                   </div>
                 </>
               )}
             >
-              {patients.slice(0, 3).map((patient) => (
+              {(showAll ? patients : patients.slice(0, 3)).map((patient) => (
                 <Option key={patient.id} value={patient.id}>
                   {`${patient.patient_id} - ${patient.name}`}
                 </Option>
               ))}
-              {patients.length > 3 && (
-                <Option disabled>--- More available on search ---</Option>
-              )}
             </Select>
           </Form.Item>
 

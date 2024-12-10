@@ -1,20 +1,28 @@
-const { createClinic, getClinics, updateClinic, deleteClinic } = require('../models/ClinicModels.js');
+const clinicModel = require('../models/ClinicModels');
 
-const addClinic = async (userId, clinicData) => {
-  const dataWithUserId = { ...clinicData, user_id: userId };
-  return await createClinic(dataWithUserId);
+// Function to get clinic information
+const getClinicInfo = async (userId) => {
+  try {
+    const info = await clinicModel.getClinicInfo(userId);
+    return info;
+  } catch (error) {
+    console.error('Failed to get clinic info:', error);
+    throw error; // Rethrow to handle it further up the call stack
+  }
 };
 
-const fetchClinics = async (userId) => {
-  return await getClinics(userId);
+// Function to update clinic information
+const updateClinicInfo = async (clinicId, clinicData) => {
+  try {
+    const update = await clinicModel.updateClinicInfo(clinicId, clinicData);
+    return update;
+  } catch (error) {
+    console.error('Failed to update clinic info:', error);
+    throw error; // Rethrow to handle it further up the call stack
+  }
 };
 
-const editClinic = async (id, clinicData) => {
-  return await updateClinic(id, clinicData);
+module.exports = {
+  getClinicInfo,
+  updateClinicInfo
 };
-
-const removeClinic = async (id) => {
-  return await deleteClinic(id);
-};
-
-module.exports = { addClinic, fetchClinics, editClinic, removeClinic };

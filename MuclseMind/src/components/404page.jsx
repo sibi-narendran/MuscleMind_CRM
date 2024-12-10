@@ -1,6 +1,5 @@
 import React from "react";
-import { Typography, Button } from "@material-tailwind/react";
-import { FlagIcon } from "@heroicons/react/24/solid";
+import { Typography } from "antd";
 import error404 from "../assets/404error.svg";
 
 export function ErrorSection7() {

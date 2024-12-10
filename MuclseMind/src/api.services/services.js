@@ -441,3 +441,22 @@ export const deleteprescriptions = async (id) => {
     throw error.response?.data || error;
   }
 };
+
+export const clinicInfo = async () => {
+  try {
+    const res = await interceptors.get(`v1/clinic/get-clinic`); // Use .get instead of .delete
+    return res.data;
+  } catch (error) {
+    throw error.response?.data || error;
+  }
+};
+
+export const updateClinicInfo = async (data) => {
+  try {
+    const res = await interceptors.put(`v1/clinic/put-clinic`, data);
+    return res.data;
+  } catch (error) {
+    throw error.response?.data || error;
+  }
+};
+

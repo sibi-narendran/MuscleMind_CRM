@@ -3,7 +3,6 @@ const router = express.Router();
 const UserRoute = require("./UserRoutes.js");
 const PatientRoute = require("./PatientRoutes.js");
 const AppointmentRoute = require("./AppointmentRoutes.js");
-const ClinicRoute = require("./ClinicRoutes.js");
 const OperatingHoursRoute = require("./OperatingHoursRoutes.js");
 const TreatmentRoute = require("./TreatmentRoutes.js");
 const MedicationRoute = require("./MedicationRoutes.js");
@@ -13,6 +12,7 @@ const HolidayRoute = require("./holidayRoutes.js");
 const DashboardStatsRoute = require("./dashboardStatsRoutes.js");
 const BillingRoute = require("./billingRoutes.js");
 const Prescriptions = require("./prescriptionRoutes.js");
+const ClinicRoutes = require("./ClinicRoutes.js");
 
 const Routes = [
   {
@@ -26,10 +26,6 @@ const Routes = [
   {
     path: "/appointments",
     route: AppointmentRoute,
-  },
-  {
-    path: "/clinics",
-    route: ClinicRoute,
   },
   {
     path: "/operating-hours",
@@ -66,6 +62,10 @@ const Routes = [
   {
     path: "/prescription",
     route: Prescriptions,
+  },
+  {
+    path: "/clinic",
+    route: ClinicRoutes,
   },
 ];
 

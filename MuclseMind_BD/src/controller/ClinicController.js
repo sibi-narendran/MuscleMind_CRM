@@ -1,46 +1,30 @@
-const { addClinic, fetchClinics, editClinic, removeClinic } = require('../services/ClinicService.js');
-const { createResponse } = require('../utils/responseUtil.js');
+const clinicService = require('../services/ClinicService');
+const { createResponse } = require('../utils/responseUtil');
 
-const addClinicController = async (req, res) => {
-  const { id: userId } = req.user; // Assuming user ID is in the JWT payload
-  const clinicData = req.body;
+// Function to handle getting clinic information
+const getClinicInfo = async (req, res) => {
   try {
-    const newClinic = await addClinic(userId, clinicData);
-    res.status(201).json(createResponse(true, 'Clinic added successfully', newClinic));
+    const userId = req.user.id; // Assuming user ID is attached to req.user by auth middleware
+    const data = await clinicService.getClinicInfo(userId);
+    createResponse(res, 200, data);
   } catch (error) {
-    res.status(500).json(createResponse(false, 'Failed to add clinic', null, error.message));
+    createResponse(res, 500, { message: error.message });
   }
 };
 
-const getClinicsController = async (req, res) => {
-  const { id: userId } = req.user;
+// Function to handle updating clinic information
+const updateClinicInfo = async (req, res) => {
   try {
-    const clinics = await fetchClinics(userId);
-    res.status(200).json(createResponse(true, 'Clinics retrieved successfully', clinics));
+    const clinicId = req.params.id; // Assuming clinic ID is passed as URL parameter
+    const clinicData = req.body;
+    const data = await clinicService.updateClinicInfo(clinicId, clinicData);
+    createResponse(res, 200, data);
   } catch (error) {
-    res.status(500).json(createResponse(false, 'Failed to retrieve clinics', null, error.message));
+    createResponse(res, 500, { message: error.message });
   }
 };
 
-const editClinicController = async (req, res) => {
-  const { id } = req.params;
-  const clinicData = req.body;
-  try {
-    const updatedClinic = await editClinic(id, clinicData);
-    res.status(200).json(createResponse(true, 'Clinic updated successfully', updatedClinic));
-  } catch (error) {
-    res.status(500).json(createResponse(false, 'Failed to update clinic', null, error.message));
-  }
+module.exports = {
+  getClinicInfo,
+  updateClinicInfo
 };
-
-const deleteClinicController = async (req, res) => {
-  const { id } = req.params;
-  try {
-    await removeClinic(id);
-    res.status(200).json(createResponse(true, 'Clinic deleted successfully'));
-  } catch (error) {
-    res.status(500).json(createResponse(false, 'Failed to delete clinic', null, error.message));
-  }
-};
-
-module.exports = { addClinicController, getClinicsController, editClinicController, deleteClinicController };
