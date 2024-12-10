@@ -11,7 +11,7 @@ const Login = lazy(() => import('../components/login'));
 const createAccount = lazy(() => import('../components/CreateAccount'));
 const ForgotPassword = lazy(() => import('../components/ForgotPassword'));
 const MyProfile = lazy(() => import('../components/Profile'));
-const Prescriptions = lazy(() => import('../components/prescriptions'));
+const Prescriptions = lazy(() => import('../pages/Prescriptions'));
 const Settings = lazy(() => import('../components/Settings'));
 
 
