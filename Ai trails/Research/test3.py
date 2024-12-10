@@ -3,19 +3,8 @@ from langchain_core.prompts import ChatPromptTemplate
 from langchain_openai import ChatOpenAI
 from datetime import datetime
 from enum import Enum
-from langchain_core.runnables import RunnablePassthrough
-from langchain_core.output_parsers import StrOutputParser
-from langchain.chat_models import ChatOpenAI
-from langchain_community.utilities import SQLDatabase
-from pyprojroot import here
-
-db_path = str(here("data")) + "/db.sqlite3"
-db = SQLDatabase.from_uri(f"sqlite:///{db_path}")
-
-
-def get_schema(_):
-    return db.get_table_info()
-
+from enum import Enum
+from langgraph.graph import StateGraph, END
 class State(TypedDict):
     query: str
     intent: str
@@ -30,9 +19,6 @@ class Intent(Enum):
     PATIENT_DETAILS = "patient_details"
     CHECK_AVAILABILITY = "check_availability"
     OTHERS = "others"
-
-def run_query(query):
-        return db.run(query)
 
 def detect_intent(state: State) -> State:
     """Detect the intent of the dental query"""
@@ -126,8 +112,8 @@ def handle_cancellation(state: State) -> State:
     return {"response": response}
 
 def handle_view_appointments(state: State) -> State:
-    # Initial prompt to gather required information
-    gather_info_prompt = ChatPromptTemplate.from_template(
+    """Handle viewing appointments"""
+    prompt = ChatPromptTemplate.from_template(
         """Act as a dental receptionist helping view appointments.
         Ask for:
         - Patient name or ID
@@ -138,65 +124,14 @@ def handle_view_appointments(state: State) -> State:
         
         Help the patient view their appointment(s)."""
     )
-
-    # SQL generation prompt
-    sql_prompt = ChatPromptTemplate.from_template(
-    """You are a dental receptionist. Generate a SQL query to view appointments.
-    IMPORTANT: Use ? for parameter binding (DO NOT use {}).
-    
-    Example correct format:
-    SELECT * FROM appointments WHERE patient_id = ?
-    
-    Tables:
-    - core_appointment (id, patient_id, doctor_id, date, time, status)
-    - core_patient (id, name, contact)
-    - core_doctor (id, name)
-    
-    Query: {query}
-    Details: {details}
-    
-    Return only the SQL query using ? for parameters."""
-
-        )
-
-    # Initialize LLM
-    llm = ChatOpenAI(
-        api_key="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",
-        model="gpt-4",
-        temperature=0.0
-    )
-
-    # Chain to gather information
-    info_chain = gather_info_prompt | llm
-
-    # Chain to generate and execute SQL query
-    sql_generation_chain = (
-        RunnablePassthrough.assign(schema=get_schema)
-        | sql_prompt
-        | llm.bind(stop="\nSQL Result:")
-        | StrOutputParser()
-    )
-
-    # Final chain to format response
-    response_chain = (
-        RunnablePassthrough.assign(
-            query=sql_generation_chain
-        ).assign(
-            schema=get_schema,
-            response=lambda variables: run_query(variables["query"])
-        )
-        | gather_info_prompt
-        | llm
-    )
-
-    # Execute the chain
-    response = response_chain.invoke({
+    chain = prompt | ChatOpenAI(api_key="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",
+            model="gpt-4",
+            temperature=0.0)
+    response = chain.invoke({
         "query": state["query"],
         "details": state.get("details", {})
-    })
-
-    return {"response": response.content}
-
+    }).content
+    return {"response": response}
 
 def handle_patient_details(state: State) -> State:
     """Handle patient information requests"""
@@ -262,8 +197,10 @@ def handle_others(state: State) -> State:
     Please let me know if you need help with any of these services."""
     return {"response": response}
 
+
 class DentalCRMBot:
     def __init__(self, api_key):
+        self.api_key = api_key
         self.handlers = {
             Intent.NEW_APPOINTMENT.value: handle_new_appointment,
             Intent.RESCHEDULE_APPOINTMENT.value: handle_reschedule,
@@ -279,52 +216,76 @@ class DentalCRMBot:
             model="gpt-4",
             temperature=0.0
         )
+        self.workflow = self._create_workflow()
+
+    def _create_workflow(self) -> StateGraph:
+        """Create and return the workflow graph"""
+        # Create the graph
+        workflow = StateGraph(State)
+
+        # Add nodes for intent detection and handling
+        workflow.add_node("detect_intent", detect_intent)
+        
+        # Add nodes for each intent handler
+        for intent_name, handler in self.handlers.items():
+            workflow.add_node(intent_name, handler)
+
+        # Add conditional edges from intent detection to handlers
+        def route_intent(state: State) -> str:
+            """Route to appropriate handler based on detected intent"""
+            return state.get("intent", Intent.OTHERS.value)
+
+        workflow.add_conditional_edges(
+            "detect_intent",
+            route_intent,
+            {intent: intent for intent in self.handlers.keys()}
+        )
+
+        # Add edges from handlers to END
+        for intent in self.handlers.keys():
+            workflow.add_edge(intent, END)
+
+        # Set entry point
+        workflow.set_entry_point("detect_intent")
+
+        # Compile the graph
+        return workflow.compile()
 
     def process_query(self, query: str, session_id: str = "default") -> str:
-        """Process user query and return appropriate response"""
-        # Initialize or get existing conversation state
-        state = self.conversation_history.get(session_id, {
+        """Process user query through the workflow graph"""
+        # Initialize state
+        state = {
             "query": query,
             "intent": "",
             "response": "",
-            "details": {}
-        })
-        
-        # Update state with new query
-        state["query"] = query
-        
-        # Detect intent if not in ongoing conversation
-        if not state["intent"]:
-            state.update(detect_intent(state))
-        
-        # Handle query based on intent
-        handler = self.handlers.get(state["intent"], handle_others)
-        state.update(handler(state))
-        
+            "details": self.conversation_history.get(session_id, {})
+        }
+
+        # Process through workflow
+        result = self.workflow.invoke(state)
+
         # Update conversation history
-        self.conversation_history[session_id] = state
+        self.conversation_history[session_id] = result.get("details", {})
+
+        return result.get("response", "I apologize, but I couldn't process your request.")
+
+    def run_interactive(self):
+        """Run an interactive session with the bot"""
+        print("Dental Assistant: How can I help you today?")
+        session_id = datetime.now().strftime("%Y%m%d%H%M%S")
         
-        return state["response"]
+        while True:
+            user_input = input("\nUser: ")
+            if user_input.lower() == "exit":
+                print("\nDental Assistant: Thank you for using our service. Have a great day!")
+                break
+            
+            response = self.process_query(user_input, session_id)
+            print(f"\nAssistant: {response}")
+
 
 # Usage example:
 if __name__ == "__main__":
-    bot = DentalCRMBot(api_key="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")
-    
-    # Example conversation
-    queries = [
-        "I want to book a dental appointment",
-        "I need to reschedule my appointment",
-        "Can you check if Dr. Smith is available next Tuesday?",
-        "What are my upcoming appointments?",
-        "I want to cancel my appointment",
-        "How do I make pizza?" # Non-dental query
-    ]
-    
-    print("Dental Assistant: How can I help you today?")
-    while True:
-        user_input = input("\nUser: ")
-        if user_input.lower() == "exit":
-            break
-        
-        response = bot.process_query(user_input)
-        print(f"\nAssistant: {response}")
+    api_key = "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"
+    bot = DentalCRMBot(api_key)
+    bot.run_interactive()
