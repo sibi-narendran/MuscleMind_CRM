@@ -4,58 +4,42 @@ dotenv.config();
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-
 const supabase = createClient(supabaseUrl, supabaseKey);
 
-const createClinic = async (clinicData) => {
-  const { data, error } = await supabase
-    .from('clinics')
-    .insert([clinicData]);
+// Function to get clinic information
+const getClinicInfo = async (userId) => {
+  try {
+    const { data, error } = await supabase
+      .from('users')
+      .select('*')
+      .eq('id', userId)
+      .single();
 
-  if (error) {
-    console.error("Error creating clinic:", error);
-    throw error;
+    if (error) throw new Error(error.message);
+    return data;
+  } catch (error) {
+    console.error('Failed to get clinic info:', error);
+    throw error; // Rethrow to handle it further up the call stack
   }
-  return data;
 };
 
-const getClinics = async (userId) => {
-  const { data, error } = await supabase
-    .from('clinics')
-    .select('*')
-    .eq('user_id', userId);
+// Function to update clinic information
+const updateClinicInfo = async (clinicId, clinicData) => {
+  try {
+    const { data, error } = await supabase
+      .from('users')
+      .update(clinicData)
+      .eq('id', clinicId);
 
-  if (error) {
-    console.error("Error fetching clinics:", error);
-    throw error;
+    if (error) throw new Error(error.message);
+    return data;
+  } catch (error) {
+    console.error('Failed to update clinic info:', error);
+    throw error; // Rethrow to handle it further up the call stack
   }
-  return data;
 };
 
-const updateClinic = async (id, clinicData) => {
-  const { data, error } = await supabase
-    .from('clinics')
-    .update(clinicData)
-    .eq('id', id);
-
-  if (error) {
-    console.error("Error updating clinic:", error);
-    throw error;
-  }
-  return data;
+module.exports = {
+  getClinicInfo,
+  updateClinicInfo
 };
-
-const deleteClinic = async (id) => {
-  const { data, error } = await supabase
-    .from('clinics')
-    .delete()
-    .eq('id', id);
-
-  if (error) {
-    console.error("Error deleting clinic:", error);
-    throw error;
-  }
-  return data;
-};
-
-module.exports = { createClinic, getClinics, updateClinic, deleteClinic };

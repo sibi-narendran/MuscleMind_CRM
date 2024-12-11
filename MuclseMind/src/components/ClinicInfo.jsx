@@ -6,32 +6,26 @@ import { getOperatingHours, updateOperatingHours,getTreatments, addTreatment, ed
 import { getMedications, addMedication, editMedication, deleteMedication } from '../api.services/services';
 import { getTeamMembers, addTeamMember, editTeamMember, deleteTeamMember } from '../api.services/services';
 import { addHoliday, getHolidays, updateHoliday, deleteHoliday } from '../api.services/services';
+import { clinicInfo, updateClinicInfo } from '../api.services/services';
 
 
 const { Option } = Select;
-
-
-
-// Helper function to capitalize day names
 const capitalize = (str) => str.charAt(0).toUpperCase() + str.slice(1);
-
-// Helper function to generate Google Maps link
-const generateGoogleMapsLink = (address) => {
-  const encodedAddress = encodeURIComponent(address);
-  return `https://www.google.com/maps/search/?api=1&query=${encodedAddress}`;
-};
-
-
 const ClinicInfo = () => {
   const [clinicData, setClinicData] = useState({
-    name: 'Smile Dental Clinic',
-    tagline: 'Your Smile, Our Priority',
-    address: '123 Smile St, Dental City, DC 12345',
-    phone: '(123) 456-7890',
-    email: 'contact@smiledental.com',
+    name: '',
+    clinic_name: '',
+    address: '', 
+    state: '',
+    city: '',
+    pincode: '',
+    phone: '',
+    email: '',
+    GST_Number: '',
+    License_Number: '',
     socialMedia: {
-      facebook: 'https://facebook.com',
-      instagram: 'https://instagram.com',
+      facebook: '',
+      instagram: '',
     },
     operatingHours: [],
   });
@@ -70,6 +64,23 @@ const ClinicInfo = () => {
   const [editTreatmentData, setEditTreatmentData] = useState(null);
   const [editTeamMemberData, setEditTeamMemberData] = useState(null);
   
+
+  useEffect(() => {
+    const fetchClinicData = async () => {
+      try {
+        const response = await clinicInfo();
+        if (response.success) {
+          setClinicData(response.data);
+        } else {
+          message.error('Failed to fetch clinic data');
+        }
+      } catch (error) {
+        message.error('Error fetching clinic data');
+      }
+    };
+
+    fetchClinicData();
+  }, []);
 
   useEffect(() => {
     const fetchOperatingHours = async () => {
@@ -364,20 +375,15 @@ const ClinicInfo = () => {
         </Button>
       </div>
       <p><strong>Name:</strong> {clinicData.name}</p>
-      <p><strong>Tagline:</strong> {clinicData.tagline}</p>
+      <p><strong>Clinic Name:</strong> {clinicData.clinic_name}</p>
       <p><strong>Address:</strong> {clinicData.address}</p>
-      <p>
-        <a 
-          href={clinicData.gmapLink || generateGoogleMapsLink(clinicData.address)} 
-          target="_blank" 
-          rel="noopener noreferrer" 
-          className="text-blue-500"
-        >
-          View on Google Maps
-        </a>
-      </p>
+      <p><strong>state:</strong> {clinicData.state}</p>
+      <p><strong>city:</strong> {clinicData.city}</p>
+      <p><strong>pincode:</strong> {clinicData.pincode}</p>
       <p><strong>Phone:</strong> {clinicData.phone}</p>
       <p><strong>Email:</strong> {clinicData.email}</p>
+      <p><strong>GST Number:</strong> {clinicData.GST_Number}</p>
+      <p><strong>License Number:</strong> {clinicData.License_Number}</p>
       <p>
         <strong>Social Media:</strong> 
         <a href={clinicData.socialMedia.facebook} className="text-blue-500">Facebook</a>, 
@@ -395,13 +401,13 @@ const ClinicInfo = () => {
         </Button>
       </div>
       <Table
-        dataSource={clinicData.operatingHours.map((entry, index) => ({
+        dataSource={clinicData.operatingHours?.map((entry, index) => ({
           key: index,
           day: capitalize(entry.day),
           status: entry.status,
           open: entry.open_time ? entry.open_time.slice(0, 5) : 'N/A',
           close: entry.close_time ? entry.close_time.slice(0, 5) : 'N/A',
-        }))}
+        })) || []}
         columns={[
           { title: 'Day', dataIndex: 'day', key: 'day' },
           { title: 'Status', dataIndex: 'status', key: 'status' },
@@ -653,15 +659,13 @@ const renderHolidays = () => (
     >
       <Form
         initialValues={clinicData}
-        onFinish={(values) => {
-          setClinicData(values);
-          setIsEditClinicModal(false);
-        }}
+        onFinish={handleSaveClinicInfo}
+        layout="vertical"
       >
         <Form.Item name="name" label="Clinic Name">
           <Input />
         </Form.Item>
-        <Form.Item name="tagline" label="Tagline">
+        <Form.Item name="clinic_name" label="Clini name">
           <Input />
         </Form.Item>
         <Form.Item name="address" label="Address">
@@ -1041,6 +1045,22 @@ const renderAddHolidayModal = () => {
         console.log('Cancel deletion');
       },
     });
+  };
+
+  const handleSaveClinicInfo = async (values) => {
+    try {
+      const response = await updateClinicInfo(values);
+      if (response.success) {
+        message.success('Clinic information updated successfully');
+        setClinicData(values); // Update local state with new clinic data
+      } else {
+        message.error('Failed to update clinic information');
+      }
+    } catch (error) {
+      message.error('Error updating clinic information');
+    } finally {
+      setIsEditClinicModal(false); // Assuming you have a modal control state
+    }
   };
 
   return (

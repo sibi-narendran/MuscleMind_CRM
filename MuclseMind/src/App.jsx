@@ -6,17 +6,12 @@ import routes from './routes';
 import Login from './components/login';
 import CreateAccount from './components/CreateAccount';
 import ForgotPassword from './components/ForgotPassword';
-import ErrorSection7 from './components/404page';
-import useNetworkStatus from './components/useNetworkStatus';
+// import ErrorSection7 from './components/404page';
 
 const DefaultLayout = lazy(() => import('./layout/DefaultLayout'));
 
 function App() {
-  const isOnline = useNetworkStatus();
 
-  if (!isOnline) {
-    return <ErrorSection7 />;
-  }
 
   return (
     <>
@@ -68,7 +63,7 @@ function App() {
               );
             })}
         </Route>
-        <Route path="*" element={<ErrorSection7 />} />
+        {/* <Route path="*" element={<ErrorSection7 />} /> */}
       </Routes>
     </>
   );

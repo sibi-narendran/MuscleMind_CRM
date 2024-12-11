@@ -22,7 +22,7 @@ const Billing = () => {
     try {
       const response = await getBillings();
       console.log("Fetched billings:", response);
-      setBillings(response.data || []);
+      setBillings(response.data || []); 
     } catch (error) {
       console.error("Error fetching billings:", error);
     }
@@ -144,7 +144,7 @@ const Billing = () => {
             </p>
             <h3 className="text-2xl font-bold text-gray-900 dark:text-white mt-1">
               {card.value}
-            </h3>
+            </h3> 
             <p className={`text-sm mt-2 ${card.trendColor}`}>{card.trend}</p>
           </div>
         ))}
