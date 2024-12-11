@@ -4,11 +4,11 @@ const { createResponse } = require('../utils/responseUtil');
 // Function to handle getting clinic information
 const getClinicInfo = async (req, res) => {
   try {
-    const userId = req.user.id; // Assuming user ID is attached to req.user by auth middleware
+    const userId = req.user.id; 
     const data = await clinicService.getClinicInfo(userId);
-    createResponse(res, 200, data);
+    res.status(200).json(createResponse(true, 'Clinic info fetched successfully', data));
   } catch (error) {
-    createResponse(res, 500, { message: error.message });
+    res.status(500).json(createResponse(false, 'Failed to fetch clinic info', null, error.message));
   }
 };
 
@@ -18,9 +18,9 @@ const updateClinicInfo = async (req, res) => {
     const clinicId = req.params.id; // Assuming clinic ID is passed as URL parameter
     const clinicData = req.body;
     const data = await clinicService.updateClinicInfo(clinicId, clinicData);
-    createResponse(res, 200, data);
-  } catch (error) {
-    createResponse(res, 500, { message: error.message });
+    res.status(200).json(createResponse(true, 'Clinic info updated successfully', data));
+      } catch (error) {
+    res.status(500).json(createResponse(false, 'Failed to update clinic info', null, error.message));
   }
 };
 
