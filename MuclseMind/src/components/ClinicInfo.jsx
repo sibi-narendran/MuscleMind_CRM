@@ -82,7 +82,7 @@ const ClinicInfo = () => {
     fetchClinicData();
   }, []);
 
-  useEffect(() => {
+  
     const fetchOperatingHours = async () => {
       try {
         const response = await getOperatingHours();
@@ -94,10 +94,11 @@ const ClinicInfo = () => {
       } catch (error) {
         message.error('Error fetching operating hours');
       }
-    };
-
+  };
+  useEffect(() => {
     fetchOperatingHours();
   }, []);
+
 
 
   const fetchHolidays = async () => {
@@ -374,21 +375,16 @@ const ClinicInfo = () => {
           Edit
         </Button>
       </div>
-      <p><strong>Name:</strong> {clinicData.name}</p>
-      <p><strong>Clinic Name:</strong> {clinicData.clinic_name}</p>
+      <p><strong>Name:</strong> {clinicData.username}</p>
+      <p><strong>Clinic Name:</strong> {clinicData.clinicName}</p>
       <p><strong>Address:</strong> {clinicData.address}</p>
-      <p><strong>state:</strong> {clinicData.state}</p>
-      <p><strong>city:</strong> {clinicData.city}</p>
-      <p><strong>pincode:</strong> {clinicData.pincode}</p>
-      <p><strong>Phone:</strong> {clinicData.phone}</p>
+      <p><strong>State:</strong> {clinicData.state}</p>
+      <p><strong>City:</strong> {clinicData.city}</p>
+      <p><strong>Pincode:</strong> {clinicData.pincode}</p>
+      <p><strong>Phone:</strong> {clinicData.phoneNumber}</p>
       <p><strong>Email:</strong> {clinicData.email}</p>
       <p><strong>GST Number:</strong> {clinicData.GST_Number}</p>
       <p><strong>License Number:</strong> {clinicData.License_Number}</p>
-      <p>
-        <strong>Social Media:</strong> 
-        <a href={clinicData.socialMedia.facebook} className="text-blue-500">Facebook</a>, 
-        <a href={clinicData.socialMedia.instagram} className="text-blue-500">Instagram</a>
-      </p>
     </section>
   );
 
@@ -646,6 +642,7 @@ const renderHolidays = () => (
       <p><strong>Appointment Booking:</strong> {otherClinicInfo.appointmentBooking}</p>
       <p><strong>Special Services:</strong> {otherClinicInfo.specialServices}</p>
       <p><strong>GST Number:</strong> {otherClinicInfo.gstNumber}</p>
+      
     </section>
   );
 
@@ -662,10 +659,10 @@ const renderHolidays = () => (
         onFinish={handleSaveClinicInfo}
         layout="vertical"
       >
-        <Form.Item name="name" label="Clinic Name">
+        <Form.Item name="username" label="User Name">
           <Input />
         </Form.Item>
-        <Form.Item name="clinic_name" label="Clini name">
+        <Form.Item name="clinicName" label="Clini name">
           <Input />
         </Form.Item>
         <Form.Item name="address" label="Address">
@@ -674,10 +671,19 @@ const renderHolidays = () => (
         <Form.Item name="gmapLink" label="Google Maps Link">
           <Input />
         </Form.Item>
-        <Form.Item name="phone" label="Phone">
+        <Form.Item name="phoneNumber" label="Phone Number">
           <Input />
         </Form.Item>
         <Form.Item name="email" label="Email">
+          <Input /> 
+        </Form.Item>
+        <Form.Item name="state" label="State">
+          <Input />
+        </Form.Item>
+        <Form.Item name="city" label="City">
+          <Input />
+        </Form.Item>
+        <Form.Item name="pincode" label="Pincode">
           <Input />
         </Form.Item>
         <Form.Item name={['socialMedia', 'facebook']} label="Facebook">
@@ -702,10 +708,10 @@ const renderHolidays = () => (
       footer={null}
     >
       <Form
-        initialValues={clinicData.operatingHours.reduce((acc, { day, status, open_time, close_time }) => {
+        initialValues={clinicData.operatingHours && Array.isArray(clinicData.operatingHours) ? clinicData.operatingHours.reduce((acc, { day, status, open_time, close_time }) => {
           acc[day] = { status, open: open_time, close: close_time };
           return acc;
-        }, {})}
+        }, {}) : {}}
         onFinish={handleSaveOperatingHours}
         layout="vertical"
       >
@@ -1049,17 +1055,23 @@ const renderAddHolidayModal = () => {
 
   const handleSaveClinicInfo = async (values) => {
     try {
-      const response = await updateClinicInfo(values);
+      // Assuming 'id' is stored in the clinicData state
+      const clinicId = clinicData.id;
+      if (!clinicId) {
+        message.error('Clinic ID is missing');
+        return;
+      }
+
+      const response = await updateClinicInfo(clinicId, values);
       if (response.success) {
         message.success('Clinic information updated successfully');
-        setClinicData(values); // Update local state with new clinic data
+        setClinicData(values);  // Update the local state to reflect the changes
+        setIsEditClinicModal(false);  // Close the modal
       } else {
         message.error('Failed to update clinic information');
       }
     } catch (error) {
-      message.error('Error updating clinic information');
-    } finally {
-      setIsEditClinicModal(false); // Assuming you have a modal control state
+      message.error('Error updating clinic information: ' + error.message);
     }
   };
 

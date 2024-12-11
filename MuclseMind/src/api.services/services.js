@@ -444,16 +444,16 @@ export const deleteprescriptions = async (id) => {
 
 export const clinicInfo = async () => {
   try {
-    const res = await interceptors.get(`v1/clinic/get-clinic`); // Use .get instead of .delete
+    const res = await interceptors.get(`v1/clinic/get-clinic`); 
     return res.data;
   } catch (error) {
     throw error.response?.data || error;
   }
 };
 
-export const updateClinicInfo = async (data) => {
+export const updateClinicInfo = async (id,data) => {
   try {
-    const res = await interceptors.put(`v1/clinic/put-clinic`, data);
+    const res = await interceptors.put(`v1/clinic/put-clinic/${id}`, data);
     return res.data;
   } catch (error) {
     throw error.response?.data || error;

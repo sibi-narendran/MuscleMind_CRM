@@ -7,7 +7,7 @@ const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 const supabase = createClient(supabaseUrl, supabaseKey);
 
 // Function to get clinic information
-const getClinicInfo = async (userId) => {
+const   getClinicInfo = async (userId) => {
   try {
     const { data, error } = await supabase
       .from('users')
