@@ -153,7 +153,7 @@ const AddAppointmentModal = ({ visible, onClose, onAdd }) => {
             >
               {(showAll ? patients : patients.slice(0, 3)).map((patient) => (
                 <Option key={patient.id} value={patient.id}>
-                  {`${patient.patient_id} - ${patient.name}`}
+                  {`${patient.patient_id}-${patient.name}`}
                 </Option>
               ))}
             </Select>
