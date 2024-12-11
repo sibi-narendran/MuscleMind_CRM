@@ -7,7 +7,6 @@ import AddAppointmentModal from './AddAppointmentModal';
 import EditAppointmentModal from './EditAppointmentModal';
 import { Modal, Button, message, Popconfirm } from 'antd';
 import { getAppointments, deleteAppointment, addAppointment, updateAppointment } from '../api.services/services'; // Import services
-import '../assets/css/Appoints.css';
 
 const Appointments = () => {
   const [selectedDate, setSelectedDate] = useState(new Date());

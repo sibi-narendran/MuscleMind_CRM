@@ -233,29 +233,29 @@ const Management = () => {
                         className="hover:bg-gray-50 dark:hover:bg-meta-4"
                         onClick={() => handleMemberClick(member)}
                       >
-                        <td className="px-6 py-4 whitespace-nowrap">
+                        <td className="px-6 py-4 whitespace-nowrap" data-label="Date :">
                           {moment(member.date).format("YYYY-MM-DD")}
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
+                        <td className="px-6 py-4 whitespace-nowrap" data-label="Name :">
                           {member.name}
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
+                        <td className="px-6 py-4 whitespace-nowrap" data-label="Role :">
                           {member.role}
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
+                        <td className="px-6 py-4 whitespace-nowrap" data-label="Date of Joining :"  >
                           {member.doj}
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
+                        <td className="px-6 py-4 whitespace-nowrap" data-label="Salary :">
                           {member.salary}
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
+                        <td className="px-6 py-4 whitespace-nowrap" data-label="Status :">
                           <button
                             className={getStatusClass(member.attendance_status)}
                           >
                             {member.attendance_status || "Pending"}
                           </button>
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
+                        <td className="px-6 py-4 whitespace-nowrap" data-label="Action :">
                           <button
                             onClick={(event) => {
                               event.stopPropagation();

@@ -5,6 +5,7 @@ import {
   createBilling,
   updateBilling,
   deleteBilling,
+  getTreatments
 } from "../api.services/services";
 
 import '../assets/css/Patients.css';
@@ -13,9 +14,15 @@ const Billing = () => {
   const [billings, setBillings] = useState([]);
   const [selectedBilling, setSelectedBilling] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
+  const [showModal, setShowModal] = useState(false);
+  const [currentBilling, setCurrentBilling] = useState(null);
+  const [treatments, setTreatments] = useState([]);
+  const [selectedTreatments, setSelectedTreatments] = useState({});
+  const [totalCost, setTotalCost] = useState(0);
 
   useEffect(() => {
     fetchBillings();
+    fetchTreatments();
   }, []);
 
   const fetchBillings = async () => {
@@ -23,10 +30,22 @@ const Billing = () => {
       const response = await getBillings();
       console.log("Fetched billings:", response);
       setBillings(response.data || []); 
+      console.log("Fetched billings:", response.data);
     } catch (error) {
       console.error("Error fetching billings:", error);
     }
   };
+
+  const fetchTreatments = async () => {
+    try {
+      const response = await getTreatments();
+      setTreatments(response.data || []); // Store treatments in state
+    } catch (error) {
+      console.error("Error fetching treatments:", error);
+    }
+  };
+
+  console.log("line 46", treatments);
 
   const handleGenerateBilling = async () => {
     try {
@@ -88,6 +107,59 @@ const Billing = () => {
       default:
         return "text-gray-700 bg-gray-100 dark:bg-meta-2 dark:text-gray-100";
     }
+  };
+
+
+  const handleSubmitTreatments = async () => {
+    try {
+      // Assuming you have a function to update the billing with selected treatments
+      const updatedBilling = {
+        ...currentBilling,
+        treatments: selectedTreatments,
+        totalCost: totalCost,
+      };
+      await updateBilling(currentBilling.id, updatedBilling);
+      fetchBillings(); // Refresh the billings list
+      handleCloseModal(); // Close the modal
+      message.success("Billing updated successfully");
+    } catch (error) {
+      message.error("Failed to update billing: " + error.message);
+    }
+  };
+
+  const handleTreatmentChange = (treatmentId, cost) => {
+    setSelectedTreatments((prev) => ({
+      ...prev,
+      [treatmentId]: parseFloat(cost) || 0, // Ensure cost is a number
+    }));
+  };
+
+  const handleCheckboxChange = (treatmentId, isChecked) => {
+    setSelectedTreatments((prev) => {
+      const updated = { ...prev };
+      if (isChecked) {
+        const currentCost = document.getElementById(`cost-${treatmentId}`).value;
+        updated[treatmentId] = parseFloat(currentCost) || 0;
+      } else {
+        delete updated[treatmentId];
+      }
+      return updated;
+    });
+  };
+
+  useEffect(() => {
+    const total = Object.values(selectedTreatments).reduce((acc, cost) => acc + cost, 0);
+    setTotalCost(total);
+  }, [selectedTreatments]);
+
+  const handleOpenModal = (billing) => {
+    setCurrentBilling(billing);
+    setShowModal(true);
+  };
+
+  const handleCloseModal = () => {
+    setShowModal(false);
+    setCurrentBilling(null);
   };
 
   return (
@@ -192,16 +264,16 @@ const Billing = () => {
                   key={index}
                   className="hover:bg-gray-50 dark:hover:bg-strokedark"
                 >
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white" data-label="Invoice Number :">
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white text-right md:text-left bill-mtb" data-label="Invoice Number :">
                     {billing.invoice_no || "N/A"}
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white" data-label="Patient Name :">
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white text-right md:text-left" data-label="Patient Name :">
                     {billing.patient_name}
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-meta-2" data-label="Treatment Name :">
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-meta-2 text-right md:text-left bill-mtb" data-label="Treatment Name :">
                     {billing.treatment_name}
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-meta-2" data-label="Date :">
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-meta-2 text-right md:text-left bill-mtb" data-label="Date :">
                     {(() => {
                       if (billing.date) {
                         const date = new Date(billing.date);
@@ -214,10 +286,10 @@ const Billing = () => {
                       return "N/A";
                     })()}
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-white" data-label="Total Amount :">
+                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-white text-right md:text-left bill-mtb" data-label="Total Amount :">
                     ${billing.cost?.toFixed(2) || "N/A"}
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap" data-label="Status :">
+                  <td className="px-6 py-4 whitespace-nowrap text-right md:text-left bill-mtb" data-label="Status :">
                     <select
                       value={billing.invoice_status}
                       onChange={(e) =>
@@ -230,7 +302,13 @@ const Billing = () => {
                       <option value="Not Paid">Not Paid</option>
                     </select>
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap flex items-center" data-label="Actions :">
+                  <td className="px-6 py-4 whitespace-nowrap flex items-center text-right md:text-left bill-mtb" data-label="Actions :">
+                    <button
+                      onClick={() => handleOpenModal(billing)}
+                      className="text-green-600 dark:text-meta-2 hover:text-green-800 dark:hover:text-meta-3 mr-2"
+                    >
+                      <span className="mr-2">+</span>
+                    </button>
                     <button
                       onClick={() => handleGenerateInvoice(billing)}
                       className="text-blue-600 dark:text-meta-2 hover:text-blue-800 dark:hover:text-meta-3 mr-2"
@@ -250,6 +328,50 @@ const Billing = () => {
           </table>
         </div>
       </div>
+
+      {showModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center">
+          <div className="bg-white dark:bg-boxdark p-6 rounded-lg shadow-lg">
+            <h3 className="text-lg font-semibold mb-4">Select Treatments for {currentBilling.patient_name}</h3>
+            <ul>
+              {treatments.map((treatment) => (
+                <li key={treatment.id} className="flex items-center mb-2">
+                  <input
+                    type="checkbox"
+                    className="mr-2"
+                    onChange={(e) => handleCheckboxChange(treatment.id, e.target.checked)}
+                  />
+                  <span className="flex-1">{treatment.procedure_name}</span>
+                  <input
+                  id={`cost-${treatment.id}`}
+                  type="number"
+                  value={selectedTreatments[treatment.id] || treatment.cost}
+                  onChange={(e) => handleTreatmentChange(treatment.id, e.target.value)}
+                  className="ml-2 w-20"
+                />
+                </li>
+              ))}
+            </ul>
+            <div className="mt-4">
+            <strong>Total Cost: </strong>${totalCost.toFixed(2)}
+          </div>
+          <div className="flex justify-end mt-4">
+            <button
+              onClick={handleSubmitTreatments}
+              className="mr-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+            >
+              Submit
+            </button>
+            <button
+              onClick={handleCloseModal}
+              className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700"
+            >
+              Close
+            </button>
+          </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
