@@ -7,6 +7,7 @@ import AddAppointmentModal from './AddAppointmentModal';
 import EditAppointmentModal from './EditAppointmentModal';
 import { Modal, Button, message, Popconfirm } from 'antd';
 import { getAppointments, deleteAppointment, addAppointment, updateAppointment } from '../api.services/services'; // Import services
+import '../assets/css/Appoints.css';
 
 const Appointments = () => {
   const [selectedDate, setSelectedDate] = useState(new Date());
@@ -18,13 +19,17 @@ const Appointments = () => {
   const [dateRange, setDateRange] = useState([null, null]);
   const [startDate, endDate] = dateRange;
   const [showDetailsModal, setShowDetailsModal] = useState(false);
+  const [showCalendarModal, setShowCalendarModal] = useState(false);
+
 
   useEffect(() => {
     fetchAppointments();
+    
   }, []);
 
   useEffect(() => {
     filterAppointments();
+    
   }, [appointments, dateRange]);
 
   const fetchAppointments = async () => {
@@ -32,11 +37,14 @@ const Appointments = () => {
       const response = await getAppointments();
       if (response.success) {
         setAppointments(response.data);
+        setShowCalendarModal(false);
       } else {
         message.error(response.message || 'Failed to fetch appointments');
+        
       }
     } catch (error) {
       message.error('Failed to fetch appointments: ' + error.message);
+      
     }
   };
 
@@ -47,6 +55,7 @@ const Appointments = () => {
         const appointmentDate = new Date(apt.date);
         return appointmentDate >= startDate && appointmentDate <= endDate;
       });
+      setShowCalendarModal(false);
     }
   
     // Enhanced sorting: First by status ('Scheduled' first, 'Completed' last), then by date
@@ -64,10 +73,12 @@ const Appointments = () => {
       if (dateA < dateB) return -1;
       if (dateA > dateB) return 1;
   
-      return 0; // Keep original order if both have the same status and date
+      return 0;
+       // Keep original order if both have the same status and date
     });
   
     setFilteredAppointments(filtered);
+    
   };
 
   const handleAddAppointment = async (newAppointment) => {
@@ -135,48 +146,56 @@ const Appointments = () => {
   return (
     <div className="p-6 grid grid-cols-1 lg:grid-cols-3 gap-6 dark:bg-boxdark" style={{ height: '100vh' }}>
       {/* Left Side - Appointments List */}
-      <div className="lg:col-span-2 overflow-y-auto hide-scrollbar" style={{ maxHeight: '100vh' }}>
+      <div className="lg:col-span-2 overflow-y-auto hide-scrollbar sm:max-h-full lg:max-h-screen">
         <div className="bg-white dark:bg-boxdark rounded-xl shadow-sm border border-gray-100 dark:border-strokedark p-6 mb-6">
-          <div className="flex flex-col lg:flex-row justify-between items-center mb-6">
-            <h1 className="text-2xl font-bold text-black dark:text-white mb-4 lg:mb-0">
+          <div className="flex justify-between items-center mb-6">
+            <h1 className="text-xs font-bold text-black dark:text-white  sm:text-2xl">
               {getHeaderText()}
             </h1>
             <button
               onClick={() => setShowAddModal(true)}
               className="bg-blue-600 dark:bg-meta-4 text-white py-2 px-4 rounded-lg hover:bg-blue-700 dark:hover:bg-meta-3"
             >
-              <Plus className="inline-block mr-2" /> Add Appointment
+              <Plus className="inline-block mr-2" /> <span className="hidden sm:inline">Add Appointment</span>
+              
+            </button>
+            <button
+              onClick={() => setShowCalendarModal(true)}
+              className="sm:block lg:hidden bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 dark:hover:bg-meta-3"
+            >
+              <CalendarIcon className="inline-block mr-2" /> 
+              
             </button>
           </div>
           <div className="space-y-4">
             {filteredAppointments.map((apt) => (
               <div
                 key={apt.id}
-                className="flex flex-col lg:flex-row items-center p-4 bg-meta-9 dark:bg-strokedark rounded-lg hover:bg-gray-100 dark:hover:bg-meta-4 cursor-pointer mb-4"
+                className="flex flex-col sm:flex-row items-start sm:items-center p-4 bg-meta-9 dark:bg-strokedark rounded-lg hover:bg-gray-100 dark:hover:bg-meta-4 cursor-pointer mb-4"
                 onClick={() => handleAppointmentClick(apt)}
               >
-                <div className="flex-shrink-0 w-full lg:w-20 mb-2 lg:mb-0">
+                <div className="flex-shrink-0 w-full sm:w-20 mb-2 sm:mb-0">
                   <div className="flex items-center">
                     <Clock className="h-4 w-4 text-gray-400 dark:text-meta-2 mr-1" />
-                    <span className="text-sm font-medium text-black dark:text-meta-2">
+                    <span className="text-xs sm:text-sm font-medium text-black dark:text-meta-2">
                       {format(new Date(apt.date), 'MMM dd')} {format(new Date(`1970-01-01T${apt.time}`), 'hh:mm a')}
                     </span>
                   </div>
                 </div>
-                <div className='ml-2 mr-4'>
-                  <span className="text-sm font-medium text-black dark:text-meta-2 ml-4">
+                <div className="ml-0 sm:ml-2 mr-4">
+                  <span className="text-xs sm:text-sm font-medium text-black dark:text-meta-2 ml-0 sm:ml-4">
                     {apt.appointment_id}
                   </span>
                 </div>
-                <div className="ml-4 flex-grow">
-                  <p className="text-sm font-medium text-black dark:text-white">
+                <div className="ml-0 sm:ml-4 flex-grow">
+                  <p className="text-xs sm:text-sm font-medium text-black dark:text-white">
                     {apt.patient_name}
                   </p>
-                  <p className="text-sm text-black dark:text-meta-2">
+                  <p className="text-xs sm:text-sm text-black dark:text-meta-2">
                     {apt.treatment_name}
                   </p>
                 </div>
-                <div className="ml-4">
+                <div className="ml-0 sm:ml-4 mt-2 sm:mt-0">
                   <span
                     className={`px-2 py-1 text-xs font-medium rounded-full ${
                       apt.status === 'Scheduled'
@@ -203,7 +222,7 @@ const Appointments = () => {
       </div>
 
       {/* Right Side - Calendar */}
-      <div className="bg-white dark:bg-boxdark rounded-xl shadow-sm border border-s-meta-4 dark:border-strokedark p-6 mb-6" style={{ position: 'sticky', top: 0, height: 'fit-content' }}>
+      <div className="bg-white dark:bg-boxdark rounded-xl shadow-sm border border-s-meta-4 dark:border-strokedark p-6 mb-6 hidden lg:block " style={{ position: 'sticky', top: 0, height: 'fit-content' }} >
         <h2 className="text-lg font-semibold text-black dark:text-white mb-4">
           Select Date Range
         </h2>
@@ -224,6 +243,27 @@ const Appointments = () => {
         onClose={() => setShowAddModal(false)}
         onAdd={handleAddAppointment}
       />
+
+<Modal
+        title="Select Date Range"
+        visible={showCalendarModal}
+        onCancel={() => setShowCalendarModal(false)} // Close modal
+        footer={null}
+        bodyStyle={{ padding: '20px' }}
+      >
+        <h2 className="text-lg font-semibold text-black dark:text-white mb-4">
+          Select Date Range
+        </h2>
+        <DatePicker
+          selected={startDate}
+          onChange={(update) => setDateRange(update)}
+          startDate={startDate}
+          endDate={endDate}
+          selectsRange
+          inline
+          className="rounded-lg dark:bg-meta-4"
+        />
+      </Modal>
 
       {/* Appointment Details Modal */}
       {selectedAppointment && (
@@ -268,6 +308,7 @@ const Appointments = () => {
         />
       )}
     </div>
+
   );
 };
 

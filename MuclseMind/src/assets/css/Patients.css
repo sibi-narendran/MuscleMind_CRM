@@ -1,6 +1,6 @@
 @media 
-only screen and (max-width: 760px),
-(min-device-width: 768px) and (max-device-width: 1024px) {
+only screen and (max-width: 425px),
+(min-device-width: 320px) and (max-device-width: 425px) {
 
   table {
     width: 100%;
