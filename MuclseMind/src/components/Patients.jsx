@@ -172,18 +172,18 @@ const   Patients = () => {
           </Button>
         ),
       },
-      {
-        Header: 'Documents',
-        accessor: 'documents',
-        Cell: ({ row }) => (
-          <Button
-            onClick={() => showModal('viewDocuments', row.original)}
-            icon={<FileTextOutlined />}
-          >
-            View ({row.original.documents?.length || 0})
-          </Button>
-        ),
-      },
+      // {
+      //   Header: 'Documents',
+      //   accessor: 'documents',
+      //   Cell: ({ row }) => (
+      //     <Button
+      //       onClick={() => showModal('viewDocuments', row.original)}
+      //       icon={<FileTextOutlined />}
+      //     >
+      //       View ({row.original.documents?.length || 0})
+      //     </Button>
+      //   ),
+      // },
       {
         Header: 'Actions',
         accessor: 'actions',
@@ -350,11 +350,6 @@ const   Patients = () => {
                 <p className="font-semibold">Care Person</p>
                 <p>{currentPatient.care_person}</p>
               </div>
-            </div>
-
-            <div>
-              <p className="font-semibold">Notes</p>
-              <p>{currentPatient.notes || 'No notes available'}</p>
             </div>
 
             <div>
