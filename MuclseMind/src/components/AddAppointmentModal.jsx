@@ -130,6 +130,7 @@ const AddAppointmentModal = ({ visible, onClose, onAdd }) => {
                 option.children.toLowerCase().includes(input.toLowerCase())
               }
               onDropdownVisibleChange={handleDropdownVisibleChange}
+              onChange={handlePatientSelect}
               dropdownRender={menu => (
                 <>
                   {menu}
@@ -142,9 +143,9 @@ const AddAppointmentModal = ({ visible, onClose, onAdd }) => {
                   >
                     <Button
                       type="link"
-                      onClick={() => setShowAll(true)}
+                      onClick={() => setShowAddPatientModal(true)}
                     >
-                      Show All
+                      Add New Patient
                     </Button>
                   </div>
                 </>
@@ -152,7 +153,7 @@ const AddAppointmentModal = ({ visible, onClose, onAdd }) => {
             >
               {(showAll ? patients : patients.slice(0, 3)).map((patient) => (
                 <Option key={patient.id} value={patient.id}>
-                  {`${patient.patient_id} - ${patient.name}`}
+                  {`${patient.patient_id}-${patient.name}`}
                 </Option>
               ))}
             </Select>
