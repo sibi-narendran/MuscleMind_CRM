@@ -1,31 +1,59 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import PropTypes from 'prop-types';
 import { Stethoscope } from "../lib/icons";
+import { clinicInfo } from '../api.services/services';
 
 export default function PrescriptionPreview({ data }) {
+  const [clinicData, setClinicData] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    const fetchClinicData = async () => {
+      try {
+        setLoading(true);
+        const data = await clinicInfo();
+        if (data.success) {
+          setClinicData(data.data);
+        } else {
+          throw new Error(data.message);
+        }
+      } catch (err) {
+        setError(err.message || 'Failed to fetch clinic data');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchClinicData();
+  }, []);
+
+  if (loading) return <div>Loading...</div>;
+  if (error) return <div>Error: {error}</div>;
+
   return (
     <div className="border rounded-lg p-6 bg-white shadow-sm">
       <div className="border-b pb-4 mb-4 flex justify-between">
         <div>
-          <div className="flex items-center gap-2 text-cyan-500">
+          <div className="flex items-center gap-2  text-meta-4">
             <Stethoscope className="w-6 h-6" />
             <div>
-              <h2 className="font-bold">Dental Clinic</h2>
-              <p className="text-sm">Tooth Pain Sensation Care</p>
+              <h2 className="font-bold">{clinicData?.clinicName || 'Dental Clinic'}</h2>
+              <p className="text-sm">{clinicData?.description || 'Tooth Pain Sensation Care'}</p>
             </div>
           </div>
           
-          <div className="mt-2 text-sm text-gray-600">
-            <p>201, Down Town Street, on</p>
-            <p>NEW YORK CITY</p>
-            <p>02-1234567, +880-12345678</p>
+          <div className="mt-2 text-sm text-meta-4">
+            <p>{clinicData?.address || '201, Down Town Street, on'}</p>
+            <p>{clinicData?.city || 'NEW YORK CITY'}</p>
+            <p>{clinicData?.phoneNumber || '02-1234567, +880-12345678'}</p>
           </div>
         </div>
         
-        <div className="text-right">
-          <h3 className="font-bold">DR. NAME SURNAME</h3>
-          <p className="text-sm text-gray-600">DENTAL SURGEON, MPH</p>
-          <p className="text-sm text-gray-600">Medical officer, Dept.of Oral Medicine</p>
+        <div className="text-right text-meta-4">
+          <h3 className="font-bold">{clinicData?.username || 'DR. NAME SURNAME'}</h3>
+          <p className="text-sm text-gray-600">{clinicData?.specialization || 'DENTAL SURGEON, MPH'}</p>
+          <p className="text-sm text-gray-600">{clinicData?.department || 'Medical officer, Dept.of Oral Medicine'}</p>
         </div>
       </div>
 
@@ -97,7 +125,7 @@ export default function PrescriptionPreview({ data }) {
           </div>
           <div className="text-right">
             <p className="text-sm text-gray-600">Signature:</p>
-            <div className="w-32 h-12 border-b border-gray-300"></div>
+            <div className="w-32 h-12 border-b border-red-500"></div>
           </div>
         </div>
       </div>
