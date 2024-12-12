@@ -117,50 +117,111 @@ const EditPatientModal = ({ visible, onClose, patient, onSave, onDelete }) => {
           <Panel header="Case Sheet Information" key="2">
             <Row gutter={16}>
               <Col span={12}>
-                <Form.Item label="Medical History" name="medical_history">
-                  <TextArea  className="dark:bg-gray-800 dark:text-black" 
-                  value={formData?.phone || ''}
-            onChange={(e) => setFormData({ ...formData, phone: e.target.value })}  />
+                <Form.Item label="Medical History">
+                  <TextArea
+                    value={formData?.case_sheet_info?.medical_history || ''}
+                    onChange={(e) => setFormData({
+                      ...formData,
+                      case_sheet_info: {
+                        ...formData.case_sheet_info,
+                        medical_history: e.target.value
+                      }
+                    })}
+                    className="dark:bg-gray-800 dark:text-black"
+                  />
                 </Form.Item>
               </Col>
               <Col span={12}>
-                <Form.Item label="Dental History" name="dental_history">
-                  <TextArea rows={2} className="dark:bg-gray-800 dark:text-black" />
+                <Form.Item label="Dental History">
+                  <TextArea
+                    value={formData?.case_sheet_info?.dental_history || ''}
+                    onChange={(e) => setFormData({
+                      ...formData,
+                      case_sheet_info: {
+                        ...formData.case_sheet_info,
+                        dental_history: e.target.value
+                      }
+                    })}
+                    rows={2}
+                    className="dark:bg-gray-800 dark:text-black"
+                  />
                 </Form.Item>
               </Col>
             </Row>
 
             <Row gutter={16}>
               <Col span={12}>
-                <Form.Item label="Decayed" name="decayed">
-                  <Input className="dark:bg-gray-800 dark:text-black" />
+                <Form.Item label="Decayed">
+                  <Input
+                    value={formData?.case_sheet_info?.decayed || ''}
+                    onChange={(e) => setFormData({
+                      ...formData,
+                      case_sheet_info: {
+                        ...formData.case_sheet_info,
+                        decayed: e.target.value
+                      }
+                    })}
+                    className="dark:bg-gray-800 dark:text-black"
+                  />
                 </Form.Item>
               </Col>
               <Col span={12}>
-                <Form.Item label="Grossly Decayed" name="grossly_decayed">
-                  <Input className="dark:bg-gray-800 dark:text-black" />
+                <Form.Item label="Grossly Decayed">
+                  <Input
+                    value={formData?.case_sheet_info?.grossly_decayed || ''}
+                    onChange={(e) => setFormData({
+                      ...formData,
+                      case_sheet_info: {
+                        ...formData.case_sheet_info,
+                        grossly_decayed: e.target.value
+                      }
+                    })}
+                    className="dark:bg-gray-800 dark:text-black"
+                  />
                 </Form.Item>
               </Col>
             </Row>
 
-              
-                <Form.Item label="Roots Stumps" name="roots_stumps">
-                  <Input className="dark:bg-gray-800 dark:text-black" />
-                </Form.Item>
-          
-
-            <Form.Item label="Other Diagnosis" name="other_diagnosis">
-              <TextArea rows={2} className="dark:bg-gray-800 dark:text-black" />
+            <Form.Item label="Roots Stumps">
+              <Input
+                value={formData?.case_sheet_info?.roots_stumps || ''}
+                onChange={(e) => setFormData({
+                  ...formData,
+                  case_sheet_info: {
+                    ...formData.case_sheet_info,
+                    roots_stumps: e.target.value
+                  }
+                })}
+                className="dark:bg-gray-800 dark:text-black"
+              />
             </Form.Item>
 
-            <Form.Item label="Treatment Plan" name="treatment_plan">
-              <TextArea rows={2} className="dark:bg-gray-800 dark:text-black" />
-            </Form.Item>
-
-            <Form.Item label="Special Notes" name="notes">
+            <Form.Item label="Other Diagnosis">
               <TextArea
-                placeholder="Special Notes"
-                rows={4}
+                value={formData?.case_sheet_info?.other_diagnosis || ''}
+                onChange={(e) => setFormData({
+                  ...formData,
+                  case_sheet_info: {
+                    ...formData.case_sheet_info,
+                    other_diagnosis: e.target.value
+                  }
+                })}
+                rows={2}
+                className="dark:bg-gray-800 dark:text-black"
+              />
+            </Form.Item>
+
+            <Form.Item label="Treatment Plan">
+              <TextArea
+                value={formData?.case_sheet_info?.treatment_plan || ''}
+                onChange={(e) => setFormData({
+                  ...formData,
+                  case_sheet_info: {
+                    ...formData.case_sheet_info,
+                    treatment_plan: e.target.value
+                  }
+                })}
+                rows={2}
                 className="dark:bg-gray-800 dark:text-black"
               />
             </Form.Item>
