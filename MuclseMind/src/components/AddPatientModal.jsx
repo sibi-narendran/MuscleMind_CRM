@@ -26,16 +26,17 @@ const AddPatientModal = ({ visible, onClose, onAdd }) => {
       email: values.email,
       notes: values.notes,
       care_person: values.care_person,
-      case_sheet_file: values.case_sheet_file,
-      jotform_link: values.jotform_link,
-      documents: values.documents || [],
-      medical_history: values.medical_history,
-      dental_history: values.dental_history,
-      decayed: values.decayed,
+      case_sheet_info: {
+        medical_history: values.medical_history,
+        dental_history: values.dental_history,
+        decayed: values.decayed,
       grossly_decayed: values.grossly_decayed,
       roots_stumps: values.roots_stumps,
       other_diagnosis: values.other_diagnosis,
       treatment_plan: values.treatment_plan,
+      },
+      documents: values.documents || [],
+      case_sheet_file: values.case_sheet_file,
     };
     onAdd(newPatient);
   };
@@ -214,10 +215,7 @@ const AddPatientModal = ({ visible, onClose, onAdd }) => {
           </Panel>
 
           <Panel header="Additional Information" key="3">
-            
-
-            
-
+    
             <Form.Item label="Documents" name="documents">
               <Upload>
                 <Button icon={<UploadOutlined />}>Upload Documents</Button>

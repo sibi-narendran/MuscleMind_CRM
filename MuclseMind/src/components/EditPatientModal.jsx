@@ -24,6 +24,9 @@ const EditPatientModal = ({ visible, onClose, patient, onSave, onDelete }) => {
     setFormData(patient);
   }, [patient]);
 
+
+
+
   useEffect(() => {
     fetchCarePresons();
   }, []); 
@@ -115,7 +118,9 @@ const EditPatientModal = ({ visible, onClose, patient, onSave, onDelete }) => {
             <Row gutter={16}>
               <Col span={12}>
                 <Form.Item label="Medical History" name="medical_history">
-                  <TextArea  className="dark:bg-gray-800 dark:text-black"  />
+                  <TextArea  className="dark:bg-gray-800 dark:text-black" 
+                  value={formData?.phone || ''}
+            onChange={(e) => setFormData({ ...formData, phone: e.target.value })}  />
                 </Form.Item>
               </Col>
               <Col span={12}>

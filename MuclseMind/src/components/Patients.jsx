@@ -37,6 +37,8 @@ const   Patients = () => {
       setLoading(false);
     }
   };
+
+  console.log("patients", patients)
   
 
   useEffect(() => {
