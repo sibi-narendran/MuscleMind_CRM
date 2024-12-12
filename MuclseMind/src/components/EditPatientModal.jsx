@@ -7,8 +7,6 @@ const { Option } = Select;
 const { TextArea } = Input;
 const { Panel } = Collapse;
 
-
-
 const GENDER_OPTIONS = [
   "Male",
   "Female",
@@ -19,13 +17,9 @@ const EditPatientModal = ({ visible, onClose, patient, onSave, onDelete }) => {
   const [formData, setFormData] = useState(patient);
   const [carePresons, setCarePresons] = useState([]);
 
-
   useEffect(() => {
     setFormData(patient);
   }, [patient]);
-
-
-
 
   useEffect(() => {
     fetchCarePresons();
@@ -43,7 +37,7 @@ const EditPatientModal = ({ visible, onClose, patient, onSave, onDelete }) => {
   return (
     <Modal
       title="Edit Patient"
-      visible={visible}
+      open={visible}
       onOk={handleSave}
       onCancel={onClose}
       okText="Save"
@@ -63,55 +57,55 @@ const EditPatientModal = ({ visible, onClose, patient, onSave, onDelete }) => {
       <Form layout="vertical">
         <Collapse defaultActiveKey={['1']} className="mb-4" accordion={true}>
           <Panel header="Personal Information" key="1">
-          <Form.Item label="Name">
-          <Input
-            placeholder="Name"
-            value={formData?.name || ''}
-            onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-          />
-        </Form.Item>
-        <Form.Item label="Age">
-          <Input
-            type="number"
-            placeholder="Age"
-            value={formData?.age || ''}
-            onChange={(e) => setFormData({ ...formData, age: e.target.value })}
-          />
-        </Form.Item>
-        <Form.Item label="Gender">
-          <Select
-            value={formData?.gender || ''}
-            onChange={(value) => setFormData({ ...formData, gender: value })}
-          >
-            {GENDER_OPTIONS.map(gender => (
-              <Option key={gender} value={gender}>{gender}</Option>
-            ))}
-          </Select>
-        </Form.Item>
-        <Form.Item label="Email">
-          <Input
-            placeholder="Email"
-            value={formData?.email || ''}
-            onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-          />
-        </Form.Item>
-        <Form.Item label="Phone">
-          <Input
-            placeholder="Phone"
-            value={formData?.phone || ''}
-            onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-          />
-        </Form.Item>
-        <Form.Item label="Care of">
-          <Select
-            value={formData?.care_person || ''}
-            onChange={(value) => setFormData({ ...formData, care_person: value })}
-          >
-            {carePresons.map(doctor => (
-              <Option key={doctor.name} value={doctor.name}>{"Dr. " + doctor.name}</Option>
-            ))}
-          </Select>
-        </Form.Item>
+            <Form.Item label="Name">
+              <Input
+                placeholder="Name"
+                value={formData?.name || ''}
+                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+              />
+            </Form.Item>
+            <Form.Item label="Age">
+              <Input
+                type="number"
+                placeholder="Age"
+                value={formData?.age || ''}
+                onChange={(e) => setFormData({ ...formData, age: e.target.value })}
+              />
+            </Form.Item>
+            <Form.Item label="Gender">
+              <Select
+                value={formData?.gender || ''}
+                onChange={(value) => setFormData({ ...formData, gender: value })}
+              >
+                {GENDER_OPTIONS.map(gender => (
+                  <Option key={gender} value={gender}>{gender}</Option>
+                ))}
+              </Select>
+            </Form.Item>
+            <Form.Item label="Email">
+              <Input
+                placeholder="Email"
+                value={formData?.email || ''}
+                onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+              />
+            </Form.Item>
+            <Form.Item label="Phone">
+              <Input
+                placeholder="Phone"
+                value={formData?.phone || ''}
+                onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+              />
+            </Form.Item>
+            <Form.Item label="Care of">
+              <Select
+                value={formData?.care_person || ''}
+                onChange={(value) => setFormData({ ...formData, care_person: value })}
+              >
+                {carePresons.map(doctor => (
+                  <Option key={doctor.name} value={doctor.name}>{"Dr. " + doctor.name}</Option>
+                ))}
+              </Select>
+            </Form.Item>
           </Panel>
 
           <Panel header="Case Sheet Information" key="2">
@@ -228,21 +222,19 @@ const EditPatientModal = ({ visible, onClose, patient, onSave, onDelete }) => {
           </Panel>
 
           <Panel header="Additional Information" key="3">
-          <Form.Item label="Documents">
-          <Upload
-            fileList={formData?.documents || []}
-            onChange={({ fileList }) => setFormData({ ...formData, documents: fileList })}
-          >
-            <Button icon={<UploadOutlined />}>Upload Documents</Button>
-          </Upload>
-        </Form.Item>
+            <Form.Item label="Documents">
+              <Upload
+                fileList={formData?.documents || []}
+                onChange={({ fileList }) => setFormData({ ...formData, documents: fileList })}
+              >
+                <Button icon={<UploadOutlined />}>Upload Documents</Button>
+              </Upload>
+            </Form.Item>
           </Panel>
         </Collapse>
-       
-        
       </Form>
     </Modal>
   );
 };
 
-export default EditPatientModal; 
+export default EditPatientModal;

@@ -7,13 +7,6 @@ const { TextArea } = Input;
 const { Option } = Select;
 const { Panel } = Collapse;
 
-const CARE_PERSONS = [
-  "Dr. John Smith",
-  "Dr. Sarah Wilson",
-  "Dr. Michael Brown",
-  "Dr. Emily Davis",
-];
-
 const PHONE_PREFIXES = ["+1", "+91"];
 
 const AddPatientModal = ({ visible, onClose, onAdd }) => {
@@ -30,10 +23,10 @@ const AddPatientModal = ({ visible, onClose, onAdd }) => {
         medical_history: values.medical_history,
         dental_history: values.dental_history,
         decayed: values.decayed,
-      grossly_decayed: values.grossly_decayed,
-      roots_stumps: values.roots_stumps,
-      other_diagnosis: values.other_diagnosis,
-      treatment_plan: values.treatment_plan,
+        grossly_decayed: values.grossly_decayed,
+        roots_stumps: values.roots_stumps,
+        other_diagnosis: values.other_diagnosis,
+        treatment_plan: values.treatment_plan,
       },
       documents: values.documents || [],
       case_sheet_file: values.case_sheet_file,
@@ -55,7 +48,7 @@ const AddPatientModal = ({ visible, onClose, onAdd }) => {
   return (
     <Modal
       title="Add Patient"
-      visible={visible}
+      open={visible}
       onCancel={onClose}
       footer={null}
       width={800}
@@ -167,55 +160,44 @@ const AddPatientModal = ({ visible, onClose, onAdd }) => {
           <Panel header="Case Sheet Information" key="2">
             <Row gutter={16}>
               <Col span={12}>
-                <Form.Item label="Medical History" name="medical_history">
-                  <TextArea  className="dark:bg-gray-800 dark:text-black"  />
-                </Form.Item>
-              </Col>
-              <Col span={12}>
-                <Form.Item label="Dental History" name="dental_history">
-                  <TextArea rows={2} className="dark:bg-gray-800 dark:text-black" />
-                </Form.Item>
-              </Col>
-            </Row>
+                <div className="space-y-4">
+                  <Form.Item label="Medical History" name="medical_history">
+                    <TextArea className="dark:bg-gray-800 dark:text-black" />
+                  </Form.Item>
+                  
+                  <Form.Item label="Dental History" name="dental_history">
+                    <TextArea rows={2} className="dark:bg-gray-800 dark:text-black" />
+                  </Form.Item>
 
-            <Row gutter={16}>
-              <Col span={12}>
-                <Form.Item label="Decayed" name="decayed">
-                  <Input className="dark:bg-gray-800 dark:text-black" />
-                </Form.Item>
+                  <Form.Item label="Treatment Plan" name="treatment_plan">
+                    <TextArea rows={2} className="dark:bg-gray-800 dark:text-black" />
+                  </Form.Item>
+                </div>
               </Col>
-              <Col span={12}>
-                <Form.Item label="Grossly Decayed" name="grossly_decayed">
-                  <Input className="dark:bg-gray-800 dark:text-black" />
-                </Form.Item>
-              </Col>
-            </Row>
-
               
-                <Form.Item label="Roots Stumps" name="roots_stumps">
-                  <Input className="dark:bg-gray-800 dark:text-black" />
-                </Form.Item>
-          
+              <Col span={12}>
+                <div className="space-y-4">
+                  <Form.Item label="Decayed" name="decayed">
+                    <Input className="dark:bg-gray-800 dark:text-black" />
+                  </Form.Item>
 
-            <Form.Item label="Other Diagnosis" name="other_diagnosis">
-              <TextArea rows={2} className="dark:bg-gray-800 dark:text-black" />
-            </Form.Item>
+                  <Form.Item label="Grossly Decayed" name="grossly_decayed">
+                    <Input className="dark:bg-gray-800 dark:text-black" />
+                  </Form.Item>
 
-            <Form.Item label="Treatment Plan" name="treatment_plan">
-              <TextArea rows={2} className="dark:bg-gray-800 dark:text-black" />
-            </Form.Item>
+                  <Form.Item label="Roots Stumps" name="roots_stumps">
+                    <Input className="dark:bg-gray-800 dark:text-black" />
+                  </Form.Item>
 
-            <Form.Item label="Special Notes" name="notes">
-              <TextArea
-                placeholder="Special Notes"
-                rows={4}
-                className="dark:bg-gray-800 dark:text-black"
-              />
-            </Form.Item>
+                  <Form.Item label="Other Diagnosis" name="other_diagnosis">
+                    <TextArea rows={2} className="dark:bg-gray-800 dark:text-black" />
+                  </Form.Item>
+                </div>
+              </Col>
+            </Row>
           </Panel>
 
           <Panel header="Additional Information" key="3">
-    
             <Form.Item label="Documents" name="documents">
               <Upload>
                 <Button icon={<UploadOutlined />}>Upload Documents</Button>
