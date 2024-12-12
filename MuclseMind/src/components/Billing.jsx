@@ -1,15 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { DollarSign, Download, Filter, Trash2 } from "lucide-react";
-import {
-  getBillings,
-  createBilling,
-  updateBilling,
-  deleteBilling,
-  getTreatments
-} from "../api.services/services";
-
-import '../assets/css/Patients.css';
-import { BillgeneratePDF } from "../lib/BillGenerator";
+import { getBillings, getTreatments, createBilling, updateBilling, deleteBilling } from "../api.services/services";
+import { generateBillingPDF } from "../lib/BillGenerator";
 
 const Billing = () => {
   const [billings, setBillings] = useState([]);
@@ -29,9 +21,7 @@ const Billing = () => {
   const fetchBillings = async () => {
     try {
       const response = await getBillings();
-      console.log("Fetched billings:", response);
       setBillings(response.data || []); 
-      console.log("Fetched billings:", response.data);
     } catch (error) {
       console.error("Error fetching billings:", error);
     }
@@ -40,13 +30,11 @@ const Billing = () => {
   const fetchTreatments = async () => {
     try {
       const response = await getTreatments();
-      setTreatments(response.data || []); // Store treatments in state
+      setTreatments(response.data || []); 
     } catch (error) {
       console.error("Error fetching treatments:", error);
     }
   };
-
-  console.log("line 46", treatments);
 
   const handleGenerateBilling = async () => {
     try {
@@ -77,9 +65,8 @@ const Billing = () => {
     try {
       await deleteBilling(id);
       fetchBillings();
-      message.success("Billing deleted successfully");
     } catch (error) {
-      message.error("Failed to delete billing: " + error.message);
+      console.error("Failed to delete billing:", error);
     }
   };  
 
@@ -87,30 +74,23 @@ const Billing = () => {
     try {
       await updateBilling(billingId, { invoice_status: newStatus });
       fetchBillings();
-      message.success("Billing status updated successfully");
     } catch (error) {
-      message.error("Failed to update billing status: " + error.message);
+      console.error("Failed to update billing status:", error);
     }
   };
-
-  const filteredBillings = billings.filter((billing) =>
-    billing.patient_name.toLowerCase().includes(searchTerm.toLowerCase())
-  );
 
   const getStatusColor = (status) => {
     switch (status) {
       case "Paid":
-        return "text-meta-3  bg-meta-4 dark:bg-meta-4 dark:meta-3";
+        return "text-meta-3 bg-meta-4 dark:bg-meta-4 dark:meta-3";
       case "Pending":
         return "text-meta-6 bg-meta-4 dark:bg-meta-4 dark:text-meta-6";
       case "Not Paid":
-        return "text-meta- bg-meta-4 dark:bg-meta-4 dark:text-meta-1";
+        return "text-meta-1 bg-meta-4 dark:bg-meta-4 dark:text-meta-1";
       default:
         return "text-gray-700 bg-gray-100 dark:bg-meta-2 dark:text-gray-100";
     }
   };
-
-  
 
   const handleCheckboxChange = (treatmentId, isChecked) => {
     setSelectedTreatments((prev) => {
@@ -118,70 +98,64 @@ const Billing = () => {
       if (isChecked) {
         const treatment = treatments.find(t => t.treatment_id === treatmentId);
         if (treatment) {
-          updated[treatmentId] = treatment.cost; // Set the cost when checked
+          updated[treatmentId] = parseFloat(treatment.cost) || 0;
         }
       } else {
-        delete updated[treatmentId]; // Remove the cost when unchecked
+        delete updated[treatmentId];
       }
       return updated;
     });
   };
-  
-  const handleTreatmentChange = (treatmentId, cost) => {
-    setSelectedTreatments((prev) => ({
-      ...prev,
-      [treatmentId]: parseFloat(cost) || 0, // Ensure the cost is a number
-    }));
-  };
-
-
-  
-
-  const handleSubmitTreatments = async () => {
-    if (!currentBilling) return;
-  
-    try {
-      const treatmentNames = Object.keys(selectedTreatments).map(treatmentId => {
-        console.log("treatmentId", treatmentId);
-        console.log("treatments", selectedTreatments);
-        const treatment = treatments.find(t => t.treatment_id === parseInt(treatmentId));
-        console.log("treatment", treatment);
-        return treatment ? treatment.procedure_name : '';
-      });
-  
-      const updatedData = {
-        ...currentBilling,
-        treatment_name: treatmentNames.join(', '), // Join treatment names into a string
-        cost: totalCost,
-      };
-      await updateBilling(currentBilling.id, updatedData);
-      fetchBillings(); // Refresh the billings list
-      
-      handleCloseModal(); // Close the modal after submission
-    } catch (error) {
-      
-    }
-  };
 
   useEffect(() => {
-    const total = Object.values(selectedTreatments).reduce((acc, cost) => acc + parseFloat(cost), 0);
+    const total = Object.values(selectedTreatments).reduce((sum, cost) => sum + parseFloat(cost), 0);
     setTotalCost(total);
   }, [selectedTreatments]);
 
-  const handleOpenModal = (billingId) => {
-    const billing = billings.find(b => b.invoice_no === billingId);
-    if (billing) {
-      setCurrentBilling(billing);
-      setShowModal(true);
-    } else {
-      console.error("Billing not found for ID:", billingId);
+  const handleCreateInvoice = async (e) => {
+    e.preventDefault();
+    const formData = new FormData(e.target);
+    
+    try {
+      const treatmentNames = Object.keys(selectedTreatments)
+        .map(id => treatments.find(t => t.treatment_id === parseInt(id))?.procedure_name)
+        .filter(Boolean)
+        .join(', ');
+
+      const newBilling = {
+        invoice_no: `INV-${Date.now().toString().slice(-6)}`,
+        patient_name: formData.get('patient_name'),
+        patient_id: 1,
+        treatment_name: treatmentNames,
+        cost: totalCost,
+        date: new Date().toISOString(),
+        invoice_status: 'Pending'
+      };
+
+      await createBilling(newBilling);
+      await fetchBillings();
+      setSelectedTreatments({});
+      setTotalCost(0);
+      setShowModal(false);
+      message.success("Invoice created successfully");
+    } catch (error) {
+      message.error("Failed to create invoice");
     }
   };
 
-  const handleCloseModal = () => {
-    setShowModal(false);
-    setCurrentBilling(null);
+  const handleGenerateInvoice = async (billing) => {
+    const success = await generateBillingPDF(billing);
+    if (success) {
+      message.success("Invoice PDF generated successfully");
+    } else {
+      message.error("Failed to generate PDF");
+    }
   };
+
+
+  const filteredBillings = billings.filter((billing) =>
+    billing.patient_name.toLowerCase().includes(searchTerm.toLowerCase())
+  );
 
   return (
     <div className="p-6 dark:bg-boxdark">
@@ -205,7 +179,7 @@ const Billing = () => {
         {[
           {
             title: "Total Revenue",
-            value: "$45,678",
+            value: `$${filteredBillings.reduce((sum, b) => sum + (parseFloat(b.cost) || 0), 0).toFixed(2)}`,
             trend: "+8.3% from last month",
             trendColor: "text-green-600",
           },
@@ -244,17 +218,10 @@ const Billing = () => {
       </div>
 
       <div className="bg-white dark:bg-boxdark rounded-xl shadow-sm border border-gray-100 dark:border-strokedark">
-        <div className="p-6 border-b border-gray-200 dark:border-strokedark flex flex-col md:flex-row justify-between items-center">
-          <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 md:mb-0">
+        <div className="p-6 border-b border-gray-200 dark:border-strokedark">
+          <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
             Recent Billings
           </h2>
-          <input
-            type="text"
-            placeholder="Search by patient name"
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="px-4 py-2 border border-gray-300 rounded-lg dark:bg-meta-4 dark:text-meta-2"
-          />
         </div>
         <div className="overflow-x-auto">
           <table className="w-full">
@@ -272,7 +239,6 @@ const Billing = () => {
                   <th
                     key={index}
                     className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-meta-2 uppercase tracking-wider"
-                    
                   >
                     {header}
                   </th>
@@ -280,58 +246,34 @@ const Billing = () => {
               </tr>
             </thead>
             <tbody className="bg-white dark:bg-boxdark divide-y divide-gray-200 dark:divide-strokedark">
-              {filteredBillings.map((billing, index) => (
+              {filteredBillings.map((billing) => (
                 <tr
-                  key={index}
+                  key={billing.id}
                   className="hover:bg-gray-50 dark:hover:bg-strokedark"
                 >
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white text-right md:text-left bill-mtb" data-label="Invoice Number :">
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">
                     {billing.invoice_no || "N/A"}
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white text-right md:text-left" data-label="Patient Name :">
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">
                     {billing.patient_name}
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-meta-2 text-right md:text-left bill-mtb" data-label="Treatment Name :">
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-meta-2">
                     {billing.treatment_name}
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-meta-2 text-right md:text-left bill-mtb" data-label="Date :">
-                    {(() => {
-                      if (billing.date) {
-                        const date = new Date(billing.date);
-                        if (!isNaN(date)) {
-                          const isoDate = date.toISOString().split("T")[0];
-                          const [year, month, day] = isoDate.split("-");
-                          return `${day}-${month}-${year}`;
-                        }
-                      }
-                      return "N/A";
-                    })()}
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-meta-2">
+                    {new Date(billing.date).toLocaleDateString()}
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-white text-right md:text-left bill-mtb" data-label="Total Amount :">
-                    ${billing.cost?.toFixed(2) || "N/A"}
+                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-white">
+                    ${parseFloat(billing.cost || 0).toFixed(2)}
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-right md:text-left bill-mtb" data-label="Status :">
-                    <select
-                      value={billing.invoice_status}
-                      onChange={(e) =>
-                        handleStatusChange(billing.id, e.target.value)
-                      }
-                      className={`px-2 py-1 text-xs font-medium rounded-full ${getStatusColor(billing.invoice_status)}`}
-                    >
-                      <option value="Paid">Paid</option>
-                      <option value="Pending">Pending</option>
-                      <option value="Not Paid">Not Paid</option>
-                    </select>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <span className={`px-2 py-1 text-xs font-medium rounded-full ${getStatusColor(billing.invoice_status)}`}>
+                      {billing.invoice_status}
+                    </span>
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap flex items-center text-right md:text-left bill-mtb" data-label="Actions :">
+                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                     <button
-                      onClick={() => handleOpenModal(billing.invoice_no)}
-                      className="text-green-600 dark:text-meta-2 hover:text-green-800 dark:hover:text-meta-3 mr-2"
-                    >
-                      <span className="mr-2">+</span>
-                    </button>
-                    <button
-                      onClick={() => handleGenerateInvoice(billing.invoice_no)}
+                      onClick={() => generateBillingPDF(billing)}
                       className="text-blue-600 dark:text-meta-2 hover:text-blue-800 dark:hover:text-meta-3 mr-2"
                     >
                       <Download className="h-5 w-5" />
@@ -349,59 +291,6 @@ const Billing = () => {
           </table>
         </div>
       </div>
-
-      {showModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center">
-          <div className="bg-white dark:bg-boxdark p-6 rounded-lg shadow-lg">
-            <h3 className="text-lg font-semibold mb-4">Select Treatments for {currentBilling.patient_name}</h3>
-            <ul>
-            {treatments.map((treatment) => {
-  const treatmentNames = currentBilling?.treatment_name?.split(', ').map(name => name.trim().toLowerCase()) || [];
-  
-  // Check if the treatment's procedure name is included in the current billing's treatment_name
-    const isSelected = treatmentNames.includes(treatment.procedure_name.toLowerCase());
-  return (
-    <li key={treatment.treatment_id} className="flex items-center mb-2">
-      <input
-        type="checkbox"
-        className="mr-2"
-        checked={selectedTreatments.hasOwnProperty(treatment.treatment_id)}
-        onChange={(e) => handleCheckboxChange(treatment.treatment_id, e.target.checked)}
-      />
-      <span className="flex-1">
-        {treatment.procedure_name} - {treatment.category}
-      </span>
-      <input
-        type="number"
-        value={selectedTreatments[treatment.treatment_id] || treatment.cost}
-        onChange={(e) => handleTreatmentChange(treatment.treatment_id, e.target.value)}
-        className="ml-2 w-20"
-        disabled={!selectedTreatments.hasOwnProperty(treatment.treatment_id)} // Disable input if not selected
-      />
-    </li>
-  );
-})}
-            </ul>
-            <div className="mt-4">
-            <strong>Total Cost: </strong>${totalCost.toFixed(2)}
-          </div>
-          <div className="mt-4 flex justify-end space-x-2">
-        <button
-          onClick={handleSubmitTreatments}
-          className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700"
-        >
-          Submit
-        </button>
-        <button
-          onClick={handleCloseModal}
-          className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700"
-        >
-          Close
-        </button>
-      </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 };

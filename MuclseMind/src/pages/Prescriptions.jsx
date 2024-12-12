@@ -1,82 +1,111 @@
-import { useState } from 'react';
-import { DownloadOutlined, FilterOutlined, DeleteOutlined, PlusOutlined, EditOutlined } from '@ant-design/icons';
-import { Button, Input, Table, Card, Space, Typography } from 'antd';
-import PrescriptionForm from './PrescriptionForm';
+import { useState, useEffect } from 'react';
+import { App, Button, Input, Table, Card, Space, Typography, Modal } from 'antd';
+import { 
+  DownloadOutlined, 
+  DeleteOutlined, 
+  PlusOutlined, 
+  EditOutlined,
+  SearchOutlined
+} from '@ant-design/icons';
+
 import { generatePDF } from '../lib/pdfGenerator';
+import PrescriptionForm from './PrescriptionForm';
+import { GetPrescription, deleteprescriptions } from '../api.services/services';
+
+const { Search } = Input;
+const { Title } = Typography;
 
 function Prescriptions() {
+  const { message } = App.useApp();
   const [searchTerm, setSearchTerm] = useState('');
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [selectedPrescription, setSelectedPrescription] = useState(null);
+  const [selectedPrescription, setSelectedPrescription] = useState({
+    name: '',
+    age: '',
+    sex: '',
+    date: ''
+  });
+  const [prescriptions, setPrescriptions] = useState([]);
 
-  const staticPrescriptions = [
-    {
-      id: 1,
-      prescription_no: "RX001",
-      patient_name: "John Doe",
-      age: "35",
-      sex: "M",
-      date: new Date().toISOString().split('T')[0],
-      medicines: JSON.stringify([
-        {
-          name: "Amoxicillin",
-          dosage: "500mg",
-          duration: "7 days",
-          morning: true,
-          afternoon: false,
-          night: true,
-          instructions: "Take after meals"
+  useEffect(() => {
+    const fetchPrescriptions = async () => {
+      try {
+        const response = await GetPrescription();
+        if (response.success && Array.isArray(response.data)) {
+          setPrescriptions(response.data);
+        } else {
+          console.error('Failed to fetch prescriptions:', response.message);
+          setPrescriptions([]);
         }
-      ])
-    },
-    {
-      id: 2,
-      prescription_no: "RX002",
-      patient_name: "Jane Smith",
-      age: "28",
-      sex: "F",
-      date: "2024-12-08",
-      medicines: JSON.stringify([
-        {
-          name: "Ibuprofen",
-          dosage: "400mg",
-          duration: "5 days",
-          morning: true,
-          afternoon: true,
-          night: true,
-          instructions: "Take with food"
-        }
-      ])
-    }
-  ];
+      } catch (error) {
+        console.error('Error fetching prescriptions:', error);
+        setPrescriptions([]);
+      }
+    };
 
-  const filteredPrescriptions = staticPrescriptions.filter(prescription =>
-    prescription.patient_name.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+    fetchPrescriptions();
+  }, [searchTerm]);
 
-  const handleDownloadPDF = async (prescription) => {
-    const medicines = JSON.parse(prescription.medicines);
-    await generatePDF({
+  const getMedicinesSummary = (prescription) => {
+    return prescription.medicines ? prescription.medicines.length : 0;
+  };
+
+  const handleEditPrescription = (prescription) => {
+    setSelectedPrescription({
       name: prescription.patient_name,
-      age: prescription.age,
-      sex: prescription.sex,
-      date: prescription.date,
-      medicines
+      age: prescription.age.toString(),
+      sex: prescription.gender,
+      date: new Date(prescription.date).toISOString().split('T')[0]
+    });
+    setIsModalOpen(true);
+  };
+
+  const handleModalClose = () => {
+    setIsModalOpen(false);
+    setSelectedPrescription({
+      name: '',
+      age: '',
+      sex: '',
+      date: ''
     });
   };
 
-  const handleDeletePrescription = (prescriptionId) => {
-    // In a static version, we'll just show an alert
-    alert('Delete functionality is disabled in static version');
+  const handleDownloadPDF = (prescription) => {
+    try {
+      const success = generatePDF(prescription);
+      if (success) {
+        message.success('Prescription PDF generated successfully');
+      } else {
+        message.error('Failed to generate PDF');
+      }
+    } catch (error) {
+      console.error('Error generating PDF:', error);
+      message.error('Error generating PDF');
+    }
   };
 
-  const getMedicinesSummary = (prescription) => {
-    try {
-      const medicines = JSON.parse(prescription.medicines);
-      return `${medicines.length} medicine${medicines.length !== 1 ? 's' : ''}`;
-    } catch {
-      return 'No medicines';
-    }
+  const handleDeletePrescription = (id) => {
+    Modal.confirm({
+      title: 'Are you sure you want to delete this prescription?',
+      content: 'This action cannot be undone',
+      onOk: async () => {
+        try {
+          await deleteprescriptions(id);
+          message.success('Prescription deleted successfully');
+          setIsModalOpen(false);
+          fetchPrescriptions();
+        } catch (error) {
+          message.error('Failed to delete prescription');
+        }
+      },
+      onCancel() {
+        console.log('Cancel delete');
+      },
+    });
+  };
+
+  const handleUpdate = (updatedPrescription) => {
+    console.log("Updated prescription:", updatedPrescription);
   };
 
   const columns = [
@@ -90,14 +119,14 @@ function Prescriptions() {
       dataIndex: 'patient_name',
       key: 'patient_name',
       filteredValue: [searchTerm],
-      onFilter: (value, record) => record.patient_name.toLowerCase().includes(value.toLowerCase()),
+      onFilter: (value, record) => record.patient_name && record.patient_name.toLowerCase().includes(value.toLowerCase()),
     },
     {
       title: 'Treatment Name',
       dataIndex: 'treatment_name',
       key: 'treatment_name',
       filteredValue: [searchTerm],
-      onFilter: (value, record) => record.patient_name.toLowerCase().includes(value.toLowerCase()),
+      onFilter: (value, record) => record.treatment_name && record.treatment_name.toLowerCase().includes(value.toLowerCase()),
     },
     {
       title: 'Date',
@@ -111,17 +140,13 @@ function Prescriptions() {
       render: (_, prescription) => (
         <Button
           type="link"
-          onClick={() => {
-            setSelectedPrescription(prescription);
-            setIsModalOpen(true);
-          }}
+          onClick={() => handleEditPrescription(prescription)}
           icon={<EditOutlined />}
         >
           View/Edit ({getMedicinesSummary(prescription)})
         </Button>
       ),
     },
-  
     {
       title: 'Actions',
       key: 'actions',
@@ -144,51 +169,63 @@ function Prescriptions() {
   ];
 
   return (
-    <div style={{ padding: 24 }}>
+    <div className="p-6">
       <Card>
-        <div style={{ marginBottom: 16, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <Typography.Title level={4} style={{ margin: 0 }}>Prescriptions</Typography.Title>
+        <div className="flex justify-between items-center mb-6">
+          <Title level={2}>Prescriptions</Title>
           <Button
             type="primary"
             icon={<PlusOutlined />}
-            onClick={() => setIsModalOpen(true)}
+            onClick={() => {
+              setSelectedPrescription({
+                name: '',
+                age: '',
+                sex: '',
+                date: ''
+              });
+              setIsModalOpen(true);
+            }}
           >
             New Prescription
           </Button>
         </div>
 
-        <div style={{ marginBottom: 16, display: 'flex', gap: 16 }}>
-          <Input
-            placeholder="Search by patient name"
-            value={searchTerm}
+        <div className="mb-6">
+          <Search
+            placeholder="Search prescriptions..."
+            allowClear
+            enterButton={<SearchOutlined />}
+            size="small"
             onChange={(e) => setSearchTerm(e.target.value)}
             style={{ width: 200 }}
-            prefix={<FilterOutlined />}
           />
         </div>
 
         <Table
           columns={columns}
-          dataSource={filteredPrescriptions}
+          dataSource={prescriptions}
           rowKey="id"
-          pagination={{ pageSize: 10 }}
+          pagination={{
+            pageSize: 10,
+            showSizeChanger: true,
+            showQuickJumper: true,
+          }}
         />
       </Card>
-
-      <PrescriptionForm
-        isOpen={isModalOpen}
-        onClose={() => {
-          setIsModalOpen(false);
-          setSelectedPrescription(null);
-          // No need to refetch with static data
-        }}
-        defaultValues={selectedPrescription ? {
-          name: selectedPrescription.patient_name,
-          age: selectedPrescription.age,
-          sex: selectedPrescription.sex,
-          medicines: JSON.parse(selectedPrescription.medicines)
-        } : undefined}
-      />
+      
+      <Modal
+        open={isModalOpen}
+        onCancel={handleModalClose}
+        footer={null}
+        width={800}
+        destroyOnClose
+      >
+        <PrescriptionForm
+          selectedPrescription={selectedPrescription}
+          onClose={handleModalClose}
+          onUpdate={handleUpdate}
+        />
+      </Modal>
     </div>
   );
 }
