@@ -70,6 +70,7 @@ const AddAppointmentModal = ({ visible, onClose, onAdd }) => {
       if (response.success) {
         message.success('Appointment added successfully');
         onAdd(response.data);
+        resetFields();
         onClose();
       } else {
         message.error(response.message);

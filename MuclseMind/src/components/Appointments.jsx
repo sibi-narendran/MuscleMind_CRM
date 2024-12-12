@@ -7,6 +7,7 @@ import AddAppointmentModal from './AddAppointmentModal';
 import EditAppointmentModal from './EditAppointmentModal';
 import { Modal, Button, message, Popconfirm } from 'antd';
 import { getAppointments, deleteAppointment, addAppointment, updateAppointment } from '../api.services/services'; // Import services
+import noAppointmentsImage from '../assets/noappoint.png';
 
 const Appointments = () => {
   const [selectedDate, setSelectedDate] = useState(new Date());
@@ -212,9 +213,16 @@ const Appointments = () => {
               </div>
             ))}
             {filteredAppointments.length === 0 && (
-              <p className="text-black dark:text-meta-2 text-sm">
-                No appointments for the selected date range.
-              </p>
+              <div className="flex flex-col items-center justify-center p-8">
+                <img 
+                  src={noAppointmentsImage} // Replace with your actual image path
+                  alt="No appointments"
+                  className="w-60 h-60 object-contain mb-4"
+                />
+                <p className="text-black dark:text-meta-2 text-sm text-center">
+                  No appointments for the selected date range.
+                </p>
+              </div>
             )}
           </div>
         </div>
