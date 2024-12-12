@@ -383,8 +383,8 @@ const ClinicInfo = () => {
       <p><strong>Pincode:</strong> {clinicData.pincode}</p>
       <p><strong>Phone:</strong> {clinicData.phoneNumber}</p>
       <p><strong>Email:</strong> {clinicData.email}</p>
-      <p><strong>GST Number:</strong> {clinicData.GST_Number}</p>
-      <p><strong>License Number:</strong> {clinicData.License_Number}</p>
+      <p><strong>GST Number:</strong> {clinicData.gst_number}</p>
+      <p><strong>License Number:</strong> {clinicData.license_number}</p>
     </section>
   );
 
@@ -692,6 +692,13 @@ const renderHolidays = () => (
         <Form.Item name={['socialMedia', 'instagram']} label="Instagram">
           <Input />
         </Form.Item>
+        <Form.Item name="gst_number" label="GST Number">
+          <Input />
+        </Form.Item>
+        <Form.Item name="license_number" label="License Number">
+          <Input />
+        </Form.Item>
+        
         <div className="flex justify-end space-x-2">
           <Button onClick={() => setIsEditClinicModal(false)}>Cancel</Button>
           <Button type="primary" htmlType="submit">Save</Button>
