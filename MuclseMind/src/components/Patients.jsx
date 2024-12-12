@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useMemo } from 'react';
-import { Button, Input, message, Space, Modal, Spin, Select, Tag, Tooltip } from 'antd';
-import { PlusOutlined, EditOutlined, DeleteOutlined, DownloadOutlined, EyeOutlined, SearchOutlined, UserOutlined, FileTextOutlined } from '@ant-design/icons';
+import { Button, Input, message, Space, Modal, Spin, Select } from 'antd';
+import { PlusOutlined, EditOutlined, DeleteOutlined, DownloadOutlined, EyeOutlined } from '@ant-design/icons';
 import PreviewCaseSheet from '../components/PreviewCaseSheet';
 import AddPatientModal from '../components/AddPatientModal';
 import EditPatientModal from '../components/EditPatientModal';
@@ -94,47 +94,23 @@ const Patients = () => {
     }
   };
 
-  const handleCarePersonChange = async (id, value) => {
-    try {
-      await editPatient(id, { care_person: value });
-      message.success('Care person updated successfully');
-      fetchPatients();
-    } catch (error) {
-      message.error('Failed to update care person: ' + error.message);
-    }
-  };
-
   const columns = useMemo(
     () => [
       {
         Header: 'Patient ID',
         accessor: 'patient_id',
-        Cell: ({ value }) => (
-          <Tag color="blue" className="rounded-full px-3 text-sm">
-            #{value}
-          </Tag>
-        ),
       },
       {
         Header: 'Name',
         accessor: 'name',
-        Cell: ({ value }) => (
-          <span className="font-semibold text-gray-800 dark:text-white">
-            {value}
-          </span>
-        ),
       },
       {
-        Header: 'Basic Info',
+        Header: 'Basic info',
         accessor: 'contact',
         Cell: ({ row }) => (
-          <div className="space-y-2">
-            <span color={row.original.gender === 'Male' ? 'blue' : 'pink'} className="">
-              {row.original.gender || '-'}
-            </span>
-            <div className="text-gray-600 dark:text-gray-300">
-              Age: {row.original.age}
-            </div>
+          <div className="mtb">
+            <p className='ml-2'>Gender: {row.original.gender || '-'}</p>
+            <p className='ml-2'>Age: {row.original.age}</p>
           </div>
         ),
       },
@@ -142,71 +118,37 @@ const Patients = () => {
         Header: 'Care by',
         accessor: 'care_person',
         Cell: ({ row }) => (
-          <Select
-            value={"Dr. " + row.original.care_person}
-            onChange={(value) => handleCarePersonChange(row.original.id, value)}
-          >
-            {carePresons.map(doctor => (
-              <Option key={doctor.name} value={doctor.name}>{"Dr. " + doctor.name || 'N/A'}</Option>
-            ))}
-          </Select>
-        ),
-      },
-
-      {
-        Header: 'Case Sheet',
-        accessor: 'case_sheet_file',
-        Cell: ({ row }) => (
-          <Button
-            type="default"
-            onClick={() => showModal('viewCaseSheet', row.original)}
-            icon={<FileTextOutlined />}
-            className="rounded-lg hover:text-blue-500 hover:border-blue-500"
-          >
-            View
-          </Button>
+          <div>{row.original.care_person ? `Dr. ${row.original.care_person}` : '-'}</div>
         ),
       },
       {
         Header: 'Actions',
         accessor: 'actions',
         Cell: ({ row }) => (
-          <Space size="middle">
-            <Tooltip title="View Details">
-              <Button
-                type="default"
-                shape="circle"
-                icon={<EyeOutlined />}
-                onClick={() => handleViewPatient(row.original)}
-                className="hover:text-blue-500 hover:border-blue-500"
-              />
-            </Tooltip>
-            <Tooltip title="Edit Patient">
-              <Button
-                type="default"
-                shape="circle"
-                icon={<EditOutlined />}
-                onClick={() => {
-                  setCurrentPatient(row.original);
-                  setEditModalVisible(true);
-                }}
-                className="hover:text-green-500 hover:border-green-500"
-              />
-            </Tooltip>
-            <Tooltip title="Download Case Sheet">
-              <Button
-                type="default"
-                shape="circle"
-                icon={<DownloadOutlined />}
-                onClick={() => handleDownloadCaseSheet(row.original)}
-                className="hover:text-purple-500 hover:border-purple-500"
-              />
-            </Tooltip>
+          <Space className="flex gap-2">
+            <Button
+              className="text-gray-600 hover:text-primary dark:text-gray-400 dark:hover:text-white"
+              icon={<EyeOutlined />}
+              onClick={() => handleViewPatient(row.original)}
+            />
+            <Button
+              className="text-gray-600 hover:text-primary dark:text-gray-400 dark:hover:text-white"
+              icon={<EditOutlined />}
+              onClick={() => {
+                setCurrentPatient(row.original);
+                setEditModalVisible(true);
+              }}
+            />
+            <Button
+              className="text-gray-600 hover:text-primary dark:text-gray-400 dark:hover:text-white"
+              icon={<DownloadOutlined />}
+              onClick={() => handleDownloadCaseSheet(row.original)}
+            />
           </Space>
         ),
       },
     ],
-    [carePresons]
+    []
   );
 
   const filteredPatients = useMemo(() => {
@@ -225,82 +167,60 @@ const Patients = () => {
   } = useTable({ columns, data: filteredPatients });
 
   return (
-    <div className="p-6 bg-white dark:bg-boxdark rounded-xl shadow-lg">
-      <div className="flex justify-between items-center mb-6">
-        <div className="flex-1 max-w-md">
-          <Input
-            placeholder="Search patients by name or ID..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            prefix={<SearchOutlined className="text-gray-400" />}
-            className="rounded-lg hover:border-blue-500 focus:border-blue-500"
-            size="large"
-          />
-        </div>
-        <Button
-          type="primary"
-          size="large"
-          icon={<PlusOutlined />}
+    <div className="p-4 bg-white dark:bg-boxdark">
+      <div className="flex justify-between mb-6">
+        <Input
+          placeholder="Search patients by name or ID..."
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          className="max-w-md dark:bg-meta-4 dark:text-white dark:border-meta-4"
+        />
+        <Button 
+          className="bg-primary dark:bg-meta-4 text-white hover:bg-primary-dark dark:hover:bg-meta-3"
           onClick={() => setAddModalVisible(true)}
-          className="rounded-lg bg-blue-500 hover:bg-blue-600 border-none ml-4"
+          icon={<PlusOutlined />}
         >
           Add Patient
         </Button>
       </div>
 
       {loading ? (
-        <div className="flex justify-center items-center py-20">
+        <div className="flex justify-center items-center">
           <Spin size="large" />
         </div>
       ) : (
-        <div className="overflow-hidden rounded-lg border border-gray-200 dark:border-gray-700">
-          <div className="max-h-[calc(100vh-200px)] overflow-y-auto scrollbar-hide">
-            <table {...getTableProps()} className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-              <thead className="bg-gray-50 dark:bg-meta-4 sticky top-0 z-10">
-                {headerGroups.map(headerGroup => (
-                  <tr {...headerGroup.getHeaderGroupProps()}>
-                    {headerGroup.headers.map(column => (
-                      <th
-                        {...column.getHeaderProps()}
-                        className="px-6 py-4 text-left text-xs font-semibold text-gray-500 dark:text-gray-300 uppercase tracking-wider"
-                      >
-                        {column.render('Header')}
-                      </th>
+        <div className="overflow-x-auto">
+          <table {...getTableProps()} className="min-w-full bg-white dark:bg-boxdark">
+            <thead className="bg-gray-50 dark:bg-meta-4">
+              {headerGroups.map(headerGroup => (
+                <tr key={headerGroup.id} {...headerGroup.getHeaderGroupProps()}>
+                  {headerGroup.headers.map(column => (
+                    <th 
+                      key={column.id}
+                      {...column.getHeaderProps()}
+                      className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-white uppercase tracking-wider"
+                    >
+                      {column.render('Header')}
+                    </th>
+                  ))}
+                </tr>
+              ))}
+            </thead>
+            <tbody {...getTableBodyProps()}>
+              {rows.map(row => {
+                prepareRow(row);
+                return (
+                  <tr key={row.id} {...row.getRowProps()}>
+                    {row.cells.map(cell => (
+                      <td key={cell.column.id} {...cell.getCellProps()}>
+                        {cell.render('Cell')}
+                      </td>
                     ))}
                   </tr>
-                ))}
-              </thead>
-              <tbody 
-                {...getTableBodyProps()}
-                className="bg-white divide-y divide-gray-200 dark:divide-gray-700 dark:bg-boxdark"
-              >
-                {rows.map(row => {
-                  prepareRow(row);
-                  return (
-                    <tr 
-                      {...row.getRowProps()} 
-                      className="dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors duration-200"
-                    >
-                      {row.cells.map(cell => {
-                        const cellProps = cell.getCellProps();
-                        const columnHeader = cell.column.Header + " :";
-                        return (
-                          <td 
-                            key={cellProps.key} 
-                            {...cellProps} 
-                            className="px-4 py-2 text-sm text-black dark:text-white" 
-                            data-label={columnHeader}
-                          >
-                            {cell.render('Cell')}
-                          </td>
-                        );
-                      })}
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
+                );
+              })}
+            </tbody>
+          </table>
         </div>
       )}
 

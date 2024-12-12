@@ -158,43 +158,172 @@ const AddPatientModal = ({ visible, onClose, onAdd }) => {
           </Panel>
 
           <Panel header="Case Sheet Information" key="2">
-            <Row gutter={16}>
-              <Col span={12}>
-                <div className="space-y-4">
-                  <Form.Item label="Medical History" name="medical_history">
-                    <TextArea className="dark:bg-gray-800 dark:text-black" />
-                  </Form.Item>
+            <div className="space-y-6">
+              {/* DENTAL HISTORY Section */}
+              <div className="border p-4 rounded">
+                <h3 className="font-bold mb-4">DENTAL HISTORY</h3>
+                <Row gutter={16}>
+                  <Col span={12}>
+                    <div className="space-y-4">
+                      <Form.Item label="Chief Complaint" name="chief_complaint">
+                        <TextArea rows={3} className="dark:bg-gray-800 dark:text-black" />
+                      </Form.Item>
+                      
+                      <Form.Item label="History of Present Illness" name="present_illness">
+                        <TextArea rows={3} className="dark:bg-gray-800 dark:text-black" />
+                      </Form.Item>
+
+                      <Form.Item label="Past Dental History" name="dental_history">
+                        <TextArea rows={3} className="dark:bg-gray-800 dark:text-black" />
+                      </Form.Item>
+
+                      <Form.Item label="Medical History" name="medical_history">
+                        <TextArea rows={3} className="dark:bg-gray-800 dark:text-black" />
+                      </Form.Item>
+                    </div>
+                  </Col>
+                  <Col span={12}>
+                    <div className="space-y-4">
+                      <Form.Item label="Decayed" name="decayed">
+                        <Input className="dark:bg-gray-800 dark:text-black" />
+                      </Form.Item>
+
+                      <Form.Item label="Grossly Decayed" name="grossly_decayed">
+                        <Input className="dark:bg-gray-800 dark:text-black" />
+                      </Form.Item>
+
+                      <Form.Item label="Roots Stumps" name="roots_stumps">
+                        <Input className="dark:bg-gray-800 dark:text-black" />
+                      </Form.Item>
+
+                      <Form.Item label="Other Diagnosis" name="other_diagnosis">
+                        <TextArea rows={2} className="dark:bg-gray-800 dark:text-black" />
+                      </Form.Item>
+
+                      <Form.Item label="Treatment Plan" name="treatment_plan">
+                        <TextArea rows={2} className="dark:bg-gray-800 dark:text-black" />
+                      </Form.Item>
+                    </div>
+                  </Col>
+                </Row>
+              </div>
+
+              {/* PAST MEDICAL HISTORY Section */}
+              <div className="border p-4 rounded">
+                <h3 className="font-bold mb-4">PAST MEDICAL HISTORY</h3>
+                <p className="mb-2">ANY RELATED DISEASES TO:</p>
+                
+                <Row gutter={16}>
+                  <Col span={12}>
+                    <Form.Item label="Cardiovascular" name={["medical_conditions", "cardiovascular"]}>
+                      <Radio.Group>
+                        <Radio value="Yes">Yes</Radio>
+                        <Radio value="No">No</Radio>
+                      </Radio.Group>
+                    </Form.Item>
+                    
+                    <Form.Item label="Respiratory" name={["medical_conditions", "respiratory"]}>
+                      <Radio.Group>
+                        <Radio value="Yes">Yes</Radio>
+                        <Radio value="No">No</Radio>
+                      </Radio.Group>
+                    </Form.Item>
+                    
+                    <Form.Item label="Gastrointestinal" name={["medical_conditions", "gastrointestinal"]}>
+                      <Radio.Group>
+                        <Radio value="Yes">Yes</Radio>
+                        <Radio value="No">No</Radio>
+                      </Radio.Group>
+                    </Form.Item>
+                    
+                    <Form.Item label="Neural" name={["medical_conditions", "neural"]}>
+                      <Radio.Group>
+                        <Radio value="Yes">Yes</Radio>
+                        <Radio value="No">No</Radio>
+                      </Radio.Group>
+                    </Form.Item>
+                  </Col>
                   
-                  <Form.Item label="Dental History" name="dental_history">
-                    <TextArea rows={2} className="dark:bg-gray-800 dark:text-black" />
-                  </Form.Item>
+                  <Col span={12}>
+                    <Form.Item label="Hepatic" name={["medical_conditions", "hepatic"]}>
+                      <Radio.Group>
+                        <Radio value="Yes">Yes</Radio>
+                        <Radio value="No">No</Radio>
+                      </Radio.Group>
+                    </Form.Item>
+                    
+                    <Form.Item label="Renal" name={["medical_conditions", "renal"]}>
+                      <Radio.Group>
+                        <Radio value="Yes">Yes</Radio>
+                        <Radio value="No">No</Radio>
+                      </Radio.Group>
+                    </Form.Item>
+                    
+                    <Form.Item label="Endocrine" name={["medical_conditions", "endocrine"]}>
+                      <Radio.Group>
+                        <Radio value="Yes">Yes</Radio>
+                        <Radio value="No">No</Radio>
+                      </Radio.Group>
+                    </Form.Item>
+                    
+                    <Form.Item label="Diabetes" name={["medical_conditions", "diabetes"]}>
+                      <Radio.Group>
+                        <Radio value="Yes">Yes</Radio>
+                        <Radio value="No">No</Radio>
+                      </Radio.Group>
+                    </Form.Item>
+                  </Col>
+                </Row>
+              </div>
 
-                  <Form.Item label="Treatment Plan" name="treatment_plan">
-                    <TextArea rows={2} className="dark:bg-gray-800 dark:text-black" />
-                  </Form.Item>
-                </div>
-              </Col>
-              
-              <Col span={12}>
+              {/* Allergies and Other Medical Information */}
+              <div className="border p-4 rounded mt-4">
+                <Form.Item label="ALLERGIC TO" name="allergies">
+                  <Input className="dark:bg-gray-800 dark:text-black" />
+                </Form.Item>
+
                 <div className="space-y-4">
-                  <Form.Item label="Decayed" name="decayed">
-                    <Input className="dark:bg-gray-800 dark:text-black" />
+                  <Form.Item 
+                    label="Have you been hospitalized / Operated?" 
+                    name="hospitalization_history"
+                  >
+                    <Radio.Group>
+                      <Radio value="Yes">Yes</Radio>
+                      <Radio value="No">No</Radio>
+                    </Radio.Group>
                   </Form.Item>
 
-                  <Form.Item label="Grossly Decayed" name="grossly_decayed">
-                    <Input className="dark:bg-gray-800 dark:text-black" />
-                  </Form.Item>
-
-                  <Form.Item label="Roots Stumps" name="roots_stumps">
-                    <Input className="dark:bg-gray-800 dark:text-black" />
-                  </Form.Item>
-
-                  <Form.Item label="Other Diagnosis" name="other_diagnosis">
+                  <Form.Item 
+                    label="If Yes, give details" 
+                    name="hospitalization_details"
+                    className="ml-8"
+                  >
                     <TextArea rows={2} className="dark:bg-gray-800 dark:text-black" />
                   </Form.Item>
                 </div>
-              </Col>
-            </Row>
+
+                <div className="space-y-4 mt-4">
+                  <Form.Item label="Are you pregnant?" name="pregnancy_status">
+                    <Radio.Group>
+                      <Radio value="Yes">Yes</Radio>
+                      <Radio value="No">No</Radio>
+                    </Radio.Group>
+                  </Form.Item>
+
+                  <Form.Item 
+                    label="If Yes, select trimester" 
+                    name="trimester"
+                    className="ml-8"
+                  >
+                    <Radio.Group>
+                      <Radio value="I">I TRIMESTER</Radio>
+                      <Radio value="II">II TRIMESTER</Radio>
+                      <Radio value="III">III TRIMESTER</Radio>
+                    </Radio.Group>
+                  </Form.Item>
+                </div>
+              </div>
+            </div>
           </Panel>
 
           <Panel header="Additional Information" key="3">

@@ -1,167 +1,204 @@
 import { jsPDF } from 'jspdf';
 
 const CaseSheetPdfGenerator = (patientData) => {
-  const generatePDF = () => {
-    const doc = new jsPDF();
-    
-    // Set font styles
-    const headerFont = 'helvetica';
-    const bodyFont = 'helvetica';
-    doc.setFont(headerFont, 'bold');
-    
-    // Add border to the page
-    doc.rect(10, 10, 190, 277);
-    
-    // Header with border
-    doc.rect(15, 15, 180, 15);
-    doc.setFontSize(12);
-    doc.text('DEPT. OF CONSERVATIVE DENTISTRY AND', 105, 22, { align: 'center' });
-    doc.text('ENDODONTICS', 105, 28, { align: 'center' });
-    
-    // Case Record header with border
-    doc.rect(15, 32, 180, 10);
-    doc.text('CASE RECORD', 105, 38, { align: 'center' });
-    
-    doc.setFontSize(12);
-    doc.setFont(bodyFont, 'normal');
-    
-    // Patient Information Section
-    const startY = 45;
-    const lineHeight = 7;
-    let currentY = startY;
-
-    // Draw borders for patient info section
-    doc.rect(15, startY, 180, 45);
-
-    // Left column
-    doc.setFontSize(10);
-    doc.text(`Doctor's Name:`, 20, currentY + 5);
-    doc.text(`${patientData.care_person || ''}`, 55, currentY + 5);
-    
-    currentY += lineHeight;
-    doc.text(`Pt. Name:`, 20, currentY + 5);
-    doc.text(`${patientData.name || ''}`, 55, currentY + 5);
-    
-    currentY += lineHeight;
-    doc.text(`Age/Sex:`, 20, currentY + 5);
-    doc.text(`${patientData.age || ''} / ${patientData.gender || ''}`, 55, currentY + 5);
-    
-    currentY += lineHeight;
-    doc.text(`Occupation:`, 20, currentY + 5);
-    doc.text(`${patientData.occupation || ''}`, 55, currentY + 5);
-    
-    currentY += lineHeight;
-    doc.text(`Marital Status:`, 20, currentY + 5);
-    doc.text(`${patientData.marital_status || ''}`, 55, currentY + 5);
-    
-    currentY += lineHeight;
-    doc.text(`Address/Ph. No:`, 20, currentY + 5);
-    doc.text(`${patientData.phone || ''}`, 55, currentY + 5);
-
-    // Right column
-    doc.text(`S.No:`, 120, startY + 5);
-    doc.text(`${patientData.patient_id || ''}`, 140, startY + 5);
-    
-    doc.text(`O.P. No.:`, 120, startY + lineHeight + 5);
-    doc.text(`${patientData.op_no || ''}`, 140, startY + lineHeight + 5);
-    
-    doc.text(`Date:`, 120, startY + (lineHeight * 2) + 5);
-    doc.text(`${new Date().toLocaleDateString()}`, 140, startY + (lineHeight * 2) + 5);
-
-    // Dental History Section
-    currentY = 95;
-    doc.setFont(headerFont, 'bold');
-    doc.rect(15, currentY, 180, 60);
-    doc.text('DENTAL HISTORY:', 20, currentY + 7);
-    doc.setFont(bodyFont, 'normal');
-    
-    // Chief Complaint
-    doc.text('Chief Complaint:', 20, currentY + 15);
-    if (patientData.case_sheet_info?.chief_complaint) {
-      const complaintText = doc.splitTextToSize(patientData.case_sheet_info.chief_complaint, 165);
-      doc.text(complaintText, 25, currentY + 22);
-    }
-    
-    // History of Present Illness
-    currentY += 35;
-    doc.setFont(headerFont, 'bold');
-    doc.text('History of Present Illness:', 20, currentY);
-    doc.setFont(bodyFont, 'normal');
-    if (patientData.case_sheet_info?.present_illness) {
-      const illnessText = doc.splitTextToSize(patientData.case_sheet_info.present_illness, 165);
-      doc.text(illnessText, 25, currentY + 7);
-    }
-    
-    if (patientData.case_sheet_info?.medical_history) {
-      const medicalHistory = doc.splitTextToSize(patientData.case_sheet_info.medical_history, 170);
-      doc.text(medicalHistory, 20, currentY);
-      currentY += (lineHeight * medicalHistory.length);
-    }
-
-    // Past Dental History
-    currentY += lineHeight;
-    doc.setFont(headerFont, 'bold');
-    doc.text('Past Dental History:', 20, currentY);
-    doc.setFont(bodyFont, 'normal');
-    currentY += lineHeight;
-    
-    if (patientData.case_sheet_info?.dental_history) {
-      const dentalHistory = doc.splitTextToSize(patientData.case_sheet_info.dental_history, 170);
-      doc.text(dentalHistory, 20, currentY);
-      currentY += (lineHeight * dentalHistory.length);
-    }
-
-    // Medical Conditions Grid
-    currentY += lineHeight * 2;
-    doc.setFont(headerFont, 'bold');
-    doc.text('PAST MEDICAL HISTORY:', 20, currentY);
-    doc.text('ANY RELATED DISEASES TO:', 20, currentY + lineHeight);
-    
-    // Create grid for medical conditions
-    currentY += lineHeight * 2;
-    const conditions = [
-      ['Cardiovascular', 'Yes/No', 'Hepatic', 'Yes/No'],
-      ['Respiratory', 'Yes/No', 'Renal', 'Yes/No'],
-      ['Gastrointestinal', 'Yes/No', 'Endocrine', 'Yes/No'],
-      ['Neural', 'Yes/No', '(Diabetes)', 'Yes/No']
-    ];
-
-    conditions.forEach((row, index) => {
-      doc.text(row[0], 20, currentY + (index * lineHeight));
-      doc.text(row[1], 60, currentY + (index * lineHeight));
-      doc.text(row[2], 100, currentY + (index * lineHeight));
-      doc.text(row[3], 140, currentY + (index * lineHeight));
-    });
-
-    // Additional Information
-    currentY += lineHeight * 6;
-    doc.text('ALLERGIC TO:', 20, currentY);
-    
-    currentY += lineHeight * 2;
-    doc.text('Have you been hospitalized / Operated', 20, currentY);
-    doc.text('Yes / No', 140, currentY);
-    
-    currentY += lineHeight;
-    doc.text('If Yes, give details', 20, currentY);
-    
-    // Pregnancy Information
-    currentY += lineHeight * 2;
-    doc.text('Are you pregnant?', 20, currentY);
-    doc.text('Yes / No', 140, currentY);
-    
-    currentY += lineHeight * 2;
-    // Trimester checkboxes
-    doc.rect(20, currentY, 5, 5);
-    doc.text('I TRIMESTER', 30, currentY + 4);
-    doc.rect(80, currentY, 5, 5);
-    doc.text('II TRIMESTER', 90, currentY + 4);
-    doc.rect(140, currentY, 5, 5);
-    doc.text('III TRIMESTER', 150, currentY + 4);
-
-    return doc;
+  const doc = new jsPDF();
+  
+  // Helper function to convert any value to string and handle null/undefined
+  const toString = (value) => {
+    if (value === null || value === undefined) return '';
+    return String(value);
   };
+  
+  // Set initial font styles
+  const headerFont = 'helvetica';
+  const bodyFont = 'helvetica';
+  doc.setFont(headerFont, 'bold');
+  
+  // Add main border
+  doc.rect(10, 10, 190, 277);
+  
+  // Department Header
+  doc.rect(15, 15, 180, 15);
+  doc.setFontSize(12);
+  doc.text('DEPT. OF CONSERVATIVE DENTISTRY AND', 105, 22, { align: 'center' });
+  doc.text('ENDODONTICS', 105, 28, { align: 'center' });
+  
+  // Case Record header
+  doc.rect(15, 32, 180, 10);
+  doc.text('CASE RECORD', 105, 38, { align: 'center' });
+  
+  // Patient Information Section
+  const startY = 45;
+  const lineHeight = 7;
+  let currentY = startY;
+  
+  // Patient info border
+  doc.rect(15, startY, 180, 45);
+  
+  // Basic info
+  doc.setFont(bodyFont, 'normal');
+  doc.setFontSize(10);
+  
+  let leftX = 20;
+  let rightX = 120;
+  
+  // First row
+  doc.text("Doctors Name:", leftX, currentY + 7);
+  doc.text(patientData.care_person ? `Dr. ${toString(patientData.care_person)}` : '', leftX + 35, currentY + 7);
+  doc.text("S.No.", rightX, currentY + 7);
+  doc.text(toString(patientData.patient_id), rightX + 25, currentY + 7);
+  
+  // Second row
+  currentY += lineHeight;
+  doc.text("Pt. Name:", leftX, currentY + 7);
+  doc.text(toString(patientData.name), leftX + 35, currentY + 7);
+  doc.text("Date:", rightX, currentY + 7);
+  doc.text(new Date().toLocaleDateString(), rightX + 25, currentY + 7);
+  
+  // Third row
+  currentY += lineHeight;
+  doc.text("Age/Sex:", leftX, currentY + 7);
+  doc.text(`${toString(patientData.age)} / ${toString(patientData.gender)}`, leftX + 35, currentY + 7);
+  
+  // Fourth row
+  currentY += lineHeight;
+  doc.text("Address/Ph. No.", leftX, currentY + 7);
+  doc.text(toString(patientData.phone), leftX + 35, currentY + 7);
 
-  return generatePDF();
+  // DENTAL HISTORY Section
+  currentY = 95;
+  doc.rect(15, currentY, 180, 80); // Outer rectangle
+  doc.line(105, currentY, 105, currentY + 80); // Divider for left and right sections
+  doc.setFont(headerFont, 'bold');
+  doc.text('DENTAL HISTORY:', leftX, currentY + 4);
+
+  // Left Side Fields
+  let leftY = currentY + 13; // Reduced initial spacing
+  doc.setFont(bodyFont, 'normal');
+  doc.text('Chief Complaint:', leftX, leftY + 6);
+  if (patientData.case_sheet_info?.chief_complaint) {
+    const complaintText = doc.splitTextToSize(toString(patientData.case_sheet_info.chief_complaint), 85);
+    doc.text(complaintText, leftX + 5, leftY + 12);
+  }
+
+  leftY += 13; // Reduced spacing between fields
+  doc.text('History of Present Illness:', leftX, leftY + 8);
+  if (patientData.case_sheet_info?.present_illness) {
+    const illnessText = doc.splitTextToSize(toString(patientData.case_sheet_info.present_illness), 85);
+    doc.text(illnessText, leftX + 5, leftY + 12);
+  }
+
+  leftY += 13; // Reduced spacing
+  doc.text('Past Dental History:', leftX, leftY + 8);
+  if (patientData.case_sheet_info?.dental_history) {
+    const historyText = doc.splitTextToSize(toString(patientData.case_sheet_info.dental_history), 85);
+    doc.text(historyText, leftX + 5, leftY + 12);
+  }
+
+  leftY += 13; // Reduced spacing
+  doc.text('Treatment Plan:', leftX, leftY + 8);
+  if (patientData.case_sheet_info?.treatment_plan) {
+    const familyText = doc.splitTextToSize(toString(patientData.case_sheet_info.treatment_plan), 85);
+    doc.text(familyText, leftX + 5, leftY + 12);
+  }
+
+  // Right Side Fields
+  let rightY = currentY + 12; // Reduced initial spacing
+
+  doc.text('Decayed:', rightX, rightY + 8);
+  if (patientData.case_sheet_info?.decayed) {
+    doc.text(toString(patientData.case_sheet_info.decayed), rightX + 30, rightY + 6);
+  }
+
+  rightY += 12; // Reduced spacing
+  doc.text('Grossly Decayed:', rightX, rightY + 6);
+  if (patientData.case_sheet_info?.grossly_decayed) {
+    doc.text(toString(patientData.case_sheet_info.grossly_decayed), rightX + 30, rightY + 6);
+  }
+
+  rightY += 12; // Reduced spacing
+  doc.text('Roots Stumps:', rightX, rightY + 6);
+  if (patientData.case_sheet_info?.roots_stumps) {
+    doc.text(toString(patientData.case_sheet_info.roots_stumps), rightX + 30, rightY + 6);
+  }
+
+  rightY += 12; // Reduced spacing
+  doc.text('Other Diagnosis:', rightX, rightY + 6);
+  if (patientData.case_sheet_info?.other_diagnosis) {
+    doc.text(toString(patientData.case_sheet_info.other_diagnosis), rightX + 30, rightY + 6);
+  }
+
+
+
+
+  // PAST MEDICAL HISTORY Section
+  currentY = 180;
+  doc.rect(15, currentY, 180, 40);
+  doc.setFont(headerFont, 'bold');
+  doc.text('PAST MEDICAL HISTORY:', leftX, currentY + 7);
+  doc.setFont(bodyFont, 'normal');
+  
+  // Medical conditions grid
+  currentY += 12;
+  const conditions = [
+    ['Cardiovascular', 'Hepatic'],
+    ['Respiratory', 'Renal'],
+    ['Gastrointestinal', 'Endocrine'],
+    ['Neural', '(Diabetes)']
+  ];
+  
+  conditions.forEach((row, index) => {
+    const y = currentY + (index * 7);
+    doc.text(row[0], leftX, y);
+    doc.text(toString(patientData.case_sheet_info?.medical_conditions?.[row[0].toLowerCase()] || 'No'), leftX + 45, y);
+    doc.text(row[1], rightX, y);
+    doc.text(toString(patientData.case_sheet_info?.medical_conditions?.[row[1].toLowerCase()] || 'No'), rightX + 45, y);
+  });
+
+  // ALLERGIC TO Section
+  currentY = 225;
+  doc.rect(15, currentY, 180, 15);
+  doc.setFont(headerFont, 'bold');
+  doc.text('ALLERGIC TO:', leftX, currentY + 7);
+  doc.setFont(bodyFont, 'normal');
+  if (patientData.case_sheet_info?.allergies) {
+    doc.text(toString(patientData.case_sheet_info.allergies), leftX + 45, currentY + 7);
+  }
+
+  // Hospitalization Section
+  currentY = 245;
+  doc.rect(15, currentY, 180, 20);
+  doc.text('Have you been hospitalized / Operated:', leftX, currentY + 7);
+  doc.text(toString(patientData.case_sheet_info?.hospitalization_history || 'No'), leftX + 100, currentY + 7);
+  
+  if (patientData.case_sheet_info?.hospitalization_history === 'Yes' && patientData.case_sheet_info?.hospitalization_details) {
+    doc.text('If Yes, give details:', leftX, currentY + 14);
+    const details = doc.splitTextToSize(toString(patientData.case_sheet_info.hospitalization_details), 165);
+    doc.text(details, leftX + 45, currentY + 14);
+  }
+
+  // Pregnancy Section
+  currentY = 270;
+  doc.rect(15, currentY, 180, 15);
+  doc.text('Are you pregnant?', leftX, currentY + 7);
+  doc.text(toString(patientData.case_sheet_info?.pregnancy_status || 'No'), leftX + 100, currentY + 7);
+  
+  if (patientData.case_sheet_info?.pregnancy_status === 'Yes') {
+    // Trimester checkboxes
+    const trimesterX = [leftX + 120, leftX + 160, leftX + 200];
+    const trimesterLabels = ['I TRIMESTER', 'II TRIMESTER', 'III TRIMESTER'];
+    const selectedTrimester = patientData.case_sheet_info?.trimester;
+    
+    trimesterLabels.forEach((label, index) => {
+      doc.rect(trimesterX[index], currentY + 3, 4, 4);
+      doc.text(label, trimesterX[index] + 7, currentY + 7);
+      if (selectedTrimester === label[0]) {
+        doc.text('X', trimesterX[index] + 1, currentY + 6);
+      }
+    });
+  }
+
+  return doc;
 };
 
 export default CaseSheetPdfGenerator;
