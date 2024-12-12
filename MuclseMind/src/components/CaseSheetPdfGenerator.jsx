@@ -183,20 +183,20 @@ const CaseSheetPdfGenerator = (patientData) => {
   doc.text('Are you pregnant?', leftX, currentY + 7);
   doc.text(toString(patientData.case_sheet_info?.pregnancy_status || 'No'), leftX + 100, currentY + 7);
   
-  if (patientData.case_sheet_info?.pregnancy_status === 'Yes') {
-    // Trimester checkboxes
-    const trimesterX = [leftX + 120, leftX + 160, leftX + 200];
-    const trimesterLabels = ['I TRIMESTER', 'II TRIMESTER', 'III TRIMESTER'];
-    const selectedTrimester = patientData.case_sheet_info?.trimester;
+  // if (patientData.case_sheet_info?.pregnancy_status === 'Yes') {
+  //   // Trimester checkboxes
+  //   const trimesterX = [leftX + 120, leftX + 160, leftX + 200];
+  //   const trimesterLabels = ['I TRIMESTER', 'II TRIMESTER', 'III TRIMESTER'];
+  //   const selectedTrimester = patientData.case_sheet_info?.trimester;
     
-    trimesterLabels.forEach((label, index) => {
-      doc.rect(trimesterX[index], currentY + 3, 4, 4);
-      doc.text(label, trimesterX[index] + 7, currentY + 7);
-      if (selectedTrimester === label[0]) {
-        doc.text('X', trimesterX[index] + 1, currentY + 6);
-      }
-    });
-  }
+  //   trimesterLabels.forEach((label, index) => {
+  //     doc.rect(trimesterX[index], currentY + 3, 4, 4);
+  //     doc.text(label, trimesterX[index] + 7, currentY + 7);
+  //     if (selectedTrimester === label[0]) {
+  //       doc.text('X', trimesterX[index] + 1, currentY + 6);
+  //     }
+  //   });
+  // }
 
   return doc;
 };
