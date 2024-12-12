@@ -1,27 +1,24 @@
 import React, { useEffect, useState, useMemo } from 'react';
-import { Button, Input, message, Space, Modal, Spin, Select } from 'antd';
-import { PlusOutlined, EditOutlined, DeleteOutlined, DownloadOutlined, FileTextOutlined, EyeOutlined } from '@ant-design/icons';
-import { jsPDF } from 'jspdf';
-import AddPatientModal from './AddPatientModal';
-import EditPatientModal from './EditPatientModal';
+import { Button, Input, message, Space, Modal, Spin, Select, Tag, Tooltip } from 'antd';
+import { PlusOutlined, EditOutlined, DeleteOutlined, DownloadOutlined, EyeOutlined, SearchOutlined, UserOutlined, FileTextOutlined } from '@ant-design/icons';
+import PreviewCaseSheet from '../components/PreviewCaseSheet';
+import AddPatientModal from '../components/AddPatientModal';
+import EditPatientModal from '../components/EditPatientModal';
+import CaseSheetPdfGenerator from '../components/CaseSheetPdfGenerator';
 import { getPatients, addPatient, editPatient, deletePatient, getTeamMembers } from '../api.services/services';
 import { useTable } from 'react-table';
 import '../assets/css/Patients.css';
 
-const { confirm } = Modal;
 const { Option } = Select;
 
-
-const   Patients = () => {
+const Patients = () => {
   const [patients, setPatients] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [addModalVisible, setAddModalVisible] = useState(false);
   const [editModalVisible, setEditModalVisible] = useState(false);
   const [currentPatient, setCurrentPatient] = useState(null);
   const [loading, setLoading] = useState(false);
-  const [noteModalVisible, setNoteModalVisible] = useState(false);
-  const [currentNote, setCurrentNote] = useState('');
-  const [viewModalVisible, setViewModalVisible] = useState(false);
+  const [previewModalVisible, setPreviewModalVisible] = useState(false);
   const [carePresons, setCarePresons] = useState([]);
 
   const fetchPatients = async () => {
@@ -38,27 +35,22 @@ const   Patients = () => {
     }
   };
 
-  console.log("patients", patients)
-  
-
   useEffect(() => {
     fetchPatients();
   }, []);
 
-  const handleDownloadPDF = (patient) => {
-    const doc = new jsPDF();
-    doc.text(`Patient Details`, 10, 10);
-    doc.text(`Patient ID: ${patient.patient_id}`, 10, 20);
-    doc.text(`Name: ${patient.name}`, 10, 30);
-    doc.text(`Email: ${patient.email}`, 10, 40);
-    doc.text(`Phone: ${patient.phone}`, 10, 50);
-    doc.text(`Care of: ${patient.care_person || 'N/A'}`, 10, 60);
-    doc.text(`Notes: ${patient.notes || 'N/A'}`, 10, 70);
-    doc.save(`${patient.name}_details.pdf`);
+  const handleViewPatient = (patient) => {
+    setCurrentPatient(patient);
+    setPreviewModalVisible(true);
+  };
+
+  const handleDownloadCaseSheet = (patient) => {
+    const doc = CaseSheetPdfGenerator(patient);
+    doc.save(`${patient.name}_case_sheet.pdf`);
   };
 
   const showDeleteConfirm = (patient) => {
-    confirm({
+    Modal.confirm({
       title: 'Are you sure you want to delete this patient?',
       content: 'This action cannot be undone.',
       okText: 'Yes',
@@ -75,7 +67,7 @@ const   Patients = () => {
       await addPatient(newPatient);
       message.success('Patient added successfully');
       setAddModalVisible(false);
-      fetchPatients(); // Refetch patients after adding
+      fetchPatients();
     } catch (error) {
       message.error('Failed to add patient: ' + error.message);
     }
@@ -86,7 +78,7 @@ const   Patients = () => {
       await editPatient(updatedPatient.id, updatedPatient);
       message.success('Patient updated successfully');
       setEditModalVisible(false);
-      fetchPatients(); // Refetch patients after editing
+      fetchPatients();
     } catch (error) {
       message.error('Failed to update patient: ' + error.message);
     }
@@ -96,31 +88,17 @@ const   Patients = () => {
     try {
       await deletePatient(id);
       message.success('Patient deleted successfully');
-      fetchPatients(); // Refetch patients after deleting
+      fetchPatients();
     } catch (error) {
       message.error('Failed to delete patient: ' + error.message);
     }
   };
 
-  const showNoteModal = (note) => {
-    setCurrentNote(note);
-    setNoteModalVisible(true);
-  };
-
-  const handleViewPatient = (patient) => {
-    setCurrentPatient(patient);
-    setViewModalVisible(true);
-  };
-
-  const handleDownloadCaseSheet = (patient) => {
-    console.log('Downloading case sheet for:', patient);
-  };
-
-  const handleCarePersonChange = async (patientId, carePerson) => {
+  const handleCarePersonChange = async (id, value) => {
     try {
-      await editPatient(patientId, { care_person: carePerson });
+      await editPatient(id, { care_person: value });
       message.success('Care person updated successfully');
-      fetchPatients(); // Refetch patients to update the UI
+      fetchPatients();
     } catch (error) {
       message.error('Failed to update care person: ' + error.message);
     }
@@ -131,19 +109,33 @@ const   Patients = () => {
       {
         Header: 'Patient ID',
         accessor: 'patient_id',
+        Cell: ({ value }) => (
+          <Tag color="blue" className="rounded-full px-3 text-sm">
+            #{value}
+          </Tag>
+        ),
       },
       {
         Header: 'Name',
         accessor: 'name',
+        Cell: ({ value }) => (
+          <span className="font-semibold text-gray-800 dark:text-white">
+            {value}
+          </span>
+        ),
       },
       {
-        Header: 'Basic info',
+        Header: 'Basic Info',
         accessor: 'contact',
         Cell: ({ row }) => (
-            <div className="mtb">
-              <p className='ml-2'> Gender : {row.original.gender || '-'}</p>
-              <p className='ml-2'>Age : {row.original.age }</p>
+          <div className="space-y-2">
+            <span color={row.original.gender === 'Male' ? 'blue' : 'pink'} className="">
+              {row.original.gender || '-'}
+            </span>
+            <div className="text-gray-600 dark:text-gray-300">
+              Age: {row.original.age}
             </div>
+          </div>
         ),
       },
       {
@@ -160,55 +152,61 @@ const   Patients = () => {
           </Select>
         ),
       },
+
       {
         Header: 'Case Sheet',
         accessor: 'case_sheet_file',
         Cell: ({ row }) => (
           <Button
+            type="default"
             onClick={() => showModal('viewCaseSheet', row.original)}
             icon={<FileTextOutlined />}
+            className="rounded-lg hover:text-blue-500 hover:border-blue-500"
           >
-            View 
+            View
           </Button>
         ),
       },
-      // {
-      //   Header: 'Documents',
-      //   accessor: 'documents',
-      //   Cell: ({ row }) => (
-      //     <Button
-      //       onClick={() => showModal('viewDocuments', row.original)}
-      //       icon={<FileTextOutlined />}
-      //     >
-      //       View ({row.original.documents?.length || 0})
-      //     </Button>
-      //   ),
-      // },
       {
         Header: 'Actions',
         accessor: 'actions',
         Cell: ({ row }) => (
-          <Space>
-            <Button
-              icon={<EyeOutlined />}
-              onClick={() => handleViewPatient(row.original)}
-            />
-            <Button
-              icon={<EditOutlined />}
-              onClick={() => {
-                setCurrentPatient(row.original);
-                setEditModalVisible(true);
-              }}
-            />
-            <Button
-              icon={<DownloadOutlined />}
-              onClick={() => handleDownloadCaseSheet(row.original)}
-            />
+          <Space size="middle">
+            <Tooltip title="View Details">
+              <Button
+                type="default"
+                shape="circle"
+                icon={<EyeOutlined />}
+                onClick={() => handleViewPatient(row.original)}
+                className="hover:text-blue-500 hover:border-blue-500"
+              />
+            </Tooltip>
+            <Tooltip title="Edit Patient">
+              <Button
+                type="default"
+                shape="circle"
+                icon={<EditOutlined />}
+                onClick={() => {
+                  setCurrentPatient(row.original);
+                  setEditModalVisible(true);
+                }}
+                className="hover:text-green-500 hover:border-green-500"
+              />
+            </Tooltip>
+            <Tooltip title="Download Case Sheet">
+              <Button
+                type="default"
+                shape="circle"
+                icon={<DownloadOutlined />}
+                onClick={() => handleDownloadCaseSheet(row.original)}
+                className="hover:text-purple-500 hover:border-purple-500"
+              />
+            </Tooltip>
           </Space>
         ),
       },
     ],
-    [patients]
+    [carePresons]
   );
 
   const filteredPatients = useMemo(() => {
@@ -218,72 +216,91 @@ const   Patients = () => {
     );
   }, [patients, searchTerm]);
 
-  const data = useMemo(() => filteredPatients, [filteredPatients]);
-
   const {
     getTableProps,
     getTableBodyProps,
     headerGroups,
     rows,
     prepareRow,
-  } = useTable({ columns, data });
+  } = useTable({ columns, data: filteredPatients });
 
   return (
-    <div className="">
-      <div className="flex justify-between mb-6">
-        <Input
-          placeholder="Search patients by name, email, or phone..."
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-          className="mb-6 max-w-md text-black dark:text-black"
-        />
-        <button 
+    <div className="p-6 bg-white dark:bg-boxdark rounded-xl shadow-lg">
+      <div className="flex justify-between items-center mb-6">
+        <div className="flex-1 max-w-md">
+          <Input
+            placeholder="Search patients by name or ID..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            prefix={<SearchOutlined className="text-gray-400" />}
+            className="rounded-lg hover:border-blue-500 focus:border-blue-500"
+            size="large"
+          />
+        </div>
+        <Button
+          type="primary"
+          size="large"
+          icon={<PlusOutlined />}
           onClick={() => setAddModalVisible(true)}
-          className="bg-blue-600 dark:bg-meta-4 text-white py-2 px-4 rounded-lg hover:bg-blue-700 dark:hover:bg-meta-3 mtb-btn small-button"
+          className="rounded-lg bg-blue-500 hover:bg-blue-600 border-none ml-4"
         >
-          <PlusOutlined className="mr-2 " />
-          <span className="hidden sm:inline">Add Patient</span>
-        </button>
+          Add Patient
+        </Button>
       </div>
+
       {loading ? (
-        <div className="flex justify-center items-center">
+        <div className="flex justify-center items-center py-20">
           <Spin size="large" />
         </div>
       ) : (
-        <div className="overflow-x-auto">
-        <div className="max-h-[calc(100vh-200px)] overflow-y-auto">
-        <table {...getTableProps()} className="min-w-full bg-white dark:bg-boxdark rounded-lg shadow-md">
-          <thead>
-            {headerGroups.map(headerGroup => (
-              <tr {...headerGroup.getHeaderGroupProps()} className="border-b dark:border-meta-4">
-                {headerGroup.headers.map(column => (
-                  <th {...column.getHeaderProps()} className="px-4 py-2 text-left text-lg font-bold text-black dark:text-white">
-                    {column.render('Header')}
-                  </th>
+        <div className="overflow-hidden rounded-lg border border-gray-200 dark:border-gray-700">
+          <div className="max-h-[calc(100vh-200px)] overflow-y-auto scrollbar-hide">
+            <table {...getTableProps()} className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+              <thead className="bg-gray-50 dark:bg-meta-4 sticky top-0 z-10">
+                {headerGroups.map(headerGroup => (
+                  <tr {...headerGroup.getHeaderGroupProps()}>
+                    {headerGroup.headers.map(column => (
+                      <th
+                        {...column.getHeaderProps()}
+                        className="px-6 py-4 text-left text-xs font-semibold text-gray-500 dark:text-gray-300 uppercase tracking-wider"
+                      >
+                        {column.render('Header')}
+                      </th>
+                    ))}
+                  </tr>
                 ))}
-              </tr>
-            ))}
-          </thead>
-          <tbody {...getTableBodyProps()}>
-            {rows.map(row => {
-              prepareRow(row);
-              return (
-                <tr {...row.getRowProps()} className="border-b dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-700">
-                  {row.cells.map(cell => {
-                    const cellProps = cell.getCellProps();
-                    const columnHeader = cell.column.Header + " :";
-                    return (
-                      <td key={cellProps.key} {...cellProps} className="px-4 py-2 text-sm text-black dark:text-white" data-label={columnHeader} >
-                        {cell.render('Cell')}
-                      </td>
-                    );
-                  })}
-                </tr>
-              );
-            })}
-          </tbody>
-        </table>
-        </div>
+              </thead>
+              <tbody 
+                {...getTableBodyProps()}
+                className="bg-white divide-y divide-gray-200 dark:divide-gray-700 dark:bg-boxdark"
+              >
+                {rows.map(row => {
+                  prepareRow(row);
+                  return (
+                    <tr 
+                      {...row.getRowProps()} 
+                      className="dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors duration-200"
+                    >
+                      {row.cells.map(cell => {
+                        const cellProps = cell.getCellProps();
+                        const columnHeader = cell.column.Header + " :";
+                        return (
+                          <td 
+                            key={cellProps.key} 
+                            {...cellProps} 
+                            className="px-4 py-2 text-sm text-black dark:text-white" 
+                            data-label={columnHeader}
+                          >
+                            {cell.render('Cell')}
+                          </td>
+                        );
+                      })}
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
         </div>
       )}
 
@@ -301,75 +318,11 @@ const   Patients = () => {
         onDelete={showDeleteConfirm}
       />
 
-      <Modal
-        title="Patient Notes"
-        visible={noteModalVisible}
-        onCancel={() => setNoteModalVisible(false)}
-        footer={null}
-      >
-        <p>{currentNote}</p>
-      </Modal>
-
-      <Modal
-        title="Patient Details"
-        visible={viewModalVisible}
-        onCancel={() => setViewModalVisible(false)}
-        footer={[
-        ]}
-        width={720}
-      >
-        {currentPatient && (
-          <div className="space-y-4">
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <p className="font-semibold">Patient ID</p>
-                <p>{currentPatient.patient_id}</p>
-              </div>
-              <div>
-                <p className="font-semibold">Name</p>
-                <p>{currentPatient.name}</p>
-              </div>
-              <div>
-                <p className="font-semibold">Age</p>
-                <p>{currentPatient.age}</p>
-              </div>
-              <div>
-                <p className="font-semibold">Gender</p>
-                <p>{currentPatient.gender}</p>
-              </div>
-              <div>
-                <p className="font-semibold">Phone</p>
-                <p>{currentPatient.phone}</p>
-              </div>
-              <div>
-                <p className="font-semibold">Email</p>
-                <p>{currentPatient.email}</p>
-              </div>
-              <div>
-                <p className="font-semibold">Care Person</p>
-                <p>{currentPatient.care_person}</p>
-              </div>
-            </div>
-
-            <div>
-              <p className="font-semibold">Documents</p>
-              {currentPatient.documents && currentPatient.documents.length > 0 ? (
-                <ul>
-                  {currentPatient.documents.map((doc, index) => (
-                    <li key={index}>
-                      <a href={doc.url} target="_blank" rel="noopener noreferrer">
-                        {doc.name}
-                      </a>
-                    </li>
-                  ))}
-                </ul>
-              ) : (
-                <p>No documents available</p>
-              )}
-            </div>
-          </div>
-        )}
-      </Modal>
+      <PreviewCaseSheet
+        visible={previewModalVisible}
+        onClose={() => setPreviewModalVisible(false)}
+        patient={currentPatient}
+      />
     </div>
   );
 };
