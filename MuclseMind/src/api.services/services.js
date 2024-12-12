@@ -433,6 +433,24 @@ export const GetPrescription = async (id) => {
   }
 };
 
+export const addPrescription = async (data) => {
+  try {
+    const res = await interceptors.post("v1/prescription/add-prescription", data);
+    return res.data;
+  } catch (error) {
+    throw error.response?.data || error;
+  }
+};
+
+export const updatePrescription = async (id, data) => {
+  try {
+    const res = await interceptors.put(`v1/prescription/update-prescription/${id}`, data);
+    return res.data;
+  } catch (error) {
+    throw error.response?.data || error;
+  }
+};
+  
 export const deleteprescriptions = async (id) => {
   try {
     const res = await interceptors.delete(`v1/prescription/delete-prescription/${id}`); // Use .get instead of .delete
