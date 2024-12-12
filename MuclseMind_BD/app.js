@@ -37,4 +37,9 @@ app.use((req, res, next) => {
   next(new ApiError(httpStatus.NOT_FOUND, "Not found"));
 });
 
+const PORT = process.env.PORT || 3000; // You can specify the port or use an environment variable
+app.listen(PORT, '0.0.0.0', () => {
+  console.log(`Server is running at http://0.0.0.0:${PORT}`);
+});
+
 module.exports = app;
