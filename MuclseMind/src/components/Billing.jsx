@@ -9,6 +9,7 @@ import {
 } from "../api.services/services";
 
 import '../assets/css/Patients.css';
+import { BillgeneratePDF } from "../lib/BillGenerator";
 
 const Billing = () => {
   const [billings, setBillings] = useState([]);
@@ -109,52 +110,72 @@ const Billing = () => {
     }
   };
 
-
-  const handleSubmitTreatments = async () => {
-    try {
-      // Assuming you have a function to update the billing with selected treatments
-      const updatedBilling = {
-        ...currentBilling,
-        treatments: selectedTreatments,
-        totalCost: totalCost,
-      };
-      await updateBilling(currentBilling.id, updatedBilling);
-      fetchBillings(); // Refresh the billings list
-      handleCloseModal(); // Close the modal
-      message.success("Billing updated successfully");
-    } catch (error) {
-      message.error("Failed to update billing: " + error.message);
-    }
-  };
-
-  const handleTreatmentChange = (treatmentId, cost) => {
-    setSelectedTreatments((prev) => ({
-      ...prev,
-      [treatmentId]: parseFloat(cost) || 0, // Ensure cost is a number
-    }));
-  };
+  
 
   const handleCheckboxChange = (treatmentId, isChecked) => {
     setSelectedTreatments((prev) => {
       const updated = { ...prev };
       if (isChecked) {
-        const currentCost = document.getElementById(`cost-${treatmentId}`).value;
-        updated[treatmentId] = parseFloat(currentCost) || 0;
+        const treatment = treatments.find(t => t.treatment_id === treatmentId);
+        if (treatment) {
+          updated[treatmentId] = treatment.cost; // Set the cost when checked
+        }
       } else {
-        delete updated[treatmentId];
+        delete updated[treatmentId]; // Remove the cost when unchecked
       }
       return updated;
     });
   };
+  
+  const handleTreatmentChange = (treatmentId, cost) => {
+    setSelectedTreatments((prev) => ({
+      ...prev,
+      [treatmentId]: parseFloat(cost) || 0, // Ensure the cost is a number
+    }));
+  };
+
+
+  
+
+  const handleSubmitTreatments = async () => {
+    if (!currentBilling) return;
+  
+    try {
+      const treatmentNames = Object.keys(selectedTreatments).map(treatmentId => {
+        console.log("treatmentId", treatmentId);
+        console.log("treatments", selectedTreatments);
+        const treatment = treatments.find(t => t.treatment_id === parseInt(treatmentId));
+        console.log("treatment", treatment);
+        return treatment ? treatment.procedure_name : '';
+      });
+  
+      const updatedData = {
+        ...currentBilling,
+        treatment_name: treatmentNames.join(', '), // Join treatment names into a string
+        cost: totalCost,
+      };
+      await updateBilling(currentBilling.id, updatedData);
+      fetchBillings(); // Refresh the billings list
+      
+      handleCloseModal(); // Close the modal after submission
+    } catch (error) {
+      
+    }
+  };
 
   useEffect(() => {
-    const total = Object.values(selectedTreatments).reduce((acc, cost) => acc + cost, 0);
+    const total = Object.values(selectedTreatments).reduce((acc, cost) => acc + parseFloat(cost), 0);
     setTotalCost(total);
   }, [selectedTreatments]);
 
-  const handleOpenModal = (billing) => {
-    setCurrentBilling(billing);
-    setShowModal(true);
+  const handleOpenModal = (billingId) => {
+    const billing = billings.find(b => b.invoice_no === billingId);
+    if (billing) {
+      setCurrentBilling(billing);
+      setShowModal(true);
+    } else {
+      console.error("Billing not found for ID:", billingId);
+    }
   };
 
   const handleCloseModal = () => {
@@ -304,13 +325,13 @@ const Billing = () => {
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap flex items-center text-right md:text-left bill-mtb" data-label="Actions :">
                     <button
-                      onClick={() => handleOpenModal(billing)}
+                      onClick={() => handleOpenModal(billing.invoice_no)}
                       className="text-green-600 dark:text-meta-2 hover:text-green-800 dark:hover:text-meta-3 mr-2"
                     >
                       <span className="mr-2">+</span>
                     </button>
                     <button
-                      onClick={() => handleGenerateInvoice(billing)}
+                      onClick={() => handleGenerateInvoice(billing.invoice_no)}
                       className="text-blue-600 dark:text-meta-2 hover:text-blue-800 dark:hover:text-meta-3 mr-2"
                     >
                       <Download className="h-5 w-5" />
@@ -334,41 +355,50 @@ const Billing = () => {
           <div className="bg-white dark:bg-boxdark p-6 rounded-lg shadow-lg">
             <h3 className="text-lg font-semibold mb-4">Select Treatments for {currentBilling.patient_name}</h3>
             <ul>
-              {treatments.map((treatment) => (
-                <li key={treatment.id} className="flex items-center mb-2">
-                  <input
-                    type="checkbox"
-                    className="mr-2"
-                    onChange={(e) => handleCheckboxChange(treatment.id, e.target.checked)}
-                  />
-                  <span className="flex-1">{treatment.procedure_name}</span>
-                  <input
-                  id={`cost-${treatment.id}`}
-                  type="number"
-                  value={selectedTreatments[treatment.id] || treatment.cost}
-                  onChange={(e) => handleTreatmentChange(treatment.id, e.target.value)}
-                  className="ml-2 w-20"
-                />
-                </li>
-              ))}
+            {treatments.map((treatment) => {
+  const treatmentNames = currentBilling?.treatment_name?.split(', ').map(name => name.trim().toLowerCase()) || [];
+  
+  // Check if the treatment's procedure name is included in the current billing's treatment_name
+    const isSelected = treatmentNames.includes(treatment.procedure_name.toLowerCase());
+  return (
+    <li key={treatment.treatment_id} className="flex items-center mb-2">
+      <input
+        type="checkbox"
+        className="mr-2"
+        checked={selectedTreatments.hasOwnProperty(treatment.treatment_id)}
+        onChange={(e) => handleCheckboxChange(treatment.treatment_id, e.target.checked)}
+      />
+      <span className="flex-1">
+        {treatment.procedure_name} - {treatment.category}
+      </span>
+      <input
+        type="number"
+        value={selectedTreatments[treatment.treatment_id] || treatment.cost}
+        onChange={(e) => handleTreatmentChange(treatment.treatment_id, e.target.value)}
+        className="ml-2 w-20"
+        disabled={!selectedTreatments.hasOwnProperty(treatment.treatment_id)} // Disable input if not selected
+      />
+    </li>
+  );
+})}
             </ul>
             <div className="mt-4">
             <strong>Total Cost: </strong>${totalCost.toFixed(2)}
           </div>
-          <div className="flex justify-end mt-4">
-            <button
-              onClick={handleSubmitTreatments}
-              className="mr-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
-            >
-              Submit
-            </button>
-            <button
-              onClick={handleCloseModal}
-              className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700"
-            >
-              Close
-            </button>
-          </div>
+          <div className="mt-4 flex justify-end space-x-2">
+        <button
+          onClick={handleSubmitTreatments}
+          className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700"
+        >
+          Submit
+        </button>
+        <button
+          onClick={handleCloseModal}
+          className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700"
+        >
+          Close
+        </button>
+      </div>
           </div>
         </div>
       )}
