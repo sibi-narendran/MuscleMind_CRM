@@ -152,9 +152,9 @@ const Patients = () => {
   );
 
   const filteredPatients = useMemo(() => {
-    return patients.filter(patient =>
-      patient.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      patient.patient_id.includes(searchTerm)
+    return patients.filter((patient) => 
+      String(patient.patient_id).includes(searchTerm) ||
+      patient.name.toLowerCase().includes(searchTerm.toLowerCase())
     );
   }, [patients, searchTerm]);
 
