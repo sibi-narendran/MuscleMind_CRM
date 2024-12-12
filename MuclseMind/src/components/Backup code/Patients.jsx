@@ -4,19 +4,13 @@ import { PlusOutlined, EditOutlined, DeleteOutlined, DownloadOutlined, FileTextO
 import { jsPDF } from 'jspdf';
 import AddPatientModal from './AddPatientModal';
 import EditPatientModal from './EditPatientModal';
-import { getPatients, addPatient, editPatient, deletePatient } from '../api.services/services';
+import { getPatients, addPatient, editPatient, deletePatient, getTeamMembers } from '../api.services/services';
 import { useTable } from 'react-table';
 import '../assets/css/Patients.css';
 
 const { confirm } = Modal;
 const { Option } = Select;
 
-const CARE_PERSONS = [
-  "Dr. John Smith",
-  "Dr. Sarah Wilson",
-  "Dr. Michael Brown",
-  "Dr. Emily Davis"
-];
 
 const   Patients = () => {
   const [patients, setPatients] = useState([]);
@@ -28,18 +22,22 @@ const   Patients = () => {
   const [noteModalVisible, setNoteModalVisible] = useState(false);
   const [currentNote, setCurrentNote] = useState('');
   const [viewModalVisible, setViewModalVisible] = useState(false);
+  const [carePresons, setCarePresons] = useState([]);
 
   const fetchPatients = async () => {
     setLoading(true);
     try {
       const response = await getPatients();
       setPatients(Array.isArray(response.data) ? response.data : []);
+      const carePresonsResponse = await getTeamMembers();
+      setCarePresons(Array.isArray(carePresonsResponse.data) ? carePresonsResponse.data : []);
     } catch (error) {
       message.error('Failed to fetch patients: ' + error.message);
     } finally {
       setLoading(false);
     }
   };
+  
 
   useEffect(() => {
     fetchPatients();
@@ -151,11 +149,11 @@ const   Patients = () => {
         accessor: 'care_person',
         Cell: ({ row }) => (
           <Select
-            value={row.original.care_person}
+            value={"Dr. " + row.original.care_person}
             onChange={(value) => handleCarePersonChange(row.original.id, value)}
           >
-            {CARE_PERSONS.map(doctor => (
-              <Option key={doctor} value={doctor}>{doctor}</Option>
+            {carePresons.map(doctor => (
+              <Option key={doctor.name} value={doctor.name}>{"Dr. " + doctor.name || 'N/A'}</Option>
             ))}
           </Select>
         ),
@@ -172,18 +170,18 @@ const   Patients = () => {
           </Button>
         ),
       },
-      {
-        Header: 'Documents',
-        accessor: 'documents',
-        Cell: ({ row }) => (
-          <Button
-            onClick={() => showModal('viewDocuments', row.original)}
-            icon={<FileTextOutlined />}
-          >
-            View ({row.original.documents?.length || 0})
-          </Button>
-        ),
-      },
+      // {
+      //   Header: 'Documents',
+      //   accessor: 'documents',
+      //   Cell: ({ row }) => (
+      //     <Button
+      //       onClick={() => showModal('viewDocuments', row.original)}
+      //       icon={<FileTextOutlined />}
+      //     >
+      //       View ({row.original.documents?.length || 0})
+      //     </Button>
+      //   ),
+      // },
       {
         Header: 'Actions',
         accessor: 'actions',
@@ -214,8 +212,7 @@ const   Patients = () => {
   const filteredPatients = useMemo(() => {
     return patients.filter(patient =>
       patient.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      patient.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      patient.phone.includes(searchTerm)
+      patient.patient_id.includes(searchTerm)
     );
   }, [patients, searchTerm]);
 
@@ -350,11 +347,6 @@ const   Patients = () => {
                 <p className="font-semibold">Care Person</p>
                 <p>{currentPatient.care_person}</p>
               </div>
-            </div>
-
-            <div>
-              <p className="font-semibold">Notes</p>
-              <p>{currentPatient.notes || 'No notes available'}</p>
             </div>
 
             <div>
