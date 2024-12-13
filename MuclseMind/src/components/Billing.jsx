@@ -251,27 +251,27 @@ const Billing = () => {
                   key={billing.id}
                   className="hover:bg-gray-50 dark:hover:bg-strokedark"
                 >
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white" data-label="Invoice Number">
                     {billing.invoice_no || "N/A"}
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white" data-label="Patient Name">
                     {billing.patient_name}
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-meta-2">
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-meta-2" data-label="Treatment Name">
                     {billing.treatment_name}
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-meta-2">
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-meta-2" data-label="Date">
                     {new Date(billing.date).toLocaleDateString()}
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-white">
+                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-white" data-label="Total Amount">
                     ${parseFloat(billing.cost || 0).toFixed(2)}
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
+                  <td className="px-6 py-4 whitespace-nowrap" data-label="Status">
                     <span className={`px-2 py-1 text-xs font-medium rounded-full ${getStatusColor(billing.invoice_status)}`}>
                       {billing.invoice_status}
                     </span>
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium" data-label="Actions">
                     <button
                       onClick={() => generateBillingPDF(billing)}
                       className="text-blue-600 dark:text-meta-2 hover:text-blue-800 dark:hover:text-meta-3 mr-2"

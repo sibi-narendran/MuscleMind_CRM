@@ -8,6 +8,7 @@ import CaseSheetPdfGenerator from '../components/CaseSheetPdfGenerator';
 import { getPatients, addPatient, editPatient, deletePatient, getTeamMembers } from '../api.services/services';
 import { useTable } from 'react-table';
 import '../assets/css/Patients.css';
+import { getUserProfile } from '../api.services/services';  
 
 const { Option } = Select;
 
@@ -20,6 +21,9 @@ const Patients = () => {
   const [loading, setLoading] = useState(false);
   const [previewModalVisible, setPreviewModalVisible] = useState(false);
   const [carePresons, setCarePresons] = useState([]);
+  const [userProfile, setUserProfile] = useState(null);
+  
+
 
   const fetchPatients = async () => {
     setLoading(true);
@@ -37,7 +41,17 @@ const Patients = () => {
 
   useEffect(() => {
     fetchPatients();
+    const fetchUserProfile = async () => {
+      const response = await getUserProfile();
+      const clinicName = response.data?.clinicName || '';
+      setUserProfile(clinicName);
+    };
+    fetchUserProfile();
   }, []);
+
+
+  console.log("line 53", userProfile);
+  
 
   const handleViewPatient = (patient) => {
     setCurrentPatient(patient);
@@ -45,7 +59,7 @@ const Patients = () => {
   };
 
   const handleDownloadCaseSheet = (patient) => {
-    const doc = CaseSheetPdfGenerator(patient);
+    const doc = CaseSheetPdfGenerator(patient, userProfile);
     doc.save(`${patient.name}_case_sheet.pdf`);
   };
 
@@ -58,6 +72,7 @@ const Patients = () => {
       cancelText: 'No',
       onOk() {
         handleDeletePatient(patient.id);
+        setEditModalVisible(false);
       },
     });
   };
@@ -65,7 +80,7 @@ const Patients = () => {
   const handleAddPatient = async (newPatient) => {
     try {
       await addPatient(newPatient);
-      message.success('Patient added successfully');
+      message.success('Patient added successfully ' + newPatient.name);
       setAddModalVisible(false);
       fetchPatients();
     } catch (error) {
@@ -76,7 +91,7 @@ const Patients = () => {
   const handleEditPatient = async (updatedPatient) => {
     try {
       await editPatient(updatedPatient.id, updatedPatient);
-      message.success('Patient updated successfully');
+      message.success('Patient updated successfully ' + updatedPatient.name);
       setEditModalVisible(false);
       fetchPatients();
     } catch (error) {
@@ -242,6 +257,7 @@ const Patients = () => {
         visible={previewModalVisible}
         onClose={() => setPreviewModalVisible(false)}
         patient={currentPatient}
+        clinicName={userProfile}
       />
     </div>
   );
