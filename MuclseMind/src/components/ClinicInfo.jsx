@@ -369,49 +369,54 @@ const ClinicInfo = () => {
   // Render functions for each section
   const renderClinicOverviewAndContact = () => (
     <section className="mb-8">
-      <div className="flex justify-between items-center mb-4">
+      <div className="flex flex-col md:flex-row justify-between items-center mb-4">
         <h2 className="text-2xl font-bold">Clinic Overview & Contact Information</h2>
         <Button type="primary" icon={<EditOutlined />} onClick={() => setIsEditClinicModal(true)}>
           Edit
         </Button>
       </div>
-      <p><strong>Name:</strong> {clinicData.username}</p>
-      <p><strong>Clinic Name:</strong> {clinicData.clinicName}</p>
-      <p><strong>Address:</strong> {clinicData.address}</p>
-      <p><strong>State:</strong> {clinicData.state}</p>
-      <p><strong>City:</strong> {clinicData.city}</p>
-      <p><strong>Pincode:</strong> {clinicData.pincode}</p>
-      <p><strong>Phone:</strong> {clinicData.phoneNumber}</p>
-      <p><strong>Email:</strong> {clinicData.email}</p>
-      <p><strong>GST Number:</strong> {clinicData.gst_number}</p>
-      <p><strong>License Number:</strong> {clinicData.license_number}</p>
+      <div className="space-y-2">
+        <p><strong>Name:</strong> {clinicData.username}</p>
+        <p><strong>Clinic Name:</strong> {clinicData.clinicName}</p>
+        <p><strong>Address:</strong> {clinicData.address}</p>
+        <p><strong>State:</strong> {clinicData.state}</p>
+        <p><strong>City:</strong> {clinicData.city}</p>
+        <p><strong>Pincode:</strong> {clinicData.pincode}</p>
+        <p><strong>Phone:</strong> {clinicData.phoneNumber}</p>
+        <p><strong>Email:</strong> {clinicData.email}</p>
+        <p><strong>GST Number:</strong> {clinicData.gst_number}</p>
+        <p><strong>License Number:</strong> {clinicData.license_number}</p>
+      </div>
     </section>
   );
 
   const renderOperatingHours = () => (
     <section className="mb-8">
-      <div className="flex justify-between items-center mb-4">
+      <div className="flex flex-col md:flex-row justify-between items-center mb-4">
         <h2 className="text-2xl font-bold">Operating Hours</h2>
         <Button type="primary" icon={<EditOutlined />} onClick={() => setIsEditOperatingHoursModal(true)}>
           Edit
         </Button>
       </div>
-      <Table
-        dataSource={clinicData.operatingHours?.map((entry, index) => ({
-          key: index,
-          day: capitalize(entry.day),
-          status: entry.status,
-          open: entry.open_time ? entry.open_time.slice(0, 5) : 'N/A',
-          close: entry.close_time ? entry.close_time.slice(0, 5) : 'N/A',
-        })) || []}
-        columns={[
-          { title: 'Day', dataIndex: 'day', key: 'day' },
-          { title: 'Status', dataIndex: 'status', key: 'status' },
-          { title: 'Open', dataIndex: 'open', key: 'open' },
-          { title: 'Close', dataIndex: 'close', key: 'close' },
-        ]}
-        pagination={false}
-      />
+      <div className="overflow-x-auto">
+        <Table
+          dataSource={clinicData.operatingHours?.map((entry, index) => ({
+            key: index,
+            day: capitalize(entry.day),
+            status: entry.status,
+            open: entry.open_time ? entry.open_time.slice(0, 5) : 'N/A',
+            close: entry.close_time ? entry.close_time.slice(0, 5) : 'N/A',
+          })) || []}
+          columns={[
+            { title: 'Day', dataIndex: 'day', key: 'day' },
+            { title: 'Status', dataIndex: 'status', key: 'status' },
+            { title: 'Open', dataIndex: 'open', key: 'open' },
+            { title: 'Close', dataIndex: 'close', key: 'close' },
+          ]}
+          pagination={false}
+          className="min-w-full"
+        />
+      </div>
     </section>
   );
 
@@ -488,161 +493,174 @@ const handleFinish = async (values) => {
 
 const renderHolidays = () => (
   <section className="mb-8">
-    <div className="flex justify-between items-center mb-4">
+    <div className="flex flex-col md:flex-row justify-between items-center mb-4">
       <h2 className="text-2xl font-bold">Holidays</h2>
       <Button type="primary" onClick={() => setIsHolidayModalVisible(true)}>
         Add Holiday
       </Button>
     </div>
-    <Table
-      dataSource={specialHolidays}
-      columns={[
-        { title: 'Reason', dataIndex: 'name', key: 'name' },
-        { title: 'Date', dataIndex: 'date', key: 'date' },
-        {
-          title: 'Action',
-          key: 'action',
-          render: (_, record) => (
-            <Button type="link" onClick={() => handleEditHoliday(record)}>
-              Edit
-            </Button>
-          ),
-        }
-      ]}
-      pagination={false}
-    />
+    <div className="overflow-x-auto">
+      <Table
+        dataSource={specialHolidays}
+        columns={[
+          { title: 'Reason', dataIndex: 'name', key: 'name' },
+          { title: 'Date', dataIndex: 'date', key: 'date' },
+          {
+            title: 'Action',
+            key: 'action',
+            render: (_, record) => (
+              <Button type="link" onClick={() => handleEditHoliday(record)}>
+                Edit
+              </Button>
+            ),
+          }
+        ]}
+        pagination={false}
+        className="min-w-full"
+      />
+    </div>
   </section>
 );
   const renderDentalTeam = () => (
     <section className="mb-8">
-      <div className="flex justify-between items-center mb-4">
+      <div className="flex flex-col md:flex-row justify-between items-center mb-4">
         <h2 className="text-2xl font-bold">Dental Team</h2>
         <Button type="primary" icon={<PlusOutlined />} onClick={handleAddTeamMember}>
           Add Team Member
         </Button>
       </div>
-      <Table
-        dataSource={teamMembers}
-        columns={[
-          { title: 'Name', dataIndex: 'name', key: 'name' },
-          { title: 'Role', dataIndex: 'role', key: 'role' },
-          { title: 'Date of joining', dataIndex: 'doj', key: 'doj' },
-          { title: 'Salary Per Month', dataIndex: 'salary', key: 'salary' },
-          {
-            title: 'Action',
-            key: 'action',
-            render: (_, record) => (
-              <Button type="link" onClick={() => handleEditTeamMember(record)}>
-                Edit
-              </Button>
-            ),
-          },
-        ]}
-        pagination={false}
-      />
+      <div className="overflow-x-auto">
+        <Table
+          dataSource={teamMembers}
+          columns={[
+            { title: 'Name', dataIndex: 'name', key: 'name' },
+            { title: 'Role', dataIndex: 'role', key: 'role' },
+            { title: 'Date of joining', dataIndex: 'doj', key: 'doj' },
+            { title: 'Salary Per Month', dataIndex: 'salary', key: 'salary' },
+            {
+              title: 'Action',
+              key: 'action',
+              render: (_, record) => (
+                <Button type="link" onClick={() => handleEditTeamMember(record)}>
+                  Edit
+                </Button>
+              ),
+            },
+          ]}
+          pagination={false}
+          className="min-w-full"
+        />
+      </div>
     </section>
   );
 
   const renderTreatments = () => (
     <section className="mb-8">
-      <div className="flex justify-between items-center mb-4">
+      <div className="flex flex-col md:flex-row justify-between items-center mb-4">
         <h2 className="text-2xl font-bold">Treatment Procedures & Fees</h2>
         <Button type="primary" icon={<PlusOutlined />} onClick={() => setIsTreatmentModalVisible(true)}>
           Add Treatment
         </Button>
       </div>
-      <Table
-        dataSource={treatments}
-        columns={[
-          { title: 'Category', dataIndex: 'category', key: 'category' },
-          { title: 'Procedure Name', dataIndex: 'procedure_name', key: 'name' },
-          { title: 'Cost', dataIndex: 'cost', key: 'cost' },
-          { title: 'Duration', dataIndex: 'duration', key: 'duration' },
-          {
-            title: 'Action',
-            key: 'action',
-            render: (_, record) => (
-              <Button type="link" icon={<EditOutlined />} onClick={() => handleEditTreatment(record)}>
-                Edit
-              </Button>
-            ),
-          },
-        ]}
-        pagination={false}
-      />
+      <div className="overflow-x-auto">
+        <Table
+          dataSource={treatments}
+          columns={[
+            { title: 'Category', dataIndex: 'category', key: 'category' },
+            { title: 'Procedure Name', dataIndex: 'procedure_name', key: 'name' },
+            { title: 'Cost', dataIndex: 'cost', key: 'cost' },
+            { title: 'Duration', dataIndex: 'duration', key: 'duration' },
+            {
+              title: 'Action',
+              key: 'action',
+              render: (_, record) => (
+                <Button type="link" icon={<EditOutlined />} onClick={() => handleEditTreatment(record)}>
+                  Edit
+                </Button>
+              ),
+            },
+          ]}
+          pagination={false}
+          className="min-w-full"
+        />
+      </div>
     </section>
   );
   const renderMedications = () => (
     <section className="mb-8">
-      <div className="flex justify-between items-center mb-4">
+      <div className="flex flex-col md:flex-row justify-between items-center mb-4">
         <h2 className="text-2xl font-bold">Medication Preferences</h2>
         <Button type="primary" icon={<PlusOutlined />} onClick={() => setIsMedicationModal(true)}>
           Add Medication
         </Button>
       </div>
-      <Table
-        dataSource={medications}
-        columns={[
-          { title: 'Condition', dataIndex: 'condition', key: 'condition' },
-          { title: 'Medication Name', dataIndex: 'name', key: 'name' },
-          { title: 'Brand Preference', dataIndex: 'brand', key: 'brand' },
-          { title: 'Dosage', dataIndex: 'dosage', key: 'dosage', render: (dosage) => (
-            <>
-              <strong>Adult:</strong> {dosage.adult}<br />
-              <strong>Child:</strong> {dosage.child}<br />
-              <strong>Infant:</strong> {dosage.infant}
-            </>
-          ) },
-          { title: 'Times', dataIndex: 'times', key: 'times', render: (times) => (
-            <div className="flex flex-col">
-              {times.map((time, index) => (
-                <span key={index}>{time}</span>
-              ))}
-            </div>
-          )   },
-          { title: 'Food Instructions', dataIndex: 'foodInstructions', key: 'foodInstructions', render: (instructions) => (
-            <div className="flex flex-col">
-              {instructions.map((instruction, index) => (
-                <span key={index}>{instruction}</span>
-              ))}
-            </div>
-          )  },
-          { title: 'Special Note', dataIndex: 'specialNote', key: 'specialNote' },
-          {
-            title: 'Action',
-            key: 'action',
-            render: (_, record) => (
-              <Button type="link" icon={<EditOutlined />} onClick={() => handleEditMedication(record)}>
-                Edit
-              </Button>
-            ),
-          },
-        ]}
-        pagination={false}
-      />
+      <div className="overflow-x-auto">
+        <Table
+          dataSource={medications}
+          columns={[
+            { title: 'Condition', dataIndex: 'condition', key: 'condition' },
+            { title: 'Medication Name', dataIndex: 'name', key: 'name' },
+            { title: 'Brand Preference', dataIndex: 'brand', key: 'brand' },
+            { title: 'Dosage', dataIndex: 'dosage', key: 'dosage', render: (dosage) => (
+              <>
+                <strong>Adult:</strong> {dosage.adult}<br />
+                <strong>Child:</strong> {dosage.child}<br />
+                <strong>Infant:</strong> {dosage.infant}
+              </>
+            ) },
+            { title: 'Times', dataIndex: 'times', key: 'times', render: (times) => (
+              <div className="flex flex-col">
+                {times.map((time, index) => (
+                  <span key={index}>{time}</span>
+                ))}
+              </div>
+            )   },
+            { title: 'Food Instructions', dataIndex: 'foodInstructions', key: 'foodInstructions', render: (instructions) => (
+              <div className="flex flex-col">
+                {instructions.map((instruction, index) => (
+                  <span key={index}>{instruction}</span>
+                ))}
+              </div>
+            )  },
+            { title: 'Special Note', dataIndex: 'specialNote', key: 'specialNote' },
+            {
+              title: 'Action',
+              key: 'action',
+              render: (_, record) => (
+                <Button type="link" icon={<EditOutlined />} onClick={() => handleEditMedication(record)}>
+                  Edit
+                </Button>
+              ),
+            },
+          ]}
+          pagination={false}
+          className="min-w-full"
+        />
+      </div>
     </section>
   );
 
   const renderOtherClinicInfo = () => (
     <section className="mb-8">
-      <div className="flex justify-between items-center mb-4">
+      <div className="flex flex-col md:flex-row justify-between items-center mb-4">
         <h2 className="text-2xl font-bold">Other Clinic Information</h2>
         <Button type="primary" icon={<EditOutlined />} onClick={() => setIsEditOtherInfoModal(true)}>
           Edit
         </Button>
       </div>
-      <p><strong>License Number:</strong> {otherClinicInfo.licenseNumber}</p>
-      <p><strong>Insurance Providers:</strong> {otherClinicInfo.insuranceProviders}</p>
-      <p><strong>Emergency Contact:</strong> {otherClinicInfo.emergencyContact}</p>
-      <p><strong>Languages Spoken:</strong> {otherClinicInfo.languagesSpoken}</p>
-      <p><strong>Payment Methods:</strong> {otherClinicInfo.paymentMethods}</p>
-      <p><strong>Parking Information:</strong> {otherClinicInfo.parkingInfo}</p>
-      <p><strong>Accessibility Features:</strong> {otherClinicInfo.accessibilityFeatures}</p>
-      <p><strong>Patient Reviews:</strong> {otherClinicInfo.patientReviews}</p>
-      <p><strong>Appointment Booking:</strong> {otherClinicInfo.appointmentBooking}</p>
-      <p><strong>Special Services:</strong> {otherClinicInfo.specialServices}</p>
-      <p><strong>GST Number:</strong> {otherClinicInfo.gstNumber}</p>
-      
+      <div className="space-y-2">
+        <p><strong>License Number:</strong> {otherClinicInfo.licenseNumber}</p>
+        <p><strong>Insurance Providers:</strong> {otherClinicInfo.insuranceProviders}</p>
+        <p><strong>Emergency Contact:</strong> {otherClinicInfo.emergencyContact}</p>
+        <p><strong>Languages Spoken:</strong> {otherClinicInfo.languagesSpoken}</p>
+        <p><strong>Payment Methods:</strong> {otherClinicInfo.paymentMethods}</p>
+        <p><strong>Parking Information:</strong> {otherClinicInfo.parkingInfo}</p>
+        <p><strong>Accessibility Features:</strong> {otherClinicInfo.accessibilityFeatures}</p>
+        <p><strong>Patient Reviews:</strong> {otherClinicInfo.patientReviews}</p>
+        <p><strong>Appointment Booking:</strong> {otherClinicInfo.appointmentBooking}</p>
+        <p><strong>Special Services:</strong> {otherClinicInfo.specialServices}</p>
+        <p><strong>GST Number:</strong> {otherClinicInfo.gstNumber}</p>
+      </div>
     </section>
   );
 
