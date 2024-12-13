@@ -28,7 +28,7 @@ const AddAppointmentModal = ({ visible, onClose, onAdd }) => {
         setPatients(response.data);
       }
     } catch (error) {
-      message.error('Failed to fetch patients: ' + error.message);
+      message.error('Failed to fetch patients: ' + error.error);
     }
   };
 
