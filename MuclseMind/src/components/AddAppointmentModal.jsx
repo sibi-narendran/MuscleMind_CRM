@@ -75,7 +75,7 @@ const AddAppointmentModal = ({ visible, onClose, onAdd }) => {
         message.error(response.message);
       }
     } catch (error) {
-      message.error(error.message);
+      message.error(error.error);
     }
   };
 

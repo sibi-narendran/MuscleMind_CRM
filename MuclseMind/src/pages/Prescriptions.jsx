@@ -1,33 +1,39 @@
-import { useState, useEffect } from 'react';
-import { App, Button, Input, Table, Card, Space, Typography, Modal } from 'antd';
-import { 
-  DownloadOutlined, 
-  DeleteOutlined, 
-  PlusOutlined, 
-  EditOutlined,
-  SearchOutlined
-} from '@ant-design/icons';
-
+import React, { useState, useEffect } from 'react';
+import { Button, Input, Table, Card, Space, Typography, Modal, message } from 'antd';
+import { DownloadOutlined, DeleteOutlined, PlusOutlined, EditOutlined, SearchOutlined } from '@ant-design/icons';
+import EditPrescriptionForm from './EditPrescriptionForm';
+import AddPrescriptionForm from './AddPrescriptionForm';
+import { deletePrescriptions, GetPrescription } from '../api.services/services';
 import { generatePDF } from '../lib/pdfGenerator';
-import PrescriptionForm from './PrescriptionForm';
-import { GetPrescription, deleteprescriptions } from '../api.services/services';
+import { z } from 'zod';
 
 const { Search } = Input;
 const { Title } = Typography;
 
-function Prescriptions() {
-  const { message } = App.useApp();
-  const [searchTerm, setSearchTerm] = useState('');
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [selectedPrescription, setSelectedPrescription] = useState({
-    name: '',
-    age: '',
-    sex: '',
-    date: ''
-  });
-  const [prescriptions, setPrescriptions] = useState([]);
+export const prescriptionSchema = z.object({
+  patient_name: z.string(),
+  age: z.number(),
+  gender: z.enum(['Male', 'Female']),
+  date: z.string(),
+  medicines: z.array(z.object({
+    name: z.string(),
+    dosage: z.string(),
+    duration: z.string(),
+    morning: z.boolean(),
+    afternoon: z.boolean(),
+    night: z.boolean(),
+    instructions: z.string().optional(),
+  })),
+});
 
-  useEffect(() => {
+export default function Prescriptions() {
+  const [prescriptions, setPrescriptions] = useState([]);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [selectedPrescription, setSelectedPrescription] = useState(null);
+
+
     const fetchPrescriptions = async () => {
       try {
         const response = await GetPrescription();
@@ -42,70 +48,64 @@ function Prescriptions() {
         setPrescriptions([]);
       }
     };
-
+    useEffect(() => {
     fetchPrescriptions();
   }, [searchTerm]);
 
-  const getMedicinesSummary = (prescription) => {
-    return prescription.medicines ? prescription.medicines.length : 0;
-  };
-
-  const handleEditPrescription = (prescription) => {
-    setSelectedPrescription({
-      name: prescription.patient_name,
-      age: prescription.age.toString(),
-      sex: prescription.gender,
-      date: new Date(prescription.date).toISOString().split('T')[0]
-    });
-    setIsModalOpen(true);
-  };
-
-  const handleModalClose = () => {
-    setIsModalOpen(false);
-    setSelectedPrescription({
-      name: '',
-      age: '',
-      sex: '',
-      date: ''
-    });
-  };
-
-  const handleDownloadPDF = (prescription) => {
+  const handleDeletePrescription = async (id) => {
     try {
-      const success = generatePDF(prescription);
-      if (success) {
-        message.success('Prescription PDF generated successfully');
-      } else {
-        message.error('Failed to generate PDF');
-      }
+      Modal.confirm({
+        title: 'Are you sure you want to delete this prescription?',
+        content: 'This action cannot be undone.',
+        okText: 'Yes',
+        okType: 'danger',
+        cancelText: 'No',
+        onOk: async () => {
+          const response = await deletePrescriptions(id);
+          if (response.success) {
+            message.success('Prescription deleted successfully');
+            fetchPrescriptions(); // Refresh the list
+          } else {
+            throw new Error(response.message || 'Failed to delete prescription');
+          }
+        },
+      });
     } catch (error) {
-      console.error('Error generating PDF:', error);
+      message.error('Failed to delete prescription: ' + error.message);
+      console.error('Error deleting prescription:', error);
+    }
+  };
+
+  const handleOpenAddForm = () => setIsAddModalOpen(true);
+  const handleOpenEditForm = (prescription) => {
+    setSelectedPrescription(prescription);
+    setIsEditModalOpen(true);
+  };
+  const handleCloseEditModal = () => setIsEditModalOpen(false);
+  const handleCloseAddModal = () => setIsAddModalOpen(false);
+
+  const handleUpdatePrescriptions = async () => {
+    try {
+      await fetchPrescriptions(); // Refresh the list of prescriptions
+      handleCloseEditModal(); // Close the modal after successful update
+      message.success('Prescription updated successfully');
+    } catch (error) {
+      console.error('Error updating prescriptions:', error);
+      message.error('Failed to update prescription');
+    }
+  };
+
+  const handleDownloadPDF = async (prescription) => {
+    try {
+      await generatePDF(prescription);
+      message.success('Prescription PDF generated successfully');
+    } catch (error) {
       message.error('Error generating PDF');
     }
   };
 
-  const handleDeletePrescription = (id) => {
-    Modal.confirm({
-      title: 'Are you sure you want to delete this prescription?',
-      content: 'This action cannot be undone',
-      onOk: async () => {
-        try {
-          await deleteprescriptions(id);
-          message.success('Prescription deleted successfully');
-          setIsModalOpen(false);
-          fetchPrescriptions();
-        } catch (error) {
-          message.error('Failed to delete prescription');
-        }
-      },
-      onCancel() {
-        console.log('Cancel delete');
-      },
-    });
-  };
-
-  const handleUpdate = (updatedPrescription) => {
-    console.log("Updated prescription:", updatedPrescription);
+  const getMedicinesSummary = (prescription) => {
+    return prescription.medicines ? prescription.medicines.length : 0;
   };
 
   const columns = [
@@ -119,14 +119,18 @@ function Prescriptions() {
       dataIndex: 'patient_name',
       key: 'patient_name',
       filteredValue: [searchTerm],
-      onFilter: (value, record) => record.patient_name && record.patient_name.toLowerCase().includes(value.toLowerCase()),
+      onFilter: (value, record) => 
+        record.patient_name && 
+        record.patient_name.toLowerCase().includes(value.toLowerCase()),
     },
     {
       title: 'Treatment Name',
       dataIndex: 'treatment_name',
       key: 'treatment_name',
       filteredValue: [searchTerm],
-      onFilter: (value, record) => record.treatment_name && record.treatment_name.toLowerCase().includes(value.toLowerCase()),
+      onFilter: (value, record) => 
+        record.treatment_name && 
+        record.treatment_name.toLowerCase().includes(value.toLowerCase()),
     },
     {
       title: 'Date',
@@ -140,7 +144,7 @@ function Prescriptions() {
       render: (_, prescription) => (
         <Button
           type="link"
-          onClick={() => handleEditPrescription(prescription)}
+          onClick={() => handleOpenEditForm(prescription)}
           icon={<EditOutlined />}
         >
           View/Edit ({getMedicinesSummary(prescription)})
@@ -170,22 +174,10 @@ function Prescriptions() {
 
   return (
     <div className="p-6">
-      <Card>
+      <Card className="bg-white dark:bg-boxdark">
         <div className="flex justify-between items-center mb-6">
-          <Title level={2}>Prescriptions</Title>
-          <Button
-            type="primary"
-            icon={<PlusOutlined />}
-            onClick={() => {
-              setSelectedPrescription({
-                name: '',
-                age: '',
-                sex: '',
-                date: ''
-              });
-              setIsModalOpen(true);
-            }}
-          >
+          <Title level={2} className="dark:text-white">Prescriptions</Title>
+          <Button type="primary" icon={<PlusOutlined />} onClick={handleOpenAddForm}>
             New Prescription
           </Button>
         </div>
@@ -205,29 +197,36 @@ function Prescriptions() {
           columns={columns}
           dataSource={prescriptions}
           rowKey="id"
-          pagination={{
-            pageSize: 10,
-            showSizeChanger: true,
-            showQuickJumper: true,
-          }}
+          pagination={{ pageSize: 10, showSizeChanger: true, showQuickJumper: true }}
         />
       </Card>
       
       <Modal
-        open={isModalOpen}
-        onCancel={handleModalClose}
+        title="Edit Prescription"
+        open={isEditModalOpen}
+        onCancel={handleCloseEditModal}
         footer={null}
         width={800}
         destroyOnClose
       >
-        <PrescriptionForm
-          selectedPrescription={selectedPrescription}
-          onClose={handleModalClose}
-          onUpdate={handleUpdate}
-        />
+        {selectedPrescription && (
+          <EditPrescriptionForm
+            selectedPrescription={selectedPrescription}
+            onUpdate={handleUpdatePrescriptions}
+          />
+        )}
+      </Modal>
+
+      <Modal
+        title="Add New Prescription"
+        open={isAddModalOpen}
+        onCancel={handleCloseAddModal}
+        footer={null}
+        width={800}
+        destroyOnClose
+      >
+        <AddPrescriptionForm onUpdate={handleUpdatePrescriptions} />
       </Modal>
     </div>
   );
 }
-
-export default Prescriptions;
