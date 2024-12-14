@@ -1231,7 +1231,17 @@ const renderAddHolidayModal = () => {
 
   const handleSubmit = async () => {
     try {
-      const response = await updateImageClinicInfo(headerFile, footerFile);
+      // Create a new FormData object
+      const formData = new FormData();
+      if (headerFile) {
+        formData.append("headerImage", headerFile);
+      }
+      if (footerFile) {
+        formData.append("footerImage", footerFile);
+      }
+
+      // Send the FormData object with the request
+      const response = await updateImageClinicInfo(formData);
       if (response.success) {
         message.success('Images updated successfully');
       } else {

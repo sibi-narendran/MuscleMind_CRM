@@ -529,25 +529,10 @@ export const updateClinicInfo = async (id, data) => {
   }
 };
 
-export const updateImageClinicInfo = async (headerFile, footerFile) => {
-  const formData = new FormData();
-  if (headerFile) {
-    formData.append("headerImage", headerFile);
-  }
-  if (footerFile) {
-    formData.append("footerImage", footerFile);
-  }
+export const updateImageClinicInfo = async (data) => {
 
   try {
-    const response = await interceptors.put(
-      "v1/clinic/put-image-clinic",
-      formData,
-      {
-        headers: {
-          "Content-Type": "multipart/form-data",
-        },
-      }
-    );
+    const response = await interceptors.put("v1/clinic/put-image-clinic",data);
     return response.data;
   } catch (error) {
     throw error.response?.data || error;
