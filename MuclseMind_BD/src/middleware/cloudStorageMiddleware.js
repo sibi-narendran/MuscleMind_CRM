@@ -27,7 +27,7 @@ const handleClinicImageUpload = async (req, res, next) => {
           .from('dental_CRM_cloud')
           .list('clinic', {
             prefix: type
-          });
+          });   
 
         if (oldImages?.length > 0) {
           await supabase.storage
