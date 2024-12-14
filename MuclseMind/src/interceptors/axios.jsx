@@ -1,7 +1,7 @@
 import axios from "axios";
 
 const apiInstance = axios.create({
-  baseURL: "http://localhost:3333",
+  // baseURL: "http://localhost:3333",
   baseURL: "https://muclsemind-ai.onrender.com",
   // baseURL: "http://192.168.1.10:3000",
 });
