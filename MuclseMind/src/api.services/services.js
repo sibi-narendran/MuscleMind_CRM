@@ -131,6 +131,20 @@ export const deleteAppointment = async (id) => {
   }
 };
 
+export const getAppointmentsByDateRange = async (startDate, endDate) => {
+  try {
+    const res = await interceptors.get(`v1/appointments/getAppointmentsByDateRange`, {
+      params: {
+        startDate,
+        endDate
+      }
+    });
+    return res.data;
+  } catch (error) {
+    throw error.response?.data || error;
+  }
+};
+
 // Clinic Overview & Contact Information
 export const addClinic = async (data) => {
   try {
@@ -451,7 +465,7 @@ export const updatePrescription = async (id, data) => {
   }
 };
   
-export const deleteprescriptions = async (id) => {
+export const deletePrescriptions = async (id) => {
   try {
     const res = await interceptors.delete(`v1/prescription/delete-prescription/${id}`); // Use .get instead of .delete
     return res.data;

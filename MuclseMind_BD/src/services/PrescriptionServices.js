@@ -4,12 +4,20 @@ const fetchPrescriptions = async (userId) => {
   return await prescriptionModel.getPrescriptions(userId);
 };
 
-const addPrescription = async (prescriptionData) => {
-  return await prescriptionModel.createPrescription(prescriptionData);
+const addPrescription = async (prescriptionData, userId) => {
+  const dataWithUserId = {
+    ...prescriptionData,
+    user_id: userId
+  };
+  return await prescriptionModel.createPrescription(dataWithUserId);
 };
 
 const editPrescription = async (id, prescriptionData, userId) => {
-  return await prescriptionModel.updatePrescription(id, prescriptionData, userId);
+  const dataWithUserId = {
+    ...prescriptionData,
+    user_id: userId
+  };
+  return await prescriptionModel.updatePrescription(id, dataWithUserId, userId);
 };
 
 const removePrescription = async (id, userId) => {

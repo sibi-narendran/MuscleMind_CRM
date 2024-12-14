@@ -28,7 +28,7 @@ export const generatePDF = async (data) => {
       <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 1.5rem; border-bottom: 1px solid #e5e7eb; padding-bottom: 1rem; margin-bottom: 1rem;">
         <div>
           <p style="font-size: 0.875rem; color: #4b5563;">Name:</p>
-          <p style="font-weight: 500;">${data.name || '_______'}</p>
+          <p style="font-weight: 500;">${data.patient_name || '_______'}</p>
         </div>
         <div>
           <p style="font-size: 0.875rem; color: #4b5563;">Age:</p>
@@ -36,7 +36,7 @@ export const generatePDF = async (data) => {
         </div>
         <div>
           <p style="font-size: 0.875rem; color: #4b5563;">Sex:</p>
-          <p style="font-weight: 500;">${data.sex || '_______'}</p>
+          <p style="font-weight: 500;">${data.gender || '_______'}</p>
         </div>
         <div>
           <p style="font-size: 0.875rem; color: #4b5563;">Date:</p>
@@ -117,7 +117,7 @@ export const generatePDF = async (data) => {
     pdf.addImage(imgData, 'JPEG', 0, 0, 210, 297); // A4 dimensions in mm
 
     // Generate filename
-    const filename = `prescription-${data.name?.replace(/[^a-z0-9]/gi, '_').toLowerCase()}-${format(new Date(), 'yyyy-MM-dd')}.pdf`;
+    const filename = `prescription-${data.patient_name?.replace(/[^a-z0-9]/gi, '_').toLowerCase()}-${format(new Date(), 'yyyy-MM-dd')}.pdf`;
     pdf.save(filename);
 
     // Cleanup

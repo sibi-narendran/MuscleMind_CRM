@@ -1,21 +1,24 @@
 import React, { useState, useEffect } from "react";
-import { DollarSign, Download, Filter, Trash2 } from "lucide-react";
-import { getBillings, getTreatments, createBilling, updateBilling, deleteBilling } from "../api.services/services";
+import { DollarSign, Download, Filter, Trash2, Edit } from "lucide-react";
+import { Modal, message } from "antd";
+import { getBillings, createBilling, deleteBilling } from "../api.services/services";
 import { generateBillingPDF } from "../lib/BillGenerator";
+import EditBillingModal from "./EditBillingModal";
+import AddInvoiceModal from "./AddInvoiceModal";
 
 const Billing = () => {
   const [billings, setBillings] = useState([]);
   const [selectedBilling, setSelectedBilling] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
-  const [showModal, setShowModal] = useState(false);
-  const [currentBilling, setCurrentBilling] = useState(null);
   const [treatments, setTreatments] = useState([]);
   const [selectedTreatments, setSelectedTreatments] = useState({});
   const [totalCost, setTotalCost] = useState(0);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [sortOrder, setSortOrder] = useState('desc');
+  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
 
   useEffect(() => {
     fetchBillings();
-    fetchTreatments();
   }, []);
 
   const fetchBillings = async () => {
@@ -27,55 +30,46 @@ const Billing = () => {
     }
   };
 
-  const fetchTreatments = async () => {
-    try {
-      const response = await getTreatments();
-      setTreatments(response.data || []); 
-    } catch (error) {
-      console.error("Error fetching treatments:", error);
-    }
-  };
 
-  const handleGenerateBilling = async () => {
+  const handleEditBilling = async () => {
     try {
-      const newBilling = {
-        /* populate with necessary data */
-      };
-      await createBilling(newBilling);
-      fetchBillings();
-    } catch (error) {
-      console.error("Error generating billing:", error);
-    }
-  };
-
-  const handleEditBilling = async (id, updatedData) => {
-    try {
-      await updateBilling(id, updatedData);
-      fetchBillings();
+      await fetchBillings();
+      setIsEditModalOpen(false);
+      setSelectedBilling(null);
     } catch (error) {
       console.error("Error updating billing:", error);
+      message.error("Failed to update billing");
     }
   };
 
   const handleDeleteBilling = async (id) => {
-    if (!id) {
-      console.error("Invalid billing ID:", id);
-      return;
-    }
-    try {
-      await deleteBilling(id);
-      fetchBillings();
-    } catch (error) {
-      console.error("Failed to delete billing:", error);
-    }
-  };  
+    Modal.confirm({
+      title: 'Are you sure you want to delete this invoice?',
+      content: 'This action cannot be undone.',
+      okText: 'Yes, Delete',
+      okType: 'danger',
+      cancelText: 'No, Cancel',
+      onOk: async () => {
+        try {
+          await deleteBilling(id);
+          message.success('Invoice deleted successfully');
+          fetchBillings();
+        } catch (error) {
+          message.error('Failed to delete invoice');
+          console.error("Failed to delete billing:", error);
+        }
+      },
+    });
+  };
 
-  const handleStatusChange = async (billingId, newStatus) => {
+  const handleAddInvoice = async (newInvoice) => {
     try {
-      await updateBilling(billingId, { invoice_status: newStatus });
-      fetchBillings();
+      await createBilling(newInvoice);
+      await fetchBillings();
+      setIsAddModalOpen(false);
+      message.success("Invoice created successfully");
     } catch (error) {
-      console.error("Failed to update billing status:", error);
+      message.error("Failed to create invoice");
     }
   };
 
@@ -112,37 +106,6 @@ const Billing = () => {
     setTotalCost(total);
   }, [selectedTreatments]);
 
-  const handleCreateInvoice = async (e) => {
-    e.preventDefault();
-    const formData = new FormData(e.target);
-    
-    try {
-      const treatmentNames = Object.keys(selectedTreatments)
-        .map(id => treatments.find(t => t.treatment_id === parseInt(id))?.procedure_name)
-        .filter(Boolean)
-        .join(', ');
-
-      const newBilling = {
-        invoice_no: `INV-${Date.now().toString().slice(-6)}`,
-        patient_name: formData.get('patient_name'),
-        patient_id: 1,
-        treatment_name: treatmentNames,
-        cost: totalCost,
-        date: new Date().toISOString(),
-        invoice_status: 'Pending'
-      };
-
-      await createBilling(newBilling);
-      await fetchBillings();
-      setSelectedTreatments({});
-      setTotalCost(0);
-      setShowModal(false);
-      message.success("Invoice created successfully");
-    } catch (error) {
-      message.error("Failed to create invoice");
-    }
-  };
-
   const handleGenerateInvoice = async (billing) => {
     const success = await generateBillingPDF(billing);
     if (success) {
@@ -152,10 +115,52 @@ const Billing = () => {
     }
   };
 
+  const handleEditClick = (billing) => {
+    if (!billing.id) {
+      message.error("Invalid billing record");
+      return;
+    }
+    setSelectedBilling(billing);
+    setIsEditModalOpen(true);
+  };
 
   const filteredBillings = billings.filter((billing) =>
     billing.patient_name.toLowerCase().includes(searchTerm.toLowerCase())
   );
+
+  const formatDate = (dateString) => {
+    const date = new Date(dateString);
+    return date.toLocaleDateString('en-US', {
+      day: '2-digit',
+      month: 'short',
+      year: 'numeric'
+    });
+  };
+
+  const sortedBillings = [...filteredBillings].sort((a, b) => {
+    const dateA = new Date(a.date);
+    const dateB = new Date(b.date);
+    return sortOrder === 'desc' ? dateB - dateA : dateA - dateB;
+  });
+
+  const handleSortChange = () => {
+    setSortOrder(prev => prev === 'desc' ? 'asc' : 'desc');
+  };
+
+  const tableHeaders = [
+    "Invoice Number",
+    "Patient Name",
+    "Treatment Name",
+    {
+      label: "Date",
+      sortable: true,
+      onClick: handleSortChange,
+      icon: sortOrder === 'desc' ? '↓' : '↑'
+    },
+    "Total Amount",
+    "Status",
+    "Actions",
+  ];
 
   return (
     <div className="p-6 dark:bg-boxdark">
@@ -168,7 +173,10 @@ const Billing = () => {
             <Filter className="h-5 w-5 mr-2" />
             Filter
           </button>
-          <button className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
+          <button 
+            onClick={() => setIsAddModalOpen(true)}
+            className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+          >
             <DollarSign className="h-5 w-5 mr-2" />
             New Invoice
           </button>
@@ -227,26 +235,25 @@ const Billing = () => {
           <table className="w-full">
             <thead>
               <tr className="bg-gray-50 dark:bg-strokedark">
-                {[
-                  "Invoice Number",
-                  "Patient Name",
-                  "Treatment Name",
-                  "Date",
-                  "Total Amount",
-                  "Status",
-                  "Actions",
-                ].map((header, index) => (
+                {tableHeaders.map((header, index) => (
                   <th
                     key={index}
                     className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-meta-2 uppercase tracking-wider"
+                    onClick={typeof header === 'object' && header.sortable ? header.onClick : undefined}
+                    style={typeof header === 'object' && header.sortable ? { cursor: 'pointer' } : {}}
                   >
-                    {header}
+                    <div className="flex items-center space-x-1">
+                      <span>{typeof header === 'object' ? header.label : header}</span>
+                      {typeof header === 'object' && header.sortable && (
+                        <span className="text-xs">{header.icon}</span>
+                      )}
+                    </div>
                   </th>
                 ))}
               </tr>
             </thead>
             <tbody className="bg-white dark:bg-boxdark divide-y divide-gray-200 dark:divide-strokedark">
-              {filteredBillings.map((billing) => (
+              {sortedBillings.map((billing) => (
                 <tr
                   key={billing.id}
                   className="hover:bg-gray-50 dark:hover:bg-strokedark"
@@ -260,7 +267,7 @@ const Billing = () => {
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-meta-2" data-label="Treatment Name">
                     {billing.treatment_name}
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-meta-2" data-label="Date">
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-meta-2">
                     {new Date(billing.date).toLocaleDateString()}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-white" data-label="Total Amount">
@@ -271,7 +278,7 @@ const Billing = () => {
                       {billing.invoice_status}
                     </span>
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium" data-label="Actions">
+                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                     <button
                       onClick={() => generateBillingPDF(billing)}
                       className="text-blue-600 dark:text-meta-2 hover:text-blue-800 dark:hover:text-meta-3 mr-2"
@@ -291,6 +298,22 @@ const Billing = () => {
           </table>
         </div>
       </div>
+
+      <AddInvoiceModal
+        isOpen={isAddModalOpen}
+        onClose={() => setIsAddModalOpen(false)}
+        onAdd={handleAddInvoice}
+      />
+
+      <EditBillingModal
+        isOpen={isEditModalOpen}
+        onClose={() => {
+          setIsEditModalOpen(false);
+          setSelectedBilling(null);
+        }}
+        billing={selectedBilling}
+        onUpdate={handleEditBilling}
+      />
     </div>
   );
 };

@@ -44,7 +44,7 @@ export default function PrescriptionPreview({ data }) {
         <div className="grid grid-cols-3 gap-4">
           <div>
             <p className="text-sm text-gray-600">Name:</p>
-            <p>{data.name || '_______'}</p>
+            <p>{data.patient_name || '_______'}</p>
           </div>
           <div>
             <p className="text-sm text-gray-600">Age:</p>
@@ -52,7 +52,7 @@ export default function PrescriptionPreview({ data }) {
           </div>
           <div>
             <p className="text-sm text-gray-600">Sex:</p>
-            <p>{data.sex || '_______'}</p>
+            <p>{data.gender || '_______'}</p>
           </div>
         </div>
 

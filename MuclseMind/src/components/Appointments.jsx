@@ -199,11 +199,11 @@ const Appointments = () => {
                   <span
                     className={`px-2 py-1 text-xs font-medium rounded-full ${
                       apt.status === 'Scheduled'
-                        ? 'text-meta-6 bg-meta-4 dark:bg-green-900'
+                        ? 'text-meta-6 bg-meta-4 '
                         : apt.status === 'Completed'
-                        ? 'text-meta-3 bg-meta-4 dark:bg-yellow-900'
+                        ? 'text-meta-3 bg-meta-4 '
                         : apt.status === 'Cancelled'
-                        ? 'text-meta-1 bg-meta-4 dark:bg-red-900'
+                        ? 'text-meta-1 bg-meta-4 '
                         : ''
                     }`}
                   >
