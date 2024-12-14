@@ -3,7 +3,7 @@ import { Button, Input, Table, Card, Space, Typography, Modal, message } from 'a
 import { DownloadOutlined, DeleteOutlined, PlusOutlined, EditOutlined, SearchOutlined } from '@ant-design/icons';
 import EditPrescriptionForm from './EditPrescriptionForm';
 import AddPrescriptionForm from './AddPrescriptionForm';
-import { deletePrescriptions, GetPrescription } from '../api.services/services';
+import { deletePrescriptions, GetPrescription, getUserProfile } from '../api.services/services';
 import { generatePDF } from '../lib/pdfGenerator';
 import { z } from 'zod';
 
@@ -97,9 +97,16 @@ export default function Prescriptions() {
 
   const handleDownloadPDF = async (prescription) => {
     try {
-      await generatePDF(prescription);
+      const userProfileResponse = await getUserProfile();
+      
+      if (!userProfileResponse.success) {
+        throw new Error('Failed to fetch user profile');
+      }
+
+      await generatePDF(prescription, userProfileResponse);
       message.success('Prescription PDF generated successfully');
     } catch (error) {
+      console.error('Error generating PDF:', error);
       message.error('Error generating PDF');
     }
   };

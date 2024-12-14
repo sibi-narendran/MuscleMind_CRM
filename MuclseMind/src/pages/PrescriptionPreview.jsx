@@ -1,19 +1,39 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { FaStethoscope } from 'react-icons/fa';
-
-// Static clinic data
-const clinicData = {
-  clinicName: 'Dental Clinic',
-  description: 'Tooth Pain Sensation Care',
-  address: '201, Down Town Street',
-  city: 'NEW YORK CITY',
-  phoneNumber: '02-1234567',
-  username: 'DR. NAME SURNAME',
-  specialization: 'DENTAL SURGEON, MPH',
-  department: 'Medical officer, Dept.of Oral Medicine'
-};
+import { getUserProfile } from '../api.services/services';
 
 export default function PrescriptionPreview({ data }) {
+  const [clinicData, setClinicData] = useState({
+    clinicName: '',
+    description: 'Tooth Pain Sensation Care',
+    address: '',
+    city: '',
+    phoneNumber: '',
+    username: ''
+  });
+
+  useEffect(() => {
+    const fetchClinicData = async () => {
+      try {
+        const response = await getUserProfile();
+        if (response.success && response.data) {
+          setClinicData({
+            ...clinicData,
+            clinicName: response.data.clinicName || '',
+            address: response.data.address || '',
+            city: response.data.city || '',
+            phoneNumber: response.data.phoneNumber || '',
+            username: response.data.username || ''
+          });
+        }
+      } catch (error) {
+        console.error('Error fetching clinic data:', error);
+      }
+    };
+
+    fetchClinicData();
+  }, []);
+
   return (
     <div className="border rounded-lg p-6 bg-white shadow-sm">
       <div className="border-b pb-4 mb-4 flex justify-between">
@@ -35,8 +55,6 @@ export default function PrescriptionPreview({ data }) {
 
         <div className="text-right text-meta-4">
           <h3 className="font-bold">{clinicData.username}</h3>
-          <p className="text-sm text-gray-600">{clinicData.specialization}</p>
-          <p className="text-sm text-gray-600">{clinicData.department}</p>
         </div>
       </div>
 
