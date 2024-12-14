@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from "react";
 import { Modal, Input, Select, Button, Checkbox, message } from "antd";
 import { getTreatments, createBilling, getPatients } from "../api.services/services";
+import PropTypes from "prop-types";
 
 const { Option } = Select;
 
-const AddInvoiceModal = ({ isOpen, onClose, onAdd }) => {
+const AddInvoiceModal = ({ isOpen, onClose, onSuccess }) => {
   const [formData, setFormData] = useState({
     patient_id: "",
     patient_name: "",
@@ -18,6 +19,7 @@ const AddInvoiceModal = ({ isOpen, onClose, onAdd }) => {
   const [selectedTreatments, setSelectedTreatments] = useState({});
   const [treatmentCosts, setTreatmentCosts] = useState({});
   const [totalCost, setTotalCost] = useState(0);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -95,6 +97,9 @@ const AddInvoiceModal = ({ isOpen, onClose, onAdd }) => {
 
   const handleSubmit = async () => {
     try {
+      if (isSubmitting) return;
+      setIsSubmitting(true);
+
       if (!formData.patient_id) {
         message.error("Please select a patient");
         return;
@@ -128,16 +133,21 @@ const AddInvoiceModal = ({ isOpen, onClose, onAdd }) => {
       };
 
       const response = await createBilling(newInvoice);
+      
       if (response.success) {
-        message.success("Invoice created successfully");
+        await onSuccess();
         resetForm();
-        onAdd();
-        onClose();
       } else {
         throw new Error(response.message || 'Failed to create invoice');
       }
     } catch (error) {
-      message.error("Failed to create invoice: " + error.message);
+      if (error.message.includes('already exists')) {
+        message.error("This invoice number already exists. Please try again.");
+      } else {
+        message.error("Failed to create invoice: " + error.message);
+      }
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -150,7 +160,13 @@ const AddInvoiceModal = ({ isOpen, onClose, onAdd }) => {
         <Button key="cancel" onClick={onClose}>
           Cancel
         </Button>,
-        <Button key="submit" type="primary" onClick={handleSubmit}>
+        <Button 
+          key="submit" 
+          type="primary" 
+          onClick={handleSubmit}
+          loading={isSubmitting}
+          disabled={isSubmitting}
+        >
           Create Invoice
         </Button>
       ]}
@@ -220,6 +236,12 @@ const AddInvoiceModal = ({ isOpen, onClose, onAdd }) => {
       </div>
     </Modal>
   );
+};
+
+AddInvoiceModal.propTypes = {
+  isOpen: PropTypes.bool.isRequired,
+  onClose: PropTypes.func.isRequired,
+  onSuccess: PropTypes.func.isRequired
 };
 
 export default AddInvoiceModal; 

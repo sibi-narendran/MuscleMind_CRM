@@ -89,4 +89,32 @@ const deleteAppointment = async (id) => {
   return data;
 };
 
-module.exports = { createAppointment, getAppointments, getAppointmentsByDate, updateAppointment, deleteAppointment }; 
+const getTodayAppointments = async (userId) => {
+  const today = new Date().toISOString().split('T')[0];
+  
+  const { data, error } = await supabase
+    .from('appointments')
+    .select('*')
+    .eq('user_id', userId)
+    .eq('date', today)
+    .order('time', { ascending: true });
+
+  if (error) throw error;
+  return data;
+};
+
+const getAppointmentsByDateRange = async (userId, startDate, endDate) => {
+  const { data, error } = await supabase
+    .from('appointments')
+    .select('*')
+    .eq('user_id', userId)
+    .gte('date', startDate)
+    .lte('date', endDate)
+    .order('date', { ascending: true })
+    .order('time', { ascending: true });
+
+  if (error) throw error;
+  return data;
+};
+
+module.exports = { createAppointment, getAppointments, getAppointmentsByDate, updateAppointment, deleteAppointment, getTodayAppointments, getAppointmentsByDateRange }; 

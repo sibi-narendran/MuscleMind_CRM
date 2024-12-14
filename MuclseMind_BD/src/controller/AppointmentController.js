@@ -1,4 +1,4 @@
-const { addAppointment, fetchAppointments, modifyAppointment, removeAppointment } = require('../services/AppointmentService');
+const { addAppointment, fetchAppointments, modifyAppointment, removeAppointment, fetchTodayAppointments, fetchAppointmentsByDateRange } = require('../services/AppointmentService');
 const { createResponse } = require('../utils/responseUtil');
 
 const addAppointmentController = async (req, res) => {
@@ -50,4 +50,32 @@ const deleteAppointmentController = async (req, res) => {
   }
 };
 
-module.exports = { addAppointmentController, getAppointmentsController, updateAppointmentController, deleteAppointmentController }; 
+const getTodayAppointmentsController = async (req, res) => {
+  try {
+    const userId = req.user.userId;
+    const appointments = await fetchTodayAppointments(userId);
+    res.status(200).json(createResponse(true, 'Today\'s appointments retrieved successfully', appointments));
+  } catch (error) {
+    console.error('Failed to retrieve today\'s appointments:', error);
+    res.status(500).json(createResponse(false, 'Failed to retrieve today\'s appointments', null, error.message));
+  }
+};
+
+const getAppointmentsByDateRangeController = async (req, res) => {
+  try {
+    const userId = req.user.userId;
+    const { startDate, endDate } = req.query;
+
+    if (!startDate || !endDate) {
+      return res.status(400).json(createResponse(false, 'Start date and end date are required', null));
+    }
+
+    const appointments = await fetchAppointmentsByDateRange(userId, startDate, endDate);
+    res.status(200).json(createResponse(true, 'Appointments retrieved successfully', appointments));
+  } catch (error) {
+    console.error('Failed to retrieve appointments:', error);
+    res.status(500).json(createResponse(false, 'Failed to retrieve appointments', null, error.message));
+  }
+};
+
+module.exports = { addAppointmentController, getAppointmentsController, updateAppointmentController, deleteAppointmentController, getTodayAppointmentsController, getAppointmentsByDateRangeController }; 
