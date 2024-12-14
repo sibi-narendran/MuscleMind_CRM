@@ -38,8 +38,28 @@ const updateClinicInfo = async (clinicId, clinicData) => {
     throw error; // Rethrow to handle it further up the call stack
   }
 };
+const updateClinicImages = async (userId, imageData) => {
+  try {
+    const { data, error } = await supabase
+      .from('clinic_settings')
+      .upsert([{
+        user_id: userId,
+        header_image: imageData.header_image_url,
+        footer_image: imageData.footer_image_url,
+        updated_at: new Date().toISOString()
+      }])
+      .select();
+
+    if (error) throw error;
+    return { data, error: null };
+  } catch (error) {
+    console.error('Error in updateClinicImages:', error);
+    return { data: null, error: error.message };
+  }
+};
 
 module.exports = {
   getClinicInfo,
-  updateClinicInfo
+  updateClinicInfo,
+  updateClinicImages
 };

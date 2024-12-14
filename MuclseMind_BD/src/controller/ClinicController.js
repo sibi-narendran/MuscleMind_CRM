@@ -24,7 +24,37 @@ const updateClinicInfo = async (req, res) => {
   }
 };
 
+const uploadClinicImages = async (req, res) => {
+  try {
+    const userId = req.user.userId;
+    const imageData = {
+      header_image_url: req.body.header_image_url,
+      footer_image_url: req.body.footer_image_url
+    };
+
+    const result = await clinicService.updateClinicImageUrls(userId, imageData);
+
+    if (!result.success) {
+      throw new Error(result.error);
+    }
+
+    res.status(200).json(
+      createResponse(true, 'Clinic images updated successfully', {
+        header_image: imageData.header_image_url,
+        footer_image: imageData.footer_image_url
+      })
+    );
+
+  } catch (error) {
+    console.error('Error in uploadClinicLogo:', error);
+    res.status(500).json(
+      createResponse(false, 'Failed to update clinic images', null, error.message)
+    );
+  }
+};
+
 module.exports = {
   getClinicInfo,
-  updateClinicInfo
+  updateClinicInfo,
+  uploadClinicImages
 };

@@ -22,7 +22,19 @@ const updateClinicInfo = async (clinicId, clinicData) => {
   }
 };
 
+const updateClinicImageUrls = async (userId, imageData) => {
+  try {
+    const result = await clinicModel.updateClinicImages(userId, imageData);
+    if (result.error) throw new Error(result.error);
+    return { success: true, data: result.data };
+  } catch (error) {
+    console.error('Error in updateClinicImageUrls service:', error);
+    return { success: false, error: error.message };
+  }
+};
+
 module.exports = {
   getClinicInfo,
-  updateClinicInfo
+  updateClinicInfo,
+  updateClinicImageUrls
 };
