@@ -8,6 +8,7 @@ import { getTeamMembers, addTeamMember, editTeamMember, deleteTeamMember } from 
 import { addHoliday, getHolidays, updateHoliday, deleteHoliday } from '../api.services/services';
 import { clinicInfo, updateClinicInfo } from '../api.services/services';
 import axios from 'axios';
+import { updateImageClinicInfo } from '../api.services/services';
 
 
 const { Option } = Select;
@@ -1229,17 +1230,15 @@ const renderAddHolidayModal = () => {
   );
 
   const handleSubmit = async () => {
-    const clinicId = clinicData.id; // Replace with actual clinic ID
-
     try {
-      const response = await updateClinicInfo(clinicId, headerFile, footerFile);
+      const response = await updateImageClinicInfo(headerFile, footerFile);
       if (response.success) {
-        message.success('Images uploaded successfully');
+        message.success('Images updated successfully');
       } else {
-        message.error('Failed to upload images');
+        message.error('Failed to update images');
       }
     } catch (error) {
-      message.error('Error uploading images');
+      message.error('Error updating images');
     }
   };
 
