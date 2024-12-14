@@ -1,7 +1,9 @@
 import { jsPDF } from 'jspdf';
 
-const CaseSheetPdfGenerator = (patientData) => {
+const CaseSheetPdfGenerator = (patientData, userProfile) => {
   const doc = new jsPDF();
+
+  console.log("line 5", userProfile);
   
   // Helper function to convert any value to string and handle null/undefined
   const toString = (value) => {
@@ -20,8 +22,8 @@ const CaseSheetPdfGenerator = (patientData) => {
   // Department Header
   doc.rect(15, 15, 180, 15);
   doc.setFontSize(12);
-  doc.text('DEPT. OF CONSERVATIVE DENTISTRY AND', 105, 22, { align: 'center' });
-  doc.text('ENDODONTICS', 105, 28, { align: 'center' });
+  doc.text(`${userProfile}`, 105, 22, { align: 'center' });
+  // doc.text('ENDODONTICS', 105, 28, { align: 'center' });
   
   // Case Record header
   doc.rect(15, 32, 180, 10);

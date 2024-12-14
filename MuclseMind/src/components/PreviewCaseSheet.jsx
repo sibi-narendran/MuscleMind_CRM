@@ -2,14 +2,17 @@ import React from 'react';
 import { Modal, Button } from 'antd';
 import CaseSheetPdfGenerator from './CaseSheetPdfGenerator';
 
-const PreviewCaseSheet = ({ visible, onClose, patient }) => {
+const PreviewCaseSheet = ({ visible, onClose, patient , clinicName}) => {
+
+  console.log("line 7", clinicName);
+  
   const handleDownload = () => {
-    const doc = CaseSheetPdfGenerator(patient);
+    const doc = CaseSheetPdfGenerator(patient, clinicName);
     doc.save(`${patient.name}_case_sheet.pdf`);
   };
 
   const handlePreview = () => {
-    const doc = CaseSheetPdfGenerator(patient);
+    const doc = CaseSheetPdfGenerator(patient, clinicName);
     const pdfDataUri = doc.output('datauristring');
     const previewWindow = window.open();
     if (previewWindow) {

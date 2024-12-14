@@ -10,6 +10,8 @@ const { Panel } = Collapse;
 const PHONE_PREFIXES = ["+1", "+91"];
 
 const AddPatientModal = ({ visible, onClose, onAdd }) => {
+  const [form] = Form.useForm();
+
   const handleAdd = (values) => {
     const newPatient = {
       name: values.name,
@@ -20,6 +22,7 @@ const AddPatientModal = ({ visible, onClose, onAdd }) => {
       notes: values.notes,
       care_person: values.care_person,
       case_sheet_info: {
+        allergies: values.allergies,
         medical_history: values.medical_history,
         dental_history: values.dental_history,
         decayed: values.decayed,
@@ -27,11 +30,29 @@ const AddPatientModal = ({ visible, onClose, onAdd }) => {
         roots_stumps: values.roots_stumps,
         other_diagnosis: values.other_diagnosis,
         treatment_plan: values.treatment_plan,
+        present_illness: values.present_illness,
+        chief_complaint: values.chief_complaint,
+        trimester: values.trimester,
+        hospitalization_history: values.hospitalization_history,
+        hospitalization_details: values.hospitalization_details,
+        pregnancy_status: values.pregnancy_status,
+        medical_conditions: 
+        {
+            cardiovascular: values.medical_conditions.cardiovascular,
+            respiratory: values.medical_conditions.respiratory,
+            gastrointestinal: values.medical_conditions.gastrointestinal,
+            neural: values.medical_conditions.neural,
+            diabetes: values.medical_conditions.diabetes,
+            endocrine: values.medical_conditions.endocrine,
+            renal: values.medical_conditions.renal,
+            hepatic: values.medical_conditions.hepatic, 
+        }
       },
       documents: values.documents || [],
       case_sheet_file: values.case_sheet_file,
     };
     onAdd(newPatient);
+    form.resetFields();
   };
 
   const [carePresons, setCarePresons] = useState([]);
@@ -54,6 +75,7 @@ const AddPatientModal = ({ visible, onClose, onAdd }) => {
       width={800}
     >
       <Form
+        form={form}
         layout="vertical"
         onFinish={handleAdd}
         initialValues={{

@@ -1,12 +1,14 @@
 import React, { useState, useEffect } from 'react';
-import { Modal, Form, Input, InputNumber, Select, Button, Table, Upload, DatePicker, List, Typography, message, TimePicker, Checkbox } from 'antd';
-import { PlusOutlined, EditOutlined, DeleteOutlined } from '@ant-design/icons';
+import { Modal, Form, Input, InputNumber, Select, Button, Table, Upload, DatePicker, List, Typography, message, TimePicker, Checkbox, Image } from 'antd';
+import { PlusOutlined, EditOutlined, DeleteOutlined, UploadOutlined } from '@ant-design/icons';
 import moment from 'moment';
 import { getOperatingHours, updateOperatingHours,getTreatments, addTreatment, editTreatment, deleteTreatment  } from '../api.services/services';
 import { getMedications, addMedication, editMedication, deleteMedication } from '../api.services/services';
 import { getTeamMembers, addTeamMember, editTeamMember, deleteTeamMember } from '../api.services/services';
 import { addHoliday, getHolidays, updateHoliday, deleteHoliday } from '../api.services/services';
 import { clinicInfo, updateClinicInfo } from '../api.services/services';
+import axios from 'axios';
+import { updateImageClinicInfo } from '../api.services/services';
 
 
 const { Option } = Select;
@@ -63,6 +65,12 @@ const ClinicInfo = () => {
   const [editHoliday, setEditHoliday] = useState(null);
   const [editTreatmentData, setEditTreatmentData] = useState(null);
   const [editTeamMemberData, setEditTeamMemberData] = useState(null);
+  const [headerPreview, setHeaderPreview] = useState(null);
+  const [footerPreview, setFooterPreview] = useState(null);
+  const [headerError, setHeaderError] = useState('');
+  const [footerError, setFooterError] = useState('');
+  const [headerFile, setHeaderFile] = useState(null);
+  const [footerFile, setFooterFile] = useState(null);
   
 
   useEffect(() => {
@@ -1100,6 +1108,140 @@ const renderAddHolidayModal = () => {
     }
   };
 
+  const validateFile = (file, setError) => {
+    const isImage = file.type.startsWith('image/');
+    if (!isImage) {
+      setError('You can only upload image files!');
+    } else {
+      setError('');
+    }
+    return isImage;
+  };
+
+  const handleUpload = async (byteArray, type) => {
+    try {
+      const response = await axios.post('/api/upload', {
+        type,
+        data: byteArray,
+      }, {
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+      if (response.data.success) {
+        message.success(`${type} uploaded successfully`);
+      } else {
+        message.error(`Failed to upload ${type}`);
+      }
+    } catch (error) {
+      message.error(`Error uploading ${type}: ${error.message}`);
+    }
+  };
+
+  
+
+  const handleHeaderChange = ({ fileList }) => {
+    if (fileList.length > 0) {
+      const file = fileList[0].originFileObj;
+      if (validateFile(file, setHeaderError)) {
+        const reader = new FileReader();
+        reader.onload = () => setHeaderPreview(reader.result);
+        reader.readAsDataURL(file);
+        setHeaderFile(file);
+      } else {
+        setHeaderPreview(null);
+        setHeaderFile(null);
+      }
+    } else {
+      setHeaderPreview(null);
+      setHeaderFile(null);
+    }
+  };
+
+  const handleFooterChange = ({ fileList }) => {
+    if (fileList.length > 0) {
+      const file = fileList[0].originFileObj;
+      if (validateFile(file, setFooterError)) {
+        const reader = new FileReader();
+        reader.onload = () => setFooterPreview(reader.result);
+        reader.readAsDataURL(file);
+        setFooterFile(file);
+      } else {
+        setFooterPreview(null);
+        setFooterFile(null);
+      }
+    } else {
+      setFooterPreview(null);
+      setFooterFile(null);
+    }
+  };
+
+  const PreviewHeader = () => (
+    <>
+      <h1 className="text-2xl font-bold text-white dark:text-white">Prescription Header & Footer</h1>
+      <div className="flex flex-col md:flex-row md:space-x-4 space-y-4 md:space-y-0 mt-5">
+        <Form.Item label="Prescription Header" name="prescriptionHeader" className="text-white dark:text-white flex-1">
+          <Upload
+            name="header"
+            listType="picture"
+            beforeUpload={() => false} // Prevent automatic upload
+            onChange={handleHeaderChange}
+            className="w-full"
+            accept="image/*"
+          >
+            <Button icon={<UploadOutlined />} className="w-full md:w-auto">
+              Upload Header
+            </Button>
+          </Upload>
+          {headerPreview && (
+            <Image
+              src={headerPreview}
+              alt="Header Preview"
+              style={{ width: '200px', height: 'auto', marginTop: '10px' }}
+            />
+          )}
+          {headerError && <p className="text-red-500 mt-2">{headerError}</p>}
+        </Form.Item>
+
+        <Form.Item label="Prescription Footer" name="prescriptionFooter" className="text-white dark:text-white flex-1">
+          <Upload
+            name="footer"
+            listType="picture"
+            beforeUpload={() => false} // Prevent automatic upload
+            onChange={handleFooterChange}
+            className="w-full"
+            accept="image/*"
+          >
+            <Button icon={<UploadOutlined />} className="w-full md:w-auto">
+              Upload Footer
+            </Button>
+          </Upload>
+          {footerPreview && (
+            <Image
+              src={footerPreview}
+              alt="Footer Preview"
+              style={{ width: '200px', height: 'auto', marginTop: '10px' }}
+            />
+          )}
+          {footerError && <p className="text-red-500 mt-2">{footerError}</p>}
+        </Form.Item>
+      </div>
+    </>
+  );
+
+  const handleSubmit = async () => {
+    try {
+      const response = await updateImageClinicInfo(headerFile, footerFile);
+      if (response.success) {
+        message.success('Images updated successfully');
+      } else {
+        message.error('Failed to update images');
+      }
+    } catch (error) {
+      message.error('Error updating images');
+    }
+  };
+
   return (
     <div className="max-w-full mx-auto p-6 bg-white dark:bg-boxdark shadow-md rounded-lg">
       {renderClinicOverviewAndContact()}
@@ -1108,7 +1250,7 @@ const renderAddHolidayModal = () => {
       {renderDentalTeam()}
       {renderTreatments()}
       {renderMedications()}
-      {renderOtherClinicInfo()}
+      {/* {renderOtherClinicInfo()} */}
 
       {/* Modals */}
       <EditClinicModal />
@@ -1118,6 +1260,10 @@ const renderAddHolidayModal = () => {
       <TreatmentForm />
       <MedicationForm />
       <TeamMemberForm />
+      <PreviewHeader />
+      <Button type="primary" onClick={handleSubmit}>
+        Submit Images
+      </Button>
     </div>
   );
 };

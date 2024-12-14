@@ -133,17 +133,13 @@ export const deleteAppointment = async (id) => {
 
 export const getAppointmentsByDateRange = async (startDate, endDate) => {
   try {
-    const response = await interceptors.get(`v1/appointments/date-range?startDate=${startDate}&endDate=${endDate}`);
-    return response.data;
-  } catch (error) {
-    throw error.response?.data || error;
-  }
-};
-
-export const getTodayAppointments = async () => {
-  try {
-    const response = await interceptors.get('v1/appointments/today');
-    return response.data;
+    const res = await interceptors.get(`v1/appointments/getAppointmentsByDateRange`, {
+      params: {
+        startDate,
+        endDate
+      }
+    });
+    return res.data;
   } catch (error) {
     throw error.response?.data || error;
   }
@@ -495,4 +491,29 @@ export const updateClinicInfo = async (id,data) => {
     throw error.response?.data || error;
   }
 };
+
+
+export const updateImageClinicInfo = async (headerFile, footerFile) => {
+  const formData = new FormData();
+  if (headerFile) {
+    formData.append('headerImage', headerFile);
+  }
+  if (footerFile) {
+    formData.append('footerImage', footerFile);
+  }
+
+  try {
+    const response = await interceptors.put('v1/clinic/put-image-clinic', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    });
+    return response.data;
+  } catch (error) {
+    throw error.response?.data || error;
+  }
+};
+
+
+
 
