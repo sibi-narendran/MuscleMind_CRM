@@ -8,16 +8,19 @@ import { updatePrescription } from "../api.services/services";
 
 export default function EditPrescriptionForm({ selectedPrescription, onUpdate }) {
   const [medicines, setMedicines] = useState(selectedPrescription.medicines || []);
+  const [treatmentField, setTreatmentField] = useState('');
 
   useEffect(() => {
     setMedicines(selectedPrescription.medicines || []);
+    setTreatmentField(selectedPrescription.treatment_name || '');
   }, [selectedPrescription]);
 
   const handleFormSubmit = async () => {
     try {
       const payload = {
         ...selectedPrescription,
-        medicines: medicines
+        medicines: medicines,
+        treatment_name: treatmentField,
       };
       
       const response = await updatePrescription(selectedPrescription.id, payload);
@@ -89,18 +92,29 @@ export default function EditPrescriptionForm({ selectedPrescription, onUpdate })
               <Input disabled defaultValue={selectedPrescription.date} type="date" />
             </Form.Item>
 
+            <Form.Item label="Treatment Field">
+              <Input 
+                type="text"
+                value={treatmentField} 
+                onChange={(e) => setTreatmentField(e.target.value)}  
+              />
+            </Form.Item>
+
             <Form.Item label="Medicines">
               <div className="space-y-4">
                 {medicines.map((medicine, index) => (
                   <div key={index} className="space-y-2 p-4 border rounded-lg">
+                    <p className="text-sm text-gray-600">Medicine {index + 1}</p>
                     <Input 
                       value={medicine.name} 
                       onChange={(e) => handleMedicineChange(index, 'name', e.target.value)} 
                     />
+                    <p className="text-sm text-gray-600">Dosage</p>
                     <Input
                       value={medicine.dosage}
                       onChange={(e) => handleMedicineChange(index, 'dosage', e.target.value)}
                     />
+                    <p className="text-sm text-gray-600">Duration</p>
                     <Input
                       value={medicine.duration}
                       onChange={(e) => handleMedicineChange(index, 'duration', e.target.value)}
@@ -117,6 +131,7 @@ export default function EditPrescriptionForm({ selectedPrescription, onUpdate })
                       checked={medicine.night}
                       onChange={(e) => handleMedicineChange(index, 'night', e.target.checked)}
                     >Night</Checkbox>
+                    <p className="text-sm text-gray-600">Special Instructions</p>
                     <Input
                       value={medicine.instructions}
                       onChange={(e) => handleMedicineChange(index, 'instructions', e.target.value)}
@@ -135,7 +150,7 @@ export default function EditPrescriptionForm({ selectedPrescription, onUpdate })
           </div>
         </Form>
       </div>
-      <PrescriptionPreview data={{ ...selectedPrescription, medicines }} />
+      <PrescriptionPreview data={{ ...selectedPrescription, medicines, treatment_field: treatmentField }} />
     </div>
   );
 }

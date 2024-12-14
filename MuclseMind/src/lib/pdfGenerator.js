@@ -42,6 +42,10 @@ export const generatePDF = async (data) => {
           <p style="font-size: 0.875rem; color: #4b5563;">Date:</p>
           <p style="font-weight: 500;">${format(new Date(), 'dd/MM/yyyy')}</p>
         </div>
+        <div>
+          <p style="font-size: 0.875rem; color: #4b5563;">Treatment:</p>
+          <p style="font-weight: 500;">${data.treatment_name || '_______'}</p>
+        </div>
       </div>
 
       <!-- Medicines -->
