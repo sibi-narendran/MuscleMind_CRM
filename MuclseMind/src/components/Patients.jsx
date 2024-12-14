@@ -41,16 +41,8 @@ const Patients = () => {
 
   useEffect(() => {
     fetchPatients();
-    const fetchUserProfile = async () => {
-      const response = await getUserProfile();
-      const clinicName = response.data?.clinicName || '';
-      setUserProfile(clinicName);
-    };
     fetchUserProfile();
   }, []);
-
-
-  console.log("line 53", userProfile);
   
 
   const handleViewPatient = (patient) => {
@@ -58,7 +50,14 @@ const Patients = () => {
     setPreviewModalVisible(true);
   };
 
+  const fetchUserProfile = async () => {
+    const response = await getUserProfile();
+    const clinicName = response.data?.clinicName || '';
+    setUserProfile(clinicName);
+  };
+
   const handleDownloadCaseSheet = (patient) => {
+    console.log("line 63", userProfile);
     const doc = CaseSheetPdfGenerator(patient, userProfile);
     doc.save(`${patient.name}_case_sheet.pdf`);
   };

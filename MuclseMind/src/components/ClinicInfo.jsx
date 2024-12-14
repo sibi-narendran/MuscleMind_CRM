@@ -71,6 +71,7 @@ const ClinicInfo = () => {
   const [footerError, setFooterError] = useState('');
   const [headerFile, setHeaderFile] = useState(null);
   const [footerFile, setFooterFile] = useState(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   
 
   useEffect(() => {
@@ -1110,12 +1111,21 @@ const renderAddHolidayModal = () => {
 
   const validateFile = (file, setError) => {
     const isImage = file.type.startsWith('image/');
+    const maxSizeInMB = 5;
+    const maxSizeInBytes = maxSizeInMB * 1024 * 1024; // Convert MB to bytes
+
     if (!isImage) {
       setError('You can only upload image files!');
-    } else {
-      setError('');
+      return false;
     }
-    return isImage;
+
+    if (file.size > maxSizeInBytes) {
+      setError(`File size should not exceed ${maxSizeInMB} MB!`);
+      return false;
+    }
+
+    setError('');
+    return true;
   };
 
   const handleUpload = async (byteArray, type) => {
@@ -1257,8 +1267,8 @@ const renderAddHolidayModal = () => {
   };
 
   const handleSubmit = async () => {
+    setIsSubmitting(true); 
     try {
-      // Create a new FormData object
       const formData = new FormData();
       if (headerFile) {
         formData.append("headerImage", headerFile);
@@ -1267,7 +1277,6 @@ const renderAddHolidayModal = () => {
         formData.append("footerImage", footerFile);
       }
 
-      // Send the FormData object with the request
       const response = await updateImageClinicInfo(formData);
       if (response.success) {
         message.success('Images updated successfully');
@@ -1276,6 +1285,8 @@ const renderAddHolidayModal = () => {
       }
     } catch (error) {
       message.error('Error updating images');
+    } finally {
+      setIsSubmitting(false); // End loading
     }
   };
 
@@ -1298,7 +1309,7 @@ const renderAddHolidayModal = () => {
       <MedicationForm />
       <TeamMemberForm />
       <PreviewHeader />
-      <Button type="primary" onClick={handleSubmit}>
+      <Button type="primary" onClick={handleSubmit} loading={isSubmitting}>
         Submit Images
       </Button>
     </div>
