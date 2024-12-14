@@ -6,6 +6,7 @@ import { generateBillingPDF } from "../lib/BillGenerator";
 import EditBillingModal from "./EditBillingModal";
 import AddInvoiceModal from "./AddInvoiceModal";
 import invoicePNG from "../assets/invoice.png";
+import { getUserProfile } from "../api.services/services";
 
 const Billing = () => {
   const [billings, setBillings] = useState([]);
@@ -127,7 +128,14 @@ const Billing = () => {
     }
 
     try {
-      const success = await generateBillingPDF(billing);
+      const userProfileResponse = await getUserProfile();
+      console.log('User Profile Response:', userProfileResponse);
+
+      if (!userProfileResponse || !userProfileResponse.data) {
+        throw new Error('Failed to fetch user profile');
+      }
+
+      const success = await generateBillingPDF(billing, userProfileResponse);
       if (success) {
         message.success("Invoice PDF generated successfully");
       } else {
@@ -135,7 +143,7 @@ const Billing = () => {
       }
     } catch (error) {
       console.error("Error generating PDF:", error);
-      message.error("Failed to generate PDF");
+      message.error("Failed to generate PDF: " + error.message);
     }
   };
 
