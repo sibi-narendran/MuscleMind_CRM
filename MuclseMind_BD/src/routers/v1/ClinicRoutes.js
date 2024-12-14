@@ -8,12 +8,13 @@ const fileUpload = require('express-fileupload');
 // Add fileUpload middleware
 clinicRoutes.use(fileUpload({
   limits: { fileSize: 5 * 1024 * 1024 }, // 5MB limit
-  abortOnLimit: true
+  abortOnLimit: true,
+  useTempFiles: true,
+  tempFileDir: '/tmp/'
 }));
 
 clinicRoutes.put('/put-clinic/:id', authenticateJWT, updateClinicInfo);
-clinicRoutes.post('/put-image-clinic', authenticateJWT, handleClinicImageUpload, uploadClinicImages);
+clinicRoutes.put('/put-image-clinic', authenticateJWT, handleClinicImageUpload, uploadClinicImages);
+clinicRoutes.get('/get-clinic', authenticateJWT, getClinicInfo);
 
-
-clinicRoutes.get('/get-clinic',authenticateJWT, getClinicInfo);
 module.exports = clinicRoutes;
