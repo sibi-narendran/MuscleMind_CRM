@@ -3,7 +3,6 @@ import { jsPDF } from 'jspdf';
 const CaseSheetPdfGenerator = (patientData, userProfile) => {
   const doc = new jsPDF();
 
-  console.log("line 5", userProfile);
   
   // Helper function to convert any value to string and handle null/undefined
   const toString = (value) => {
