@@ -1176,58 +1176,85 @@ const renderAddHolidayModal = () => {
     }
   };
 
-  const PreviewHeader = () => (
-    <>
-      <h1 className="text-2xl font-bold text-white dark:text-white">Prescription Header & Footer</h1>
-      <div className="flex flex-col md:flex-row md:space-x-4 space-y-4 md:space-y-0 mt-5">
-        <Form.Item label="Prescription Header" name="prescriptionHeader" className="text-white dark:text-white flex-1">
-          <Upload
-            name="header"
-            listType="picture"
-            beforeUpload={() => false} // Prevent automatic upload
-            onChange={handleHeaderChange}
-            className="w-full"
-            accept="image/*"
-          >
-            <Button icon={<UploadOutlined />} className="w-full md:w-auto">
-              Upload Header
-            </Button>
-          </Upload>
-          {headerPreview && (
-            <Image
-              src={headerPreview}
-              alt="Header Preview"
-              style={{ width: '200px', height: 'auto', marginTop: '10px' }}
-            />
-          )}
-          {headerError && <p className="text-red-500 mt-2">{headerError}</p>}
-        </Form.Item>
+  const PreviewHeader = () => {
+    // Add state for existing images
+    const [existingImages, setExistingImages] = useState({
+      header: '',
+      footer: ''
+    });
 
-        <Form.Item label="Prescription Footer" name="prescriptionFooter" className="text-white dark:text-white flex-1">
-          <Upload
-            name="footer"
-            listType="picture"
-            beforeUpload={() => false} // Prevent automatic upload
-            onChange={handleFooterChange}
-            className="w-full"
-            accept="image/*"
-          >
-            <Button icon={<UploadOutlined />} className="w-full md:w-auto">
-              Upload Footer
-            </Button>
-          </Upload>
-          {footerPreview && (
-            <Image
-              src={footerPreview}
-              alt="Footer Preview"
-              style={{ width: '200px', height: 'auto', marginTop: '10px' }}
-            />
-          )}
-          {footerError && <p className="text-red-500 mt-2">{footerError}</p>}
-        </Form.Item>
-      </div>
-    </>
-  );
+    // Fetch existing images when component mounts
+    useEffect(() => {
+      const fetchImages = async () => {
+        try {
+          const response = await clinicInfo ();
+          if (response.success) {
+            setExistingImages({
+              header: response.data.header_image_url,
+              footer: response.data.footer_image_url
+            });
+          }
+        } catch (error) {
+          console.error('Error fetching images:', error);
+        }
+      };
+
+      fetchImages();
+    }, []);
+
+    return (
+      <>
+        <h1 className="text-2xl font-bold text-white dark:text-white">Prescription Header & Footer</h1>
+        <div className="flex flex-col md:flex-row md:space-x-4 space-y-4 md:space-y-0 mt-5">
+          <Form.Item label="Prescription Header" name="prescriptionHeader" className="text-white dark:text-white flex-1">
+            <Upload
+              name="header"
+              listType="picture"
+              beforeUpload={() => false}
+              onChange={handleHeaderChange}
+              className="w-full"
+              accept="image/*"
+            >
+              <Button icon={<UploadOutlined />} className="w-full md:w-auto">
+                Upload Header
+              </Button>
+            </Upload>
+            {(headerPreview || existingImages.header) && (
+              <Image
+                src={headerPreview || existingImages.header}
+                alt="Header Preview"
+                style={{ width: '200px', height: 'auto', marginTop: '10px' }}
+              />
+            )}
+            {headerError && <p className="text-red-500 mt-2">{headerError}</p>}
+          </Form.Item>
+
+          <Form.Item label="Prescription Footer" name="prescriptionFooter" className="text-white dark:text-white flex-1">
+            <Upload
+              name="footer"
+              listType="picture"
+              beforeUpload={() => false}
+              onChange={handleFooterChange}
+              className="w-full"
+              accept="image/*"
+            >
+              <Button icon={<UploadOutlined />} className="w-full md:w-auto">
+                Upload Footer
+              </Button>
+            </Upload>
+            {(footerPreview || existingImages.footer) && (
+              <Image
+                src={footerPreview || existingImages.footer}
+                alt="Footer Preview"
+                style={{ width: '200px', height: 'auto', marginTop: '10px' }}
+              />
+            )}
+            {footerError && <p className="text-red-500 mt-2">{footerError}</p>}
+          </Form.Item>
+        </div>
+      </>
+    );
+  };
 
   const handleSubmit = async () => {
     try {

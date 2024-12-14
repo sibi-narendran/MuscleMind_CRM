@@ -41,7 +41,7 @@ const updateClinicInfo = async (clinicId, clinicData) => {
 const updateClinicImages = async (userId, imageData) => {
   try {
     const { data, error } = await supabase
-      .from('clinic_settings')
+      .from('clinic')
       .upsert([{
         user_id: userId,
         header_image: imageData.header_image_url,

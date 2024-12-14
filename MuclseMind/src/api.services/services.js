@@ -130,6 +130,14 @@ export const deleteAppointment = async (id) => {
     throw error.response?.data || error;
   }
 };
+export const getAppointments = async (id) => {
+  try {
+    const res = await interceptors.get(`v1/appointments/getAppointment/${id}`);
+    return res.data;
+  } catch (error) {
+    throw error.response?.data || error;
+  }
+};  
 
 export const getAppointmentsByDateRange = async (startDate, endDate) => {
   try {
