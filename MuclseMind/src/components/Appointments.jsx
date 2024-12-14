@@ -6,7 +6,7 @@ import 'react-datepicker/dist/react-datepicker.css';
 import AddAppointmentModal from './AddAppointmentModal';
 import EditAppointmentModal from './EditAppointmentModal';
 import { Modal, Button, message, Popconfirm } from 'antd';
-import { getAppointments, deleteAppointment, addAppointment, updateAppointment } from '../api.services/services'; // Import services
+import { getTodayAppointments, getAppointmentsByDateRange, deleteAppointment, addAppointment, updateAppointment } from '../api.services/services';
 import noAppointmentsImage from '../assets/noappoint.png';
 
 const Appointments = () => {
@@ -21,64 +21,49 @@ const Appointments = () => {
   const [showDetailsModal, setShowDetailsModal] = useState(false);
   const [showCalendarModal, setShowCalendarModal] = useState(false);
 
-
   useEffect(() => {
-    fetchAppointments();
-    
+    fetchTodayAppointments();
   }, []);
 
   useEffect(() => {
-    filterAppointments();
-    
-  }, [appointments, dateRange]);
+    if (startDate && endDate) {
+      fetchAppointmentsByDateRange();
+    }
+  }, [dateRange]);
 
-  const fetchAppointments = async () => {
+  const fetchTodayAppointments = async () => {
     try {
-      const response = await getAppointments();
+      const response = await getTodayAppointments();
       if (response.success) {
         setAppointments(response.data);
-        setShowCalendarModal(false);
+        setFilteredAppointments(response.data);
       } else {
-        message.error(response.message || 'Failed to fetch appointments');
-        
+        message.error(response.message || 'Failed to fetch today\'s appointments');
       }
     } catch (error) {
-      message.error('Failed to fetch appointments: ' + error.message);
-      
+      message.error('Failed to fetch today\'s appointments: ' + error.message);
     }
   };
 
-  const filterAppointments = () => {
-    let filtered = appointments;
-    if (startDate && endDate) {
-      filtered = appointments.filter((apt) => {
-        const appointmentDate = new Date(apt.date);
-        return appointmentDate >= startDate && appointmentDate <= endDate;
-      });
-      setShowCalendarModal(false);
+  const fetchAppointmentsByDateRange = async () => {
+    try {
+      if (!startDate || !endDate) return;
+
+      const response = await getAppointmentsByDateRange(
+        format(startDate, 'yyyy-MM-dd'),
+        format(endDate, 'yyyy-MM-dd')
+      );
+
+      if (response.success) {
+        setAppointments(response.data);
+        setFilteredAppointments(response.data);
+        setShowCalendarModal(false);
+      } else {
+        message.error(response.message || 'Failed to fetch appointments');
+      }
+    } catch (error) {
+      message.error('Failed to fetch appointments: ' + error.message);
     }
-  
-    // Enhanced sorting: First by status ('Scheduled' first, 'Completed' last), then by date
-    filtered.sort((a, b) => {
-      // Prioritize 'Scheduled' status
-      if (a.status === 'Scheduled' && b.status !== 'Scheduled') return -1;
-      if (a.status !== 'Scheduled' && b.status === 'Scheduled') return 1;
-  
-      // Deprioritize 'Completed' status
-      if (a.status === 'Completed' && b.status !== 'Completed') return 1;
-      if (a.status !== 'Completed' && b.status === 'Completed') return -1;
-  
-      // If statuses are the same, sort by date
-      const dateA = new Date(a.date), dateB = new Date(b.date);
-      if (dateA < dateB) return -1;
-      if (dateA > dateB) return 1;
-  
-      return 0;
-       // Keep original order if both have the same status and date
-    });
-  
-    setFilteredAppointments(filtered);
-    
   };
 
   const handleAddAppointment = async (newAppointment) => {
@@ -86,14 +71,14 @@ const Appointments = () => {
       const response = await addAppointment(newAppointment);
       if (response.success) {
         message.success('Appointment added successfully');
-        setShowDetailsModal(false);
+        setShowAddModal(false);
+        await fetchTodayAppointments();
       } else {
         message.error(response.message || 'Failed to add appointment');
       }
     } catch (error) {
       message.error('Failed to add appointment: ' + error.message);
     }
-    fetchAppointments(); // Refetch appointments regardless of success or failure
   };
 
   const handleEditAppointment = async (updatedAppointment) => {
@@ -101,19 +86,18 @@ const Appointments = () => {
       const response = await updateAppointment(updatedAppointment.id, updatedAppointment);
       if (response.success) {
         message.success('Appointment updated successfully');
-        fetchAppointments(); // Refetch appointments to update the list
+        setShowEditModal(false);
+        if (startDate && endDate) {
+          await fetchAppointmentsByDateRange();
+        } else {
+          await fetchTodayAppointments();
+        }
       } else {
         message.error(response.message || 'Failed to update appointment');
       }
     } catch (error) {
       message.error('Failed to update appointment: ' + error.message);
     }
-    fetchAppointments();
-  };
-
-  const handleAppointmentClick = (appointment) => {
-    setSelectedAppointment(appointment);
-    setShowDetailsModal(true);
   };
 
   const handleDeleteAppointment = async () => {
@@ -122,13 +106,22 @@ const Appointments = () => {
       if (response.success) {
         message.success('Appointment deleted successfully');
         setShowDetailsModal(false);
+        if (startDate && endDate) {
+          await fetchAppointmentsByDateRange();
+        } else {
+          await fetchTodayAppointments();
+        }
       } else {
         message.error(response.message || 'Failed to delete appointment');
       }
     } catch (error) {
       message.error('Failed to delete appointment: ' + error.message);
     }
-    fetchAppointments(); // Refetch appointments regardless of success or failure
+  };
+
+  const handleAppointmentClick = (appointment) => {
+    setSelectedAppointment(appointment);
+    setShowDetailsModal(true);
   };
 
   const handleEditButtonClick = () => {
@@ -140,12 +133,11 @@ const Appointments = () => {
     if (startDate && endDate) {
       return `Appointments from ${format(startDate, 'MMM dd')} to ${format(endDate, 'MMM dd')}`;
     }
-    return "Appointments";
+    return "Today's Appointments";
   };
 
   return (
     <div className="p-6 grid grid-cols-1 lg:grid-cols-3 gap-6 dark:bg-boxdark" style={{ height: '100vh' }}>
-      {/* Left Side - Appointments List */}
       <div className="lg:col-span-2 overflow-y-auto hide-scrollbar sm:max-h-full lg:max-h-screen">
         <div className="bg-white dark:bg-boxdark rounded-xl shadow-sm border border-gray-100 dark:border-strokedark p-6 mb-6">
           <div className="flex justify-between items-center mb-6">
@@ -228,7 +220,6 @@ const Appointments = () => {
         </div>
       </div>
 
-      {/* Right Side - Calendar */}
       <div className="bg-white dark:bg-boxdark rounded-xl shadow-sm border border-s-meta-4 dark:border-strokedark p-6 mb-6 hidden lg:block " style={{ position: 'sticky', top: 0, height: 'fit-content' }} >
         <h2 className="text-lg font-semibold text-black dark:text-white mb-4">
           Select Date Range
@@ -244,7 +235,6 @@ const Appointments = () => {
         />
       </div>
 
-      {/* Add Appointment Modal */}
       <AddAppointmentModal
         visible={showAddModal}
         onClose={() => setShowAddModal(false)}
@@ -272,7 +262,6 @@ const Appointments = () => {
         />
       </Modal>
 
-      {/* Appointment Details Modal */}
       {selectedAppointment && (
         <Modal
           title="Appointment Details"
@@ -305,7 +294,6 @@ const Appointments = () => {
         </Modal>
       )}
 
-      {/* Edit Appointment Modal */}
       {selectedAppointment && (
         <EditAppointmentModal
           visible={showEditModal}

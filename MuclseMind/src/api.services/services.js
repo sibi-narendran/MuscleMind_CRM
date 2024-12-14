@@ -133,13 +133,17 @@ export const deleteAppointment = async (id) => {
 
 export const getAppointmentsByDateRange = async (startDate, endDate) => {
   try {
-    const res = await interceptors.get(`v1/appointments/getAppointmentsByDateRange`, {
-      params: {
-        startDate,
-        endDate
-      }
-    });
-    return res.data;
+    const response = await interceptors.get(`v1/appointments/date-range?startDate=${startDate}&endDate=${endDate}`);
+    return response.data;
+  } catch (error) {
+    throw error.response?.data || error;
+  }
+};
+
+export const getTodayAppointments = async () => {
+  try {
+    const response = await interceptors.get('v1/appointments/today');
+    return response.data;
   } catch (error) {
     throw error.response?.data || error;
   }

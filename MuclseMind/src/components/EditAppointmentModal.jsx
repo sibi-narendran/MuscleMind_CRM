@@ -9,6 +9,7 @@ const EditAppointmentModal = ({ visible, onClose, onEdit, appointment }) => {
   const [form] = Form.useForm();
   const [patients, setPatients] = useState([]);
   const [treatments, setTreatments] = useState([]);
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     if (visible) {
@@ -41,29 +42,41 @@ const EditAppointmentModal = ({ visible, onClose, onEdit, appointment }) => {
 
   const handleFinish = async (values) => {
     try {
-      const selectedTreatment = treatments.find(treatment => treatment.treatment_id === values.treatment);
-      const treatmentName = selectedTreatment ? `${selectedTreatment.category} - ${selectedTreatment.procedure_name}` : '';
+      setLoading(true);
+      
+      const selectedPatient = patients.find(p => p.id === values.patient) || 
+        { id: appointment.patient_id, name: appointment.patient_name };
+        
+      const selectedTreatment = treatments.find(t => t.treatment_id === values.treatment) || 
+        { treatment_id: appointment.treatment_id, procedure_name: appointment.treatment_name };
 
       const updatedData = {
+        patient_id: selectedPatient.id.toString(), // Ensure UUID is string
+        patient_name: selectedPatient.name,
+        treatment_id: Number(selectedTreatment.treatment_id), // Ensure number
+        treatment_name: selectedTreatment.procedure_name,
         date: values.date.format('YYYY-MM-DD'),
         time: values.time.format('HH:mm'),
-        patient_id: values.patient,
-        patient_name: patients.find(p => p.id === values.patient).name,
-        treatment_id: values.treatment,
-        treatment_name: treatmentName,
-        status: values.status
+        status: values.status,
+        user_id: appointment.user_id?.toString(), // Ensure UUID is string
+        duration: Number(appointment.duration) // Ensure number
       };
+
+      console.log('Updating appointment with:', updatedData);
 
       const response = await updateAppointment(appointment.id, updatedData);
       if (response.success) {
-        message.success('Appointment updated successfully');
+        message.success(response.message);
         onEdit(response.data);
         onClose();
       } else {
-        message.error(response.message || 'Failed to update appointment');
+        throw new Error(response.error || response.message);
       }
     } catch (error) {
-      message.error('Failed to update appointment: ' + error.message);
+      console.error('Update error:', error);
+      message.error(error.message || 'Failed to update appointment');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -78,6 +91,7 @@ const EditAppointmentModal = ({ visible, onClose, onEdit, appointment }) => {
       visible={visible}
       onCancel={onClose}
       footer={null}
+      destroyOnClose
     >
       <Form
         form={form}
@@ -127,7 +141,10 @@ const EditAppointmentModal = ({ visible, onClose, onEdit, appointment }) => {
             }
           >
             {treatments.map((treatment) => (
-              <Option key={treatment.id} value={treatment.id}>
+              <Option 
+                key={treatment.treatment_id} 
+                value={treatment.treatment_id}
+              >
                 {`${treatment.category} - ${treatment.procedure_name}`}
               </Option>
             ))}
@@ -159,7 +176,7 @@ const EditAppointmentModal = ({ visible, onClose, onEdit, appointment }) => {
           </Select>
         </Form.Item>
         <Form.Item>
-          <Button type="primary" htmlType="submit">
+          <Button type="primary" htmlType="submit" loading={loading}>
             Save
           </Button>
         </Form.Item>

@@ -1,4 +1,4 @@
-const { createAppointment, getAppointments, getAppointmentsByDate, updateAppointment, deleteAppointment } = require('../models/AppointmentModels');
+const { createAppointment, getAppointments, getAppointmentsByDate, updateAppointment, deleteAppointment, getTodayAppointments, getAppointmentsByDateRange } = require('../models/AppointmentModels');
 const { getOperatingHoursByDay } = require('../models/OperatingHoursModels');
 const { getTreatmentById } = require('../models/TreatmentModel');
 const { findAllHolidays } = require('../models/holidayModel');
@@ -75,15 +75,54 @@ const fetchAppointments = async (userId) => {
   return await getAppointments(userId);
 };
 
-const modifyAppointment = async (id, updatedData) => {
-  if (updatedData.user_id) {
-    delete updatedData.user_id;
+const modifyAppointment = async (id, updatedData, userId) => {
+  try {
+    // Ensure proper data types
+    const sanitizedData = {
+      ...updatedData,
+      patient_id: updatedData.patient_id?.toString(),
+      treatment_id: Number(updatedData.treatment_id),
+      user_id: userId?.toString(),
+      duration: Number(updatedData.duration)
+    };
+
+    // Validate required fields
+    if (!sanitizedData.patient_id || !sanitizedData.treatment_id) {
+      throw new Error('Missing required fields');
+    }
+
+    // Perform your validations here...
+
+    // Update the appointment with sanitized data
+    const result = await updateAppointment(id, sanitizedData);
+    return result;
+
+  } catch (error) {
+    console.error('Error in modifyAppointment:', error);
+    throw error;
   }
-  return await updateAppointment(id, updatedData);
 };
 
 const removeAppointment = async (id) => {
   return await deleteAppointment(id);
 };
 
-module.exports = { addAppointment, fetchAppointments, modifyAppointment, removeAppointment };
+const fetchTodayAppointments = async (userId) => {
+  try {
+    return await getTodayAppointments(userId);
+  } catch (error) {
+    console.error('Error fetching today appointments:', error);
+    throw error;
+  }
+};
+
+const fetchAppointmentsByDateRange = async (userId, startDate, endDate) => {
+  try {
+    return await getAppointmentsByDateRange(userId, startDate, endDate);
+  } catch (error) {
+    console.error('Error fetching appointments by date range:', error);
+    throw error;
+  }
+};
+
+module.exports = { addAppointment, fetchAppointments, modifyAppointment, removeAppointment, fetchTodayAppointments, fetchAppointmentsByDateRange };
