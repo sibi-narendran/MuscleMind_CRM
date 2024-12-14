@@ -78,7 +78,10 @@ export const addPatient = async (data) => {
 
 export const editPatient = async (id, data) => {
   try {
-    const res = await interceptors.put(`v1/patients/updatePatients/${id}`, data);
+    const res = await interceptors.put(
+      `v1/patients/updatePatients/${id}`,
+      data
+    );
     return res.data;
   } catch (error) {
     throw error.response?.data || error;
@@ -95,14 +98,6 @@ export const deletePatient = async (id) => {
 };
 
 // Appointment services
-export const getAppointments = async () => {
-  try {
-    const res = await interceptors.get("v1/appointments/getAppointments");
-    return res.data;
-  } catch (error) {
-    throw error.response?.data || error;
-  }
-};
 
 export const addAppointment = async (data) => {
   try {
@@ -115,7 +110,10 @@ export const addAppointment = async (data) => {
 
 export const updateAppointment = async (id, data) => {
   try {
-    const res = await interceptors.put(`v1/appointments/updateAppointment/${id}`, data);
+    const res = await interceptors.put(
+      `v1/appointments/updateAppointment/${id}`,
+      data
+    );
     return res.data;
   } catch (error) {
     throw error.response?.data || error;
@@ -124,7 +122,9 @@ export const updateAppointment = async (id, data) => {
 
 export const deleteAppointment = async (id) => {
   try {
-    const res = await interceptors.delete(`v1/appointments/deleteAppointment/${id}`);
+    const res = await interceptors.delete(
+      `v1/appointments/deleteAppointment/${id}`
+    );
     return res.data;
   } catch (error) {
     throw error.response?.data || error;
@@ -133,18 +133,22 @@ export const deleteAppointment = async (id) => {
 
 export const getAppointmentsByDateRange = async (startDate, endDate) => {
   try {
-    const res = await interceptors.get(`v1/appointments/getAppointmentsByDateRange`, {
-      params: {
-        startDate,
-        endDate
-      }
-    });
-    return res.data;
+    const response = await interceptors.get(
+      `v1/appointments/date-range?startDate=${startDate}&endDate=${endDate}`
+    );
+    return response.data;
   } catch (error) {
     throw error.response?.data || error;
   }
 };
-
+export const getTodayAppointments = async () => {
+  try {
+    const response = await interceptors.get("v1/appointments/today");
+    return response.data;
+  } catch (error) {
+    throw error.response?.data || error;
+  }
+};
 // Clinic Overview & Contact Information
 export const addClinic = async (data) => {
   try {
@@ -185,12 +189,16 @@ export const getOperatingHours = async () => {
 
 export const updateOperatingHours = async (data) => {
   try {
-    const res = await interceptors.put("v1//operating-hours/operating-hours", data, {
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${localStorage.getItem('token')}`,
-      },
-    });
+    const res = await interceptors.put(
+      "v1//operating-hours/operating-hours",
+      data,
+      {
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
+      }
+    );
     return res.data;
   } catch (error) {
     throw error.response?.data || error;
@@ -256,7 +264,10 @@ export const addTreatment = async (data) => {
 
 export const editTreatment = async (id, data) => {
   try {
-    const res = await interceptors.put(`v1/treatments/editTreatment/${id}`, data);
+    const res = await interceptors.put(
+      `v1/treatments/editTreatment/${id}`,
+      data
+    );
     return res.data;
   } catch (error) {
     throw error.response?.data || error;
@@ -265,7 +276,9 @@ export const editTreatment = async (id, data) => {
 
 export const deleteTreatment = async (id) => {
   try {
-    const res = await interceptors.delete(`v1/treatments/deleteTreatment/${id}`);
+    const res = await interceptors.delete(
+      `v1/treatments/deleteTreatment/${id}`
+    );
     return res.data;
   } catch (error) {
     throw error.response?.data || error;
@@ -292,7 +305,10 @@ export const addMedication = async (data) => {
 
 export const editMedication = async (id, data) => {
   try {
-    const res = await interceptors.put(`v1/medications/editMedication/${id}`, data);
+    const res = await interceptors.put(
+      `v1/medications/editMedication/${id}`,
+      data
+    );
     return res.data;
   } catch (error) {
     throw error.response?.data || error;
@@ -301,7 +317,9 @@ export const editMedication = async (id, data) => {
 
 export const deleteMedication = async (id) => {
   try {
-    const res = await interceptors.delete(`v1/medications/deleteMedication/${id}`);
+    const res = await interceptors.delete(
+      `v1/medications/deleteMedication/${id}`
+    );
     return res.data;
   } catch (error) {
     throw error.response?.data || error;
@@ -329,7 +347,10 @@ export const addTeamMember = async (data) => {
 
 export const editTeamMember = async (id, data) => {
   try {
-    const res = await interceptors.put(`v1/dental-team/editTeamMember/${id}`, data);
+    const res = await interceptors.put(
+      `v1/dental-team/editTeamMember/${id}`,
+      data
+    );
     return res.data;
   } catch (error) {
     throw error.response?.data || error;
@@ -338,7 +359,9 @@ export const editTeamMember = async (id, data) => {
 
 export const deleteTeamMember = async (id) => {
   try {
-    const res = await interceptors.delete(`v1/dental-team/deleteTeamMember/${id}`);
+    const res = await interceptors.delete(
+      `v1/dental-team/deleteTeamMember/${id}`
+    );
     return res.data;
   } catch (error) {
     throw error.response?.data || error;
@@ -347,7 +370,9 @@ export const deleteTeamMember = async (id) => {
 
 export const fetchAttendances = async (date) => {
   try {
-    const res = await interceptors.get(`v1/staff-attendances/attendances/${date}`);
+    const res = await interceptors.get(
+      `v1/staff-attendances/attendances/${date}`
+    );
     return res.data;
   } catch (error) {
     throw error.response?.data || error;
@@ -356,7 +381,10 @@ export const fetchAttendances = async (date) => {
 
 export const updateAttendanceStatus = async (id, status) => {
   try {
-    const res = await interceptors.put(`v1/staff-attendances/attendance/${id}`, { status });
+    const res = await interceptors.put(
+      `v1/staff-attendances/attendance/${id}`,
+      { status }
+    );
     return res.data;
   } catch (error) {
     throw error.response?.data || error;
@@ -372,7 +400,6 @@ export const getDashboardStats = async () => {
   }
 };
 
-
 export const getDashboardPatientGrowth = async () => {
   try {
     const res = await interceptors.get("v1/dashboard/dashboard-patient-growth");
@@ -385,7 +412,9 @@ export const getDashboardPatientGrowth = async () => {
 export const fetchEmployeeAttendance = async (dentalTeamId) => {
   console.log("Fetching attendance data for ID:", dentalTeamId);
   try {
-    const response = await interceptors.get(`v1/staff-attendances/monthly-attendance/${dentalTeamId}`);
+    const response = await interceptors.get(
+      `v1/staff-attendances/monthly-attendance/${dentalTeamId}`
+    );
     return response.data;
   } catch (error) {
     throw error;
@@ -449,7 +478,10 @@ export const GetPrescription = async (id) => {
 
 export const addPrescription = async (data) => {
   try {
-    const res = await interceptors.post("v1/prescription/add-prescription", data);
+    const res = await interceptors.post(
+      "v1/prescription/add-prescription",
+      data
+    );
     return res.data;
   } catch (error) {
     throw error.response?.data || error;
@@ -458,16 +490,21 @@ export const addPrescription = async (data) => {
 
 export const updatePrescription = async (id, data) => {
   try {
-    const res = await interceptors.put(`v1/prescription/update-prescription/${id}`, data);
+    const res = await interceptors.put(
+      `v1/prescription/update-prescription/${id}`,
+      data
+    );
     return res.data;
   } catch (error) {
     throw error.response?.data || error;
   }
 };
-  
+
 export const deletePrescriptions = async (id) => {
   try {
-    const res = await interceptors.delete(`v1/prescription/delete-prescription/${id}`); // Use .get instead of .delete
+    const res = await interceptors.delete(
+      `v1/prescription/delete-prescription/${id}`
+    ); // Use .get instead of .delete
     return res.data;
   } catch (error) {
     throw error.response?.data || error;
@@ -476,14 +513,14 @@ export const deletePrescriptions = async (id) => {
 
 export const clinicInfo = async () => {
   try {
-    const res = await interceptors.get(`v1/clinic/get-clinic`); 
+    const res = await interceptors.get(`v1/clinic/get-clinic`);
     return res.data;
   } catch (error) {
     throw error.response?.data || error;
   }
 };
 
-export const updateClinicInfo = async (id,data) => {
+export const updateClinicInfo = async (id, data) => {
   try {
     const res = await interceptors.put(`v1/clinic/put-clinic/${id}`, data);
     return res.data;
@@ -492,28 +529,27 @@ export const updateClinicInfo = async (id,data) => {
   }
 };
 
-
 export const updateImageClinicInfo = async (headerFile, footerFile) => {
   const formData = new FormData();
   if (headerFile) {
-    formData.append('headerImage', headerFile);
+    formData.append("headerImage", headerFile);
   }
   if (footerFile) {
-    formData.append('footerImage', footerFile);
+    formData.append("footerImage", footerFile);
   }
 
   try {
-    const response = await interceptors.put('v1/clinic/put-image-clinic', formData, {
-      headers: {
-        'Content-Type': 'multipart/form-data',
-      },
-    });
+    const response = await interceptors.put(
+      "v1/clinic/put-image-clinic",
+      formData,
+      {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      }
+    );
     return response.data;
   } catch (error) {
     throw error.response?.data || error;
   }
 };
-
-
-
-
