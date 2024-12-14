@@ -483,10 +483,22 @@ export const clinicInfo = async () => {
   }
 };
 
-export const updateClinicInfo = async (id,data) => {
+export const updateClinicInfo = async (id, headerFile, footerFile) => {
+  const formData = new FormData();
+  if (headerFile) {
+    formData.append('headerImage', headerFile);
+  }
+  if (footerFile) {
+    formData.append('footerImage', footerFile);
+  }
+
   try {
-    const res = await interceptors.put(`v1/clinic/put-clinic/${id}`, data);
-    return res.data;
+    const response = await interceptors.put(`v1/clinic/put-clinic/${id}`, formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    });
+    return response.data;
   } catch (error) {
     throw error.response?.data || error;
   }
