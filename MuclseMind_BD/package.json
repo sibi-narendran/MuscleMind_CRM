@@ -1,12 +1,12 @@
 {
-  "name": "wgs-backend-template",
+  "name": "crm-backend-template",
   "version": "1.0.0",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "dev": "nodemon index.js",
     "start": "node index.js",
-    "build": "echo 'No build step required'"
+    "dev": "nodemon index.js",
+    "build": "npm install",
+    "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],
   "author": "",
@@ -47,6 +47,7 @@
     "winston": "^3.13.0"
   },
   "engines": {
-    "node": ">=14.0.0"
+    "node": ">=18.0.0",
+    "npm": ">=9.0.0"
   }
 }
