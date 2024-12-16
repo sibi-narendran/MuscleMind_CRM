@@ -30,8 +30,30 @@ const EditPatientModal = ({ visible, onClose, patient, onSave, onDelete }) => {
     setCarePresons(Array.isArray(carePresonsResponse.data) ? carePresonsResponse.data : []);
   };
 
-  const handleSave = () => {
-    onSave(formData);
+  const handleSave = async () => {
+    try {
+      const formData = new FormData();
+      
+      // Add all regular fields
+      Object.keys(formData).forEach(key => {
+        if (key !== 'documents') {
+          formData.append(key, formData[key]);
+        }
+      });
+
+      // Add documents as binary data
+      if (formData.documents && formData.documents.length > 0) {
+        formData.documents.forEach(file => {
+          if (file.originFileObj instanceof File) {
+            formData.append('documents', file.originFileObj, file.name);
+          }
+        });
+      }
+
+      await onSave(formData);
+    } catch (error) {
+      console.error('Error updating patient:', error);
+    }
   };
 
   return (
@@ -410,8 +432,14 @@ const EditPatientModal = ({ visible, onClose, patient, onSave, onDelete }) => {
           <Panel header="Additional Information" key="3">
             <Form.Item label="Documents">
               <Upload
+                beforeUpload={(file) => {
+                  // Return false to prevent automatic upload
+                  return false;
+                }}
                 fileList={formData?.documents || []}
-                onChange={({ fileList }) => setFormData({ ...formData, documents: fileList })}
+                onChange={({ fileList }) => {
+                  setFormData({ ...formData, documents: fileList });
+                }}
               >
                 <Button icon={<UploadOutlined />}>Upload Documents</Button>
               </Upload>
