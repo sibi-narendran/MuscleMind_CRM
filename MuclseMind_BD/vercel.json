@@ -8,27 +8,16 @@
   ],
   "routes": [
     {
-      "src": "/v1/.*",
-      "headers": {
-        "Access-Control-Allow-Origin": "*",
-        "Access-Control-Allow-Headers": "Origin, X-Requested-With, Content-Type, Accept, Authorization",
-        "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS"
-      },
-      "dest": "index.js",
-      "continue": true
+      "src": "/v1/(.*)",
+      "dest": "index.js"
+    },
+    {
+      "src": "/",
+      "dest": "index.js"
     },
     {
       "src": "/(.*)",
-      "headers": {
-        "Access-Control-Allow-Origin": "*"
-      },
       "dest": "index.js"
-    }
-  ],
-  "rewrites": [
-    {
-      "source": "/(.*)",
-      "destination": "/index.js"
     }
   ]
 }
