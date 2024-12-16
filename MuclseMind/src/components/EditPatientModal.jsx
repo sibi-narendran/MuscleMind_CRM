@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Modal, Input, Form, Button, Select, Upload, Row, Col, Radio, Collapse } from 'antd';
+import { Modal, Input, Form, Button, Select, Upload, Row, Col, Radio, Collapse, message } from 'antd';
 import { UploadOutlined } from '@ant-design/icons';
 import {getTeamMembers} from "../api.services/services";
 
@@ -32,27 +32,38 @@ const EditPatientModal = ({ visible, onClose, patient, onSave, onDelete }) => {
 
   const handleSave = async () => {
     try {
-      const formData = new FormData();
+      const formDataToSend = new FormData();
       
-      // Add all regular fields
-      Object.keys(formData).forEach(key => {
-        if (key !== 'documents') {
-          formData.append(key, formData[key]);
-        }
-      });
+      // Add basic patient info
+      formDataToSend.append('name', formData.name);
+      formDataToSend.append('email', formData.email);
+      formDataToSend.append('phone', formData.phone);
+      formDataToSend.append('care_person', formData.care_person);
+      formDataToSend.append('patient_id', formData.patient_id);
+      formDataToSend.append('age', formData.age);
+      formDataToSend.append('gender', formData.gender);
+      
+      // Add case sheet info as JSON string
+      if (formData.case_sheet_info) {
+        formDataToSend.append('case_sheet_info', JSON.stringify(formData.case_sheet_info));
+      }
 
-      // Add documents as binary data
+      // Handle documents
       if (formData.documents && formData.documents.length > 0) {
-        formData.documents.forEach(file => {
-          if (file.originFileObj instanceof File) {
-            formData.append('documents', file.originFileObj, file.name);
+        formData.documents.forEach((file) => {
+          if (file.originFileObj) {
+            // New files
+            formDataToSend.append('documents', file.originFileObj);
           }
         });
       }
 
-      await onSave(formData);
+      await onSave(formDataToSend);
+      message.success('Patient updated successfully');
+      onClose();
     } catch (error) {
       console.error('Error updating patient:', error);
+      message.error('Failed to update patient');
     }
   };
 
@@ -433,13 +444,24 @@ const EditPatientModal = ({ visible, onClose, patient, onSave, onDelete }) => {
             <Form.Item label="Documents">
               <Upload
                 beforeUpload={(file) => {
-                  // Return false to prevent automatic upload
-                  return false;
+                  // Validate file type and size if needed
+                  const isValidType = ['image/jpeg', 'image/png', 'application/pdf'].includes(file.type);
+                  const isValidSize = file.size / 1024 / 1024 < 5; // 5MB limit
+
+                  if (!isValidType) {
+                    message.error('Only JPG, PNG and PDF files are allowed!');
+                  }
+                  if (!isValidSize) {
+                    message.error('File must be smaller than 5MB!');
+                  }
+
+                  return false; // Prevent automatic upload
                 }}
                 fileList={formData?.documents || []}
                 onChange={({ fileList }) => {
-                  setFormData({ ...formData, documents: fileList });
+                  setFormData(prev => ({ ...prev, documents: fileList }));
                 }}
+                multiple
               >
                 <Button icon={<UploadOutlined />}>Upload Documents</Button>
               </Upload>

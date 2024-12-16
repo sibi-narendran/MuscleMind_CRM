@@ -76,18 +76,15 @@ export const addPatient = async (data) => {
   }
 };
 
-export const editPatient = async (id, data) => {
+export const editPatient = async (patientId, data) => {
   try {
-    const res = await interceptors.put(
-      `v1/patients/updatePatients/${id}`,
-      data
-    );
+    const res = await interceptors.put(`v1/patients/updatePatients/${patientId}`, data);
     return res.data;
   } catch (error) {
     throw error.response?.data || error;
   }
 };
-
+  
 export const deletePatient = async (id) => {
   try {
     const res = await interceptors.delete(`v1/patients/deletePatients/${id}`);
@@ -137,7 +134,7 @@ export const getAppointments = async (id) => {
   } catch (error) {
     throw error.response?.data || error;
   }
-};  
+};
 
 export const getAppointmentsByDateRange = async (startDate, endDate) => {
   try {
@@ -188,7 +185,7 @@ export const updateClinic = async (id, data) => {
 // Operating Hours
 export const getOperatingHours = async () => {
   try {
-    const res = await interceptors.get("v1//operating-hours/operating-hours");
+    const res = await interceptors.get("v1/operating-hours/operating-hours");
     return res.data;
   } catch (error) {
     throw error.response?.data || error;
@@ -197,16 +194,7 @@ export const getOperatingHours = async () => {
 
 export const updateOperatingHours = async (data) => {
   try {
-    const res = await interceptors.put(
-      "v1//operating-hours/operating-hours",
-      data,
-      {
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${localStorage.getItem("token")}`,
-        },
-      }
-    );
+    const res = await interceptors.put("v1/operating-hours/operating-hours", data);
     return res.data;
   } catch (error) {
     throw error.response?.data || error;
@@ -538,9 +526,8 @@ export const updateClinicInfo = async (id, data) => {
 };
 
 export const updateImageClinicInfo = async (data) => {
-
   try {
-    const response = await interceptors.put("v1/clinic/put-image-clinic",data);
+    const response = await interceptors.put("v1/clinic/put-image-clinic", data);
     return response.data;
   } catch (error) {
     throw error.response?.data || error;

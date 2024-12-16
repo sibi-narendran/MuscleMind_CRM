@@ -331,18 +331,6 @@ const AddPatientModal = ({ visible, onClose, onAdd }) => {
                       <Radio value="No">No</Radio>
                     </Radio.Group>
                   </Form.Item>
-
-                  <Form.Item 
-                    label="If Yes, select trimester" 
-                    name="trimester"
-                    className="ml-8"
-                  >
-                    <Radio.Group>
-                      <Radio value="I">I TRIMESTER</Radio>
-                      <Radio value="II">II TRIMESTER</Radio>
-                      <Radio value="III">III TRIMESTER</Radio>
-                    </Radio.Group>
-                  </Form.Item>
                 </div>
               </div>
             </div>

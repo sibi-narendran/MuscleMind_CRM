@@ -1,5 +1,6 @@
 import React from 'react';
 import { Modal, Form, Row, Col, Collapse } from 'antd';
+import { FileOutlined, EyeOutlined } from '@ant-design/icons';
 
 const { Panel } = Collapse;
 
@@ -12,6 +13,35 @@ const ViewPatientModal = ({ visible, onClose, patient }) => {
       <div className="font-medium">{value || '-'}</div>
     </div>
   );
+
+  const handleViewDocument = (url) => {
+    // For PDFs and images, open in new tab
+    window.open(url, '_blank');
+  };
+
+  const renderDocuments = (documents) => {
+    if (!documents || documents.length === 0) return <div>No documents available</div>;
+
+    return (
+      <div className="space-y-2">
+        {documents.map((doc, index) => (
+          <div key={index} className="flex items-center justify-between p-2 border rounded">
+            <div className="flex items-center space-x-2">
+              <FileOutlined className="text-primary" />
+              <span>{doc.name}</span>
+            </div>
+            <button
+              onClick={() => handleViewDocument(doc.url)}
+              className="flex items-center space-x-1 text-primary hover:text-primary-dark"
+            >
+              <EyeOutlined />
+              <span>View</span>
+            </button>
+          </div>
+        ))}
+      </div>
+    );
+  };
 
   return (
     <Modal
@@ -103,19 +133,12 @@ const ViewPatientModal = ({ visible, onClose, patient }) => {
             </div>
           </Panel>
 
-          <Panel header="Additional Information" key="3">
-            {patient.documents && patient.documents.length > 0 && (
-              <div className="border p-4 rounded">
-                <h3 className="font-bold mb-4">Documents</h3>
-                <div className="space-y-2">
-                  {patient.documents.map((doc, index) => (
-                    <div key={index} className="text-primary hover:underline cursor-pointer">
-                      {doc.name}
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
+ 
+
+          <Panel header="Additional Documents" key="4">
+            <div className="border p-4 rounded">
+              {renderDocuments(patient.documents)}
+            </div>
           </Panel>
         </Collapse>
       </Form>

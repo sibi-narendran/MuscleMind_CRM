@@ -92,7 +92,13 @@ const Patients = () => {
 
   const handleEditPatient = async (updatedPatient) => {
     try {
-      await editPatient(updatedPatient.id, updatedPatient);
+      if (!currentPatient || !currentPatient.id) {
+        message.error('Patient ID not found');
+        return;
+      }
+
+      await editPatient(currentPatient.id, updatedPatient);
+      console.log("Updating patient:", currentPatient.id, updatedPatient);
       message.success('Patient updated successfully ' + updatedPatient.name);
       setEditModalVisible(false);
       fetchPatients();

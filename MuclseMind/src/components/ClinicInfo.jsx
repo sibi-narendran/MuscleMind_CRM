@@ -29,7 +29,6 @@ const ClinicInfo = () => {
       facebook: '',
       instagram: '',
     },
-    operatingHours: [],
   });
 
   const [teamMembers, setTeamMembers] = useState();
@@ -41,25 +40,12 @@ const ClinicInfo = () => {
   const [editMedicationData, setEditMedicationData] = useState(null);
 
   const [specialHolidays, setSpecialHolidays] = useState([]);
-  const [otherClinicInfo, setOtherClinicInfo] = useState({
-    licenseNumber: '',
-    insuranceProviders: '',
-    emergencyContact: '',
-    languagesSpoken: '',
-    paymentMethods: '',
-    parkingInfo: '',
-    accessibilityFeatures: '',
-    patientReviews: '',
-    appointmentBooking: '',
-    specialServices: '',
-    gstNumber: '',
-  });
+
 
   // Modal visibility states
   const [isEditClinicModal, setIsEditClinicModal] = useState(false);
   const [isEditOperatingHoursModal, setIsEditOperatingHoursModal] = useState(false);
   const [isHolidayModalVisible, setIsHolidayModalVisible] = useState(false);
-  const [isEditOtherInfoModal, setIsEditOtherInfoModal] = useState(false);
   const [isTreatmentModalVisible, setIsTreatmentModalVisible] = useState(false);
   const [isTeamMemberModalVisible, setIsTeamMemberModalVisible] = useState(false);
   const [editHoliday, setEditHoliday] = useState(null);
@@ -81,34 +67,16 @@ const ClinicInfo = () => {
         if (response.success) {
           setClinicData(response.data);
         } else {
-          message.error('Failed to fetch clinic data');
+          message.error('Failed to fetch clinic information');
         }
       } catch (error) {
-        message.error('Error fetching clinic data');
+        console.error('Error in fetchClinicData:', error);
+        message.error('Error fetching clinic information');
       }
     };
 
     fetchClinicData();
   }, []);
-
-  
-    const fetchOperatingHours = async () => {
-      try {
-        const response = await getOperatingHours();
-        if (response.success) {
-          setClinicData(prev => ({ ...prev, operatingHours: response.data }));
-        } else {
-          message.error('Failed to fetch operating hours');
-        }
-      } catch (error) {
-        message.error('Error fetching operating hours');
-      }
-  };
-  useEffect(() => {
-    fetchOperatingHours();
-  }, []);
-
-
 
   const fetchHolidays = async () => {
     try {
@@ -119,6 +87,7 @@ const ClinicInfo = () => {
         message.error('Error fetching holidays');
       }
     } catch (error) {
+      console.error('Error in fetchHolidays:', error);
       message.error('Error fetching holidays');
     }
   };
@@ -649,29 +618,7 @@ const renderHolidays = () => (
     </section>
   );
 
-  const renderOtherClinicInfo = () => (
-    <section className="mb-8">
-      <div className="flex flex-col md:flex-row justify-between items-center mb-4">
-        <h2 className="text-2xl font-bold">Other Clinic Information</h2>
-        <Button type="primary" icon={<EditOutlined />} onClick={() => setIsEditOtherInfoModal(true)}>
-          Edit
-        </Button>
-      </div>
-      <div className="space-y-2">
-        <p><strong>License Number:</strong> {otherClinicInfo.licenseNumber}</p>
-        <p><strong>Insurance Providers:</strong> {otherClinicInfo.insuranceProviders}</p>
-        <p><strong>Emergency Contact:</strong> {otherClinicInfo.emergencyContact}</p>
-        <p><strong>Languages Spoken:</strong> {otherClinicInfo.languagesSpoken}</p>
-        <p><strong>Payment Methods:</strong> {otherClinicInfo.paymentMethods}</p>
-        <p><strong>Parking Information:</strong> {otherClinicInfo.parkingInfo}</p>
-        <p><strong>Accessibility Features:</strong> {otherClinicInfo.accessibilityFeatures}</p>
-        <p><strong>Patient Reviews:</strong> {otherClinicInfo.patientReviews}</p>
-        <p><strong>Appointment Booking:</strong> {otherClinicInfo.appointmentBooking}</p>
-        <p><strong>Special Services:</strong> {otherClinicInfo.specialServices}</p>
-        <p><strong>GST Number:</strong> {otherClinicInfo.gstNumber}</p>
-      </div>
-    </section>
-  );
+
 
   // Modal components for editing and adding
   const EditClinicModal = () => (
@@ -837,61 +784,7 @@ const renderAddHolidayModal = () => {
   );
 };
 
-  const EditOtherInfoModal = () => (
-    <Modal
-      title="Edit Other Clinic Information"
-      open={isEditOtherInfoModal}
-      onCancel={() => setIsEditOtherInfoModal(false)}
-      footer={null}
-    >
-      <Form
-        initialValues={otherClinicInfo}
-        onFinish={(values) => {
-          setOtherClinicInfo(values);
-          setIsEditOtherInfoModal(false);
-        }}
-        layout="vertical"
-      >
-        <Form.Item name="licenseNumber" label="License Number">
-          <Input />
-        </Form.Item>
-        <Form.Item name="insuranceProviders" label="Insurance Providers">
-          <Input />
-        </Form.Item>
-        <Form.Item name="emergencyContact" label="Emergency Contact">
-          <Input />
-        </Form.Item>
-        <Form.Item name="languagesSpoken" label="Languages Spoken">
-          <Input />
-        </Form.Item>
-        <Form.Item name="paymentMethods" label="Payment Methods">
-          <Input />
-        </Form.Item>
-        <Form.Item name="parkingInfo" label="Parking Information">
-          <Input />
-        </Form.Item>
-        <Form.Item name="accessibilityFeatures" label="Accessibility Features">
-          <Input />
-        </Form.Item>
-        <Form.Item name="patientReviews" label="Patient Reviews">
-          <Input.TextArea />
-        </Form.Item>
-        <Form.Item name="appointmentBooking" label="Appointment Booking">
-          <Input />
-        </Form.Item>
-        <Form.Item name="specialServices" label="Special Services">
-          <Input />
-        </Form.Item>
-        <Form.Item name="gstNumber" label="GST Number">
-          <Input />
-        </Form.Item>
-        <div className="flex justify-end space-x-2">
-          <Button onClick={() => setIsEditOtherInfoModal(false)}>Cancel</Button>
-          <Button type="primary" htmlType="submit">Save</Button>
-        </div>
-      </Form>
-    </Modal>
-  );
+
 
   const TreatmentForm = () => (
     <Modal
@@ -1298,13 +1191,11 @@ const renderAddHolidayModal = () => {
       {renderDentalTeam()}
       {renderTreatments()}
       {renderMedications()}
-      {/* {renderOtherClinicInfo()} */}
 
       {/* Modals */}
       <EditClinicModal />
       <EditOperatingHoursModal />
       {renderAddHolidayModal()}
-      <EditOtherInfoModal />
       <TreatmentForm />
       <MedicationForm />
       <TeamMemberForm />

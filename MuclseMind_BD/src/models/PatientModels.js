@@ -10,7 +10,8 @@ const supabase = createClient(supabaseUrl, supabaseKey);
 const createPatient = async (patientData) => {
   const { data, error } = await supabase
     .from('patients')
-    .insert([patientData]);
+    .insert([patientData])
+    .select();
 
   if (error) {
     console.error("Error creating patient:", error);
@@ -29,7 +30,6 @@ const getPatientsByUserId = async (userId) => {
     console.error("Error fetching patients:", error);
     throw error;
   }
-
   return data;
 };
 
@@ -37,13 +37,13 @@ const updatePatient = async (id, patientData) => {
   const { data, error } = await supabase
     .from('patients')
     .update(patientData)
-    .eq('id', id);
+    .eq('id', id)
+    .select();
 
   if (error) {
     console.error("Error updating patient:", error);
     throw error;
   }
-
   return data;
 };
 
@@ -51,14 +51,19 @@ const deletePatient = async (id) => {
   const { data, error } = await supabase
     .from('patients')
     .delete()
-    .eq('id', id);
+    .eq('id', id)
+    .select();
 
   if (error) {
     console.error("Error deleting patient:", error);
     throw error;
   }
-
   return data;
 };
 
-module.exports = { createPatient, getPatientsByUserId, updatePatient, deletePatient }; 
+module.exports = {
+  createPatient,
+  getPatientsByUserId,
+  updatePatient,
+  deletePatient
+}; 

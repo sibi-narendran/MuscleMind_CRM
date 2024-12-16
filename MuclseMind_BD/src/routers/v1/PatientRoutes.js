@@ -1,12 +1,36 @@
 const express = require('express');
-const { addPatientController, getPatientsController, editPatientController, deletePatientController } = require('../../controller/PatientController.js');
-const { authenticateJWT } = require('../../middleware/authMiddleware.js');
-
 const router = express.Router();
+const { authenticateJWT } = require('../../middleware/authMiddleware');
+const { upload, handleUploadError } = require('../../middleware/uploadMiddleware');
+const {
+  addPatientController,
+  getPatientsController,
+  editPatientController,
+  deletePatientController
+} = require('../../controller/PatientController');
 
-router.post('/addPatients', authenticateJWT, addPatientController);
-router.get('/getPatients', authenticateJWT, getPatientsController);
-router.put('/updatePatients/:id', authenticateJWT, editPatientController);
-router.delete('/deletePatients/:id', authenticateJWT, deletePatientController);
+router.post('/addPatients', 
+  authenticateJWT, 
+  upload.array('documents'), 
+  handleUploadError,
+  addPatientController
+);
+
+router.get('/getPatients', 
+  authenticateJWT, 
+  getPatientsController
+);
+
+router.put('/updatePatients/:id', 
+  authenticateJWT, 
+  upload.array('documents'),
+  handleUploadError, 
+  editPatientController
+);
+
+router.delete('/deletePatients/:id', 
+  authenticateJWT, 
+  deletePatientController
+);
 
 module.exports = router;
