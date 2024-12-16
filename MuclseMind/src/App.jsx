@@ -1,18 +1,11 @@
 import { Suspense, lazy } from 'react';
-import React from 'react';
 import { Route, Routes } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
 import routes from './routes';
-import Login from './components/login';
-import CreateAccount from './components/CreateAccount';
-import ForgotPassword from './components/ForgotPassword';
-// import ErrorSection7 from './components/404page';
 
 const DefaultLayout = lazy(() => import('./layout/DefaultLayout'));
 
 function App() {
-
-
   return (
     <>
       <Toaster
@@ -21,49 +14,47 @@ function App() {
         containerClassName="overflow-auto"
       />
       <Routes>
-        <Route
-          path="/"
-          element={
-            <Suspense fallback={<div>Loading...</div>}>
-              <Login/>
-            </Suspense>
-          }
-        />
-         <Route
-          path="/create-account"
-          element={
-            <Suspense fallback={<div>Loading...</div>}>
-            <CreateAccount/>
-            </Suspense>
-          }
-        />
+        {/* Public Routes */}
+        {routes
+          .filter(route => ['/', '/create-account', '/forgot-password'].includes(route.path))
+          .map(({ path, component: Component }) => (
             <Route
-          path="/forgot-password"
-          element={
-            <Suspense fallback={<div>Loading...</div>}>
-            <ForgotPassword/>
-            </Suspense>
-          }
-        />
+              key={path}
+              path={path}
+              element={
+                <Suspense fallback={<div>Loading...</div>}>
+                  <Component />
+                </Suspense>
+              }
+            />
+          ))}
+
+        {/* Protected Routes with DefaultLayout */}
         <Route element={<DefaultLayout />}>
           {routes
-            .filter(route => route.path !== '/')
-            .map((route, index) => {
-              const { path, component: Component } = route;
-              return (
-                <Route
-                  key={index}
-                  path={path}
-                  element={
-                    <Suspense fallback={<div>Loading...</div>}>
-                      <Component />
-                    </Suspense>
-                  }
-                />
-              );
-            })}
+            .filter(route => !['/', '/create-account', '/forgot-password'].includes(route.path))
+            .map(({ path, component: Component }) => (
+              <Route
+                key={path}
+                path={path}
+                element={
+                  <Suspense fallback={<div>Loading...</div>}>
+                    <Component />
+                  </Suspense>
+                }
+              />
+            ))}
         </Route>
-        {/* <Route path="*" element={<ErrorSection7 />} /> */}
+
+        {/* 404 Route */}
+        <Route
+          path="*"
+          element={
+            <div className="flex h-screen items-center justify-center">
+              <h1 className="text-2xl font-bold">404 - Page Not Found</h1>
+            </div>
+          }
+        />
       </Routes>
     </>
   );

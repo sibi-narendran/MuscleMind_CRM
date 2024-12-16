@@ -8,7 +8,7 @@ const Management = lazy(() => import('../components/Management'));
 const Reminders = lazy(() => import('../components/Reminders'));
 const Clinic = lazy(() => import('../components/ClinicInfo'));
 const Login = lazy(() => import('../components/login'));
-const createAccount = lazy(() => import('../components/CreateAccount'));
+const CreateAccount = lazy(() => import('../components/CreateAccount'));
 const ForgotPassword = lazy(() => import('../components/ForgotPassword'));
 const MyProfile = lazy(() => import('../components/Profile'));
 const Prescriptions = lazy(() => import('../pages/Prescriptions'));
@@ -16,6 +16,8 @@ const Settings = lazy(() => import('../components/Settings'));
 
 const coreRoutes = [
   { path: '/', title: 'Login', component: Login },
+  { path: '/create-account', title: 'Create Account', component: CreateAccount },
+  { path: '/forgot-password', title: 'Forgot Password', component: ForgotPassword },
   { path: '/dashboard', title: 'Dashboard', component: Dashboard },
   { path: '/patients', title: 'Patients', component: Patients },
   { path: '/appointments', title: 'Appointments', component: Appointments },
@@ -24,11 +26,8 @@ const coreRoutes = [
   { path: '/reminders', title: 'Reminders', component: Reminders },
   { path: '/prescriptions', title: 'Prescriptions', component: Prescriptions },
   { path: '/clinic', title: 'Clinic', component: Clinic },
-  { path: '/create-account', title: 'Clinic', component: createAccount },
-  { path: '/forgot-password', title: 'Forgot Password', component: ForgotPassword },
-  { path: '/myprofile', title: 'MyProfile', component: MyProfile },
+  { path: '/myprofile', title: 'My Profile', component: MyProfile },
   { path: '/settings', title: 'Settings', component: Settings },
-
 ];
 
 const routes = [...coreRoutes];

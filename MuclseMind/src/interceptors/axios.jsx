@@ -2,7 +2,7 @@ import axios from "axios";
 
 const apiInstance = axios.create({
   // baseURL: "http://localhost:3333",
-  baseURL: "https://muscle-mind-crm-1iq4-git-main-sibi-narendrans-projects.vercel.app/",
+  baseURL: "https://dentalcrmbackend.vercel.app/",
 });
 
 apiInstance.interceptors.request.use(
