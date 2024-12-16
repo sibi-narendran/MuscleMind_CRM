@@ -1,8 +1,8 @@
 import axios from "axios";
 
 const apiInstance = axios.create({
-  baseURL: "http://localhost:3333",
-  // baseURL: "http://192.168.1.10:3000",
+  // baseURL: "http://localhost:3333",
+  baseURL: "https://muscle-mind-crm-6arw.vercel.app/?vercelToolbarCode=MwameZIWnNTyDds",
 });
 
 apiInstance.interceptors.request.use(
