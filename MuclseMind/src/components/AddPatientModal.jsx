@@ -7,7 +7,7 @@ const { TextArea } = Input;
 const { Option } = Select;
 const { Panel } = Collapse;
 
-const PHONE_PREFIXES = ["+1", "+91"];
+const PHONE_PREFIXES = ["+91"];
 
 const AddPatientModal = ({ visible, onClose, onAdd }) => {
   const [form] = Form.useForm();
