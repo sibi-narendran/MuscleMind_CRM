@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useMemo } from 'react';
-import { Button, Input, message, Space, Modal, Spin, Select } from 'antd';
+import { Button, Input, message, Space, Modal, Spin, Select, Pagination } from 'antd';
 import { PlusOutlined, EditOutlined, DeleteOutlined, DownloadOutlined, EyeOutlined, SearchOutlined, FileTextOutlined } from '@ant-design/icons';
 import PreviewCaseSheet from '../components/PreviewCaseSheet';
 import AddPatientModal from '../components/AddPatientModal';
@@ -25,6 +25,8 @@ const Patients = () => {
   const [userProfile, setUserProfile] = useState(null);
   const [viewModalVisible, setViewModalVisible] = useState(false);
   const [clinicName, setClinicName] = useState('');
+  const [currentPage, setCurrentPage] = useState(1);
+  const pageSize = 10;
   
 
 
@@ -218,13 +220,18 @@ const Patients = () => {
     );
   }, [patients, searchTerm]);
 
+  const paginatedData = useMemo(() => {
+    const startIndex = (currentPage - 1) * pageSize;
+    return filteredPatients.slice(startIndex, startIndex + pageSize);
+  }, [filteredPatients, currentPage]);
+
   const {
     getTableProps,
     getTableBodyProps,
     headerGroups,
     rows,
     prepareRow,
-  } = useTable({ columns, data: filteredPatients });
+  } = useTable({ columns, data: paginatedData });
 
   useEffect(() => {
     const fetchClinicData = async () => {
@@ -265,47 +272,61 @@ const Patients = () => {
           <Spin size="large" />
         </div>
       ) : (
-        <div className="max-w-full overflow-x-auto">
-          <table {...getTableProps()} className="w-full table-auto">
-            <thead>
-              {headerGroups.map(headerGroup => (
-                <tr key={headerGroup.id} {...headerGroup.getHeaderGroupProps()}>
-                  {headerGroup.headers.map(column => (
-                    <th 
-                      key={column.id}
-                      {...column.getHeaderProps()}
-                      className="font-extrabold text-black dark:text-white px-4 py-4 text-left text-sm border-b border-[#eee] dark:border-strokedark"
-                    >
-                      {column.render('Header')}
-                    </th>
-                  ))}
-                </tr>
-              ))}
-            </thead>
-            <tbody {...getTableBodyProps()}>
-              {rows.map(row => {
-                prepareRow(row);
-                return (
-                  <tr 
-                    key={row.id} 
-                    {...row.getRowProps()}
-                    className="hover:bg-gray-1 dark:hover:bg-meta-4"
-                  >
-                    {row.cells.map(cell => (
-                      <td 
-                        key={cell.column.id}
-                        {...cell.getCellProps()}
-                        className="border-b border-[#eee] px-4 py-2 dark:border-strokedark text-black dark:text-white"
+        <>
+          <div className="max-w-full overflow-x-auto">
+            <table {...getTableProps()} className="w-full table-auto">
+              <thead>
+                {headerGroups.map(headerGroup => (
+                  <tr key={headerGroup.id} {...headerGroup.getHeaderGroupProps()}>
+                    {headerGroup.headers.map(column => (
+                      <th 
+                        key={column.id}
+                        {...column.getHeaderProps()}
+                        className="font-extrabold text-black dark:text-white px-4 py-4 text-left text-sm border-b border-[#eee] dark:border-strokedark"
                       >
-                        {cell.render('Cell')}
-                      </td>
+                        {column.render('Header')}
+                      </th>
                     ))}
                   </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        </div>
+                ))}
+              </thead>
+              <tbody {...getTableBodyProps()}>
+                {rows.map(row => {
+                  prepareRow(row);
+                  return (
+                    <tr 
+                      key={row.id} 
+                      {...row.getRowProps()}
+                      className="hover:bg-gray-1 dark:hover:bg-meta-4"
+                    >
+                      {row.cells.map(cell => (
+                        <td 
+                          key={cell.column.id}
+                          {...cell.getCellProps()}
+                          className="border-b border-[#eee] px-4 py-2 dark:border-strokedark text-black dark:text-white"
+                        >
+                          {cell.render('Cell')}
+                        </td>
+                      ))}
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+          
+          <div className="flex justify-end mt-4 mb-6">
+            <Pagination
+              current={currentPage}
+              total={filteredPatients.length}
+              pageSize={pageSize}
+              onChange={(page) => setCurrentPage(page)}
+              showSizeChanger={false}
+              showTotal={(total, range) => `${range[0]}-${range[1]} of ${total} items`}
+              className="dark:text-white"
+            />
+          </div>
+        </>
       )}
 
       <AddPatientModal

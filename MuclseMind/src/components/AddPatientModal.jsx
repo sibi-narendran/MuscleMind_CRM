@@ -161,7 +161,15 @@ const AddPatientModal = ({ visible, onClose, onAdd }) => {
               name="care_person"
               rules={[{ required: true, message: "Please select a care person" }]}
             >
-              <Select placeholder="Care of" className="dark:bg-gray-800 dark:text-black">
+              <Select
+                showSearch
+                placeholder="Search and select care person"
+                optionFilterProp="children"
+                filterOption={(input, option) =>
+                  (option?.children ?? '').toLowerCase().includes(input.toLowerCase())
+                }
+                className="dark:bg-gray-800 dark:text-black"
+              >
                 {carePresons.map((doctor) => (
                   <Option key={doctor.name} value={doctor.name}>
                     {doctor.name}

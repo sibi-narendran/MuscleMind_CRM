@@ -70,3 +70,30 @@ only screen and (max-width: 425px),
 }
 
 /* Add data-label attributes to your HTML for each td */
+
+/* Pagination styles */
+.ant-pagination-item {
+  background-color: transparent !important;
+  border-color: #e5e7eb !important;
+}
+
+.ant-pagination-item-active {
+  border-color: #1890ff !important;
+}
+
+.ant-pagination-item a {
+  color: inherit !important;
+}
+
+.dark .ant-pagination-item a {
+  color: #fff !important;
+}
+
+.dark .ant-pagination-item-active {
+  background-color: #1890ff !important;
+}
+
+.dark .ant-pagination-prev button,
+.dark .ant-pagination-next button {
+  color: #fff !important;
+}
