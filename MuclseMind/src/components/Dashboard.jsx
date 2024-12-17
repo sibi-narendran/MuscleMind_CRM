@@ -122,11 +122,7 @@ const Dashboard = () => {
     ],
   };
 
-  const predictiveInsights = [
-    { patient: 'John Doe', insight: 'Follow-up required', action: 'Schedule follow-up' },
-    { patient: 'Jane Smith', insight: 'Churn risk', action: 'Send engagement email' },
-    { patient: 'Alice White', insight: 'High treatment success', action: 'Offer loyalty program' },
-  ];
+  const predictiveInsights = [];
 
   return (
     <div className="p-6 space-y-6 dark:bg-boxdark">
