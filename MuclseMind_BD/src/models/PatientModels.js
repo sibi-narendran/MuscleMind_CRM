@@ -8,9 +8,24 @@ const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 const supabase = createClient(supabaseUrl, supabaseKey);
 
 const createPatient = async (patientData) => {
+  // First verify the user exists
+  const { data: user, error: userError } = await supabase
+    .from('users')
+    .select('id')
+    .eq('id', patientData.user_id)
+    .single();
+
+  // if (userError || !user) {
+  //   throw new Error('Invalid user ID or user does not exist');
+  // }
+
+  // Then create the patient
   const { data, error } = await supabase
     .from('patients')
-    .insert([patientData])
+    .insert([{
+      ...patientData,
+      created_at: new Date()
+    }])
     .select();
 
   if (error) {

@@ -1,11 +1,12 @@
 const PatientModel = require('../models/PatientModels');
 const { uploadFiles } = require('../utils/storageServices');
 
-const addPatient = async (patientData, files) => {
+const addPatient = async (userId, patientData, files) => {
   try {
     const uploadedFiles = await uploadFiles(files);
     const newPatient = {
       ...patientData,
+      user_id: userId,
       documents: uploadedFiles.length > 0 ? uploadedFiles : undefined,
       created_at: new Date()
     };

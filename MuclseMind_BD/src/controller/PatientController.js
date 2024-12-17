@@ -3,9 +3,10 @@ const { createResponse } = require('../utils/responseUtil');
 
 const addPatientController = async (req, res) => {
   try {
+    const { id: userId } = req.user;
     const patientData = req.body;
     const files = req.files;
-    const result = await PatientService.addPatient(patientData, files);
+    const result = await PatientService.addPatient(userId, patientData, files);
     res.status(201).json(createResponse(true, 'Patient added successfully', result));
   } catch (error) {
     console.error('Add patient error:', error);
@@ -16,7 +17,9 @@ const addPatientController = async (req, res) => {
 const getPatientsController = async (req, res) => {
   try {
     const { id: userId } = req.user;
+    console.log(userId);
     const patients = await PatientService.getPatients(userId);
+    console.log(patients);
     res.status(200).json(createResponse(true, 'Patients retrieved successfully', patients));
   } catch (error) {
     res.status(500).json(createResponse(false, 'Failed to retrieve patients', null, error.message));
