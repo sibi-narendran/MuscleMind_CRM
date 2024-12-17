@@ -164,7 +164,7 @@ const AddPatientModal = ({ visible, onClose, onAdd }) => {
               <Select placeholder="Care of" className="dark:bg-gray-800 dark:text-black">
                 {carePresons.map((doctor) => (
                   <Option key={doctor.name} value={doctor.name}>
-                    {"Dr. " + doctor.name}
+                    {doctor.name}
                   </Option>
                 ))}
               </Select>
