@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Modal, Form, DatePicker, TimePicker, Button, Select, message } from 'antd';
 import moment from 'moment';
-import { updateAppointment, getPatients, getTreatments } from '../api.services/services'; // Import necessary services
+import { updateAppointment, getPatients, getTreatments, getTeamMembers } from '../api.services/services'; // Import necessary services
 
 const { Option } = Select;
 
@@ -9,14 +9,22 @@ const EditAppointmentModal = ({ visible, onClose, onEdit, appointment }) => {
   const [form] = Form.useForm();
   const [patients, setPatients] = useState([]);
   const [treatments, setTreatments] = useState([]);
+  const [carePersons, setCarePersons] = useState([]);
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     if (visible) {
       fetchPatients();
       fetchTreatments();
+      fetchCarePersons();
+      form.setFieldsValue({
+        ...appointment,
+        date: moment(appointment.date),
+        time: moment(appointment.time, 'HH:mm'),
+        care_person: appointment.care_person
+      });
     }
-  }, [visible]);
+  }, [visible, appointment]);
 
   const fetchPatients = async () => {
     try {
@@ -40,6 +48,17 @@ const EditAppointmentModal = ({ visible, onClose, onEdit, appointment }) => {
     }
   };
 
+  const fetchCarePersons = async () => {
+    try {
+      const response = await getTeamMembers();
+      if (response.success) {
+        setCarePersons(response.data);
+      }
+    } catch (error) {
+      message.error('Failed to fetch care persons: ' + error.message);
+    }
+  };
+
   const handleFinish = async (values) => {
     try {
       setLoading(true);
@@ -59,7 +78,8 @@ const EditAppointmentModal = ({ visible, onClose, onEdit, appointment }) => {
         time: values.time.format('HH:mm'),
         status: values.status,
         user_id: appointment.user_id?.toString(), // Ensure UUID is string
-        duration: Number(appointment.duration) // Ensure number
+        duration: Number(appointment.duration), // Ensure number
+        care_person: values.care_person
       };
 
       console.log('Updating appointment with:', updatedData);
@@ -102,6 +122,7 @@ const EditAppointmentModal = ({ visible, onClose, onEdit, appointment }) => {
           date: moment(appointment.date),
           time: moment(appointment.time, 'HH:mm'),
           status: appointment.status,
+          care_person: appointment.care_person
         }}
         onFinish={handleFinish}
       >
@@ -173,6 +194,27 @@ const EditAppointmentModal = ({ visible, onClose, onEdit, appointment }) => {
             <Option value="Scheduled">Scheduled</Option>
             <Option value="Completed">Completed</Option>
             <Option value="Cancelled">Cancelled</Option>
+          </Select>
+        </Form.Item>
+        <Form.Item
+          label={<span style={{ fontWeight: 'bold' }}>Care of</span>}
+          name="care_person"
+          rules={[{ required: true, message: 'Please select a care person' }]}
+        >
+          <Select
+            showSearch
+            placeholder="Search and select care person"
+            optionFilterProp="children"
+            filterOption={(input, option) =>
+              (option?.children ?? '').toLowerCase().includes(input.toLowerCase())
+            }
+            style={{ width: '100%' }}
+          >
+            {carePersons.map((doctor) => (
+              <Option key={doctor.name} value={doctor.name}>
+                {doctor.name}
+              </Option>
+            ))}
           </Select>
         </Form.Item>
         <Form.Item>

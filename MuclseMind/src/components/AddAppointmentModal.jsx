@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Modal, Form, Input, Button, DatePicker, TimePicker, Select, message } from 'antd';
 import moment from 'moment';
-import { getPatients, addAppointment, getTreatments } from '../api.services/services';
+import { getPatients, addAppointment, getTreatments, getTeamMembers } from '../api.services/services';
 import AddPatientModal from './AddPatientModal';
 import { addPatient } from '../api.services/services';
 
@@ -10,6 +10,7 @@ const { Option } = Select;
 const AddAppointmentModal = ({ visible, onClose, onAdd }) => {
   const [patients, setPatients] = useState([]);
   const [treatments, setTreatments] = useState([]);
+  const [carePersons, setCarePersons] = useState([]);
   const [showAddPatientModal, setShowAddPatientModal] = useState(false);
   const [selectedPatientDetails, setSelectedPatientDetails] = useState(null);
   const [showAll, setShowAll] = useState(false);
@@ -18,6 +19,7 @@ const AddAppointmentModal = ({ visible, onClose, onAdd }) => {
     if (visible) {
       fetchPatients();
       fetchTreatments();
+      fetchCarePersons();
     }
   }, [visible]);
 
@@ -43,6 +45,17 @@ const AddAppointmentModal = ({ visible, onClose, onAdd }) => {
     }
   };
 
+  const fetchCarePersons = async () => {
+    try {
+      const response = await getTeamMembers();
+      if (response.success) {
+        setCarePersons(response.data);
+      }
+    } catch (error) {
+      message.error('Failed to fetch care persons: ' + error.message);
+    }
+  };
+
   const handleAdd = async (values) => {
     try {
       const selectedPatient = patients.find(patient => patient.id === values.patient);
@@ -60,12 +73,10 @@ const AddAppointmentModal = ({ visible, onClose, onAdd }) => {
         time: values.time.format('HH:mm'),
         treatment_id: values.treatment,
         treatment_name: treatmentName,
+        care_person: values.care_person,
       };
 
-      if (!appointmentData.treatment_id) {
-        throw new Error('Treatment ID is required');
-      }
-
+   
       const response = await addAppointment(appointmentData);
       if (response.success) {
         message.success('Appointment added successfully');
@@ -174,6 +185,28 @@ const AddAppointmentModal = ({ visible, onClose, onAdd }) => {
                   disabled
                   style={{ width: '100%' }}
                 />
+              </Form.Item>
+              <Form.Item
+                label={<span style={{ fontWeight: 'bold' }}>Care of</span>}
+                name="care_person"
+                initialValue={selectedPatientDetails.care_person}
+                rules={[{ required: true, message: 'Please select a care person' }]}
+              >
+                <Select
+                  showSearch
+                  placeholder="Search and select care person"
+                  optionFilterProp="children"
+                  filterOption={(input, option) =>
+                    (option?.children ?? '').toLowerCase().includes(input.toLowerCase())
+                  }
+                  style={{ width: '100%' }}
+                >
+                  {carePersons.map((doctor) => (
+                    <Option key={doctor.name} value={doctor.name}>
+                      {doctor.name}
+                    </Option>
+                  ))}
+                </Select>
               </Form.Item>
             </>
           )}

@@ -159,11 +159,11 @@ const Appointments = () => {
               
             </button>
           </div>
-          <div className="space-y-4">
+          <div className="space-y-4 ">
             {filteredAppointments.map((apt) => (
               <div
                 key={apt.id}
-                className="flex flex-col sm:flex-row items-start sm:items-center p-4 bg-meta-9 dark:bg-strokedark rounded-lg hover:bg-gray-100 dark:hover:bg-meta-4 cursor-pointer mb-4"
+                className="flex flex-col  sm:flex-row items-start sm:items-center p-4 bg-meta-9 dark:bg-strokedark rounded-lg hover:bg-gray-100 dark:hover:bg-meta-4 cursor-pointer mb-4"
                 onClick={() => handleAppointmentClick(apt)}
               >
                 <div className="flex-shrink-0 w-full sm:w-20 mb-2 sm:mb-0">
@@ -174,12 +174,14 @@ const Appointments = () => {
                     </span>
                   </div>
                 </div>
+                
                 <div className="ml-0 sm:ml-2 mr-4">
                   <span className="text-xs sm:text-sm font-medium text-black dark:text-meta-2 ml-0 sm:ml-4">
                     {apt.appointment_id}
                   </span>
                 </div>
-                <div className="ml-0 sm:ml-4 flex-grow">
+                
+                <div className="ml-0 flex-grow">
                   <p className="text-xs sm:text-sm font-medium text-black dark:text-white">
                     {apt.patient_name}
                   </p>
@@ -187,15 +189,23 @@ const Appointments = () => {
                     {apt.treatment_name}
                   </p>
                 </div>
+
+                {/* Care of section */}
+                <div className="ml-0 sm:ml-4 flex items-center">
+                  <span className="text-xs sm:text-sm text-black dark:text-meta-2">
+                  {apt.care_person}
+                  </span>
+                </div>
+                
                 <div className="ml-0 sm:ml-4 mt-2 sm:mt-0">
                   <span
                     className={`px-2 py-1 text-xs font-medium rounded-full ${
                       apt.status === 'Scheduled'
-                        ? 'text-meta-6 bg-meta-4 '
+                        ? 'text-meta-6 bg-meta-4'
                         : apt.status === 'Completed'
-                        ? 'text-meta-3 bg-meta-4 '
+                        ? 'text-meta-3 bg-meta-4'
                         : apt.status === 'Cancelled'
-                        ? 'text-meta-1 bg-meta-4 '
+                        ? 'text-meta-1 bg-meta-4'
                         : ''
                     }`}
                   >
@@ -274,6 +284,7 @@ const Appointments = () => {
           <p><strong>Patient Name:</strong> {selectedAppointment.patient_name}</p>
           <p><strong>Age:</strong> {selectedAppointment.age}</p>
           <p><strong>Gender:</strong> {selectedAppointment.gender}</p>
+          <p><strong>Care of:</strong> {selectedAppointment.care_person}</p>
           <p><strong>Treatment Name:</strong> {selectedAppointment.treatment_name}</p>
           <p><strong>Date:</strong> {format(new Date(selectedAppointment.date), 'MMM dd, yyyy')}</p>
           <p><strong>Time:</strong> {format(new Date(`1970-01-01T${selectedAppointment.time}`), 'hh:mm a')}</p>
