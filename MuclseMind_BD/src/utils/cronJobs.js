@@ -24,5 +24,5 @@ async function createAttendanceDataForAllUsers() {
   });
 }
 
-// Schedule a job to run at 13:57 every day for all users
-cron.schedule('2 13 * * *', createAttendanceDataForAllUsers); 
+// Schedule a job to run at 12:00 AM (midnight) every day for all users
+cron.schedule('0 0 * * *', createAttendanceDataForAllUsers); 
