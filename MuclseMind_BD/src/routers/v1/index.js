@@ -13,6 +13,7 @@ const DashboardStatsRoute = require("./dashboardStatsRoutes.js");
 const BillingRoute = require("./billingRoutes.js");
 const Prescriptions = require("./prescriptionRoutes.js");
 const ClinicRoutes = require("./ClinicRoutes.js");
+const PaymentRoutes = require("./paymentRoutes.js");
 
 const Routes = [
   {
@@ -66,6 +67,10 @@ const Routes = [
   {
     path: "/clinic",
     route: ClinicRoutes,
+  },
+  {
+    path: "/payments",
+    route: PaymentRoutes,
   },
 ];
 

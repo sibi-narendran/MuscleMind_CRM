@@ -533,3 +533,22 @@ export const updateImageClinicInfo = async (data) => {
     throw error.response?.data || error;
   }
 };
+
+// Payment related API calls
+export const createPaymentOrder = async (data) => {
+  try {
+    const res = await interceptors.post("v1/payments/create-order", data);
+    return res.data;
+  } catch (error) {
+    throw error.response?.data || error;
+  }
+};
+
+export const verifyPayment = async (data) => {
+  try {
+    const res = await interceptors.post("v1/payments/verify-payment", data);
+    return res.data;
+  } catch (error) {
+    throw error.response?.data || error;
+  }
+};

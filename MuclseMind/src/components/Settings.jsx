@@ -2,13 +2,13 @@ import React, { useState } from 'react';
 import { PricingToggle } from '../components/PricingToggle';
 import { PricingCard } from '../components/PricingCard';
 import { PaymentModal } from '../components/PaymentModal';
-import { initializeRazorpay, createPaymentOrder, handlePayment } from '../services/payment';
+import { initializeRazorpay, createOrder, handlePayment } from '../services/payment';
 
 const pricingTiers = [
   {
+    id: 'basic-plan',
     name: 'Basic Plan',
-    price: 499,
-    addOnPrice: 99,
+    price: 1499,
     description: 'Essential features for dental practice management',
     features: [
       'Patient records management',
@@ -20,9 +20,9 @@ const pricingTiers = [
     ]
   },
   {
+    id: 'ai-powered',
     name: 'AI-Powered CRM',
-    price: 1499,
-    addOnPrice: 199,
+    price: 2499,
     popular: true,
     description: 'Advanced AI-powered features for intelligent practice management',
     features: [
@@ -37,6 +37,7 @@ const pricingTiers = [
     ]
   },
   {
+    id: 'enterprise',
     name: 'Enterprise AI (Coming Soon)',
     price: null,
     description: 'Next-generation AI features including voice capabilities',
@@ -74,7 +75,7 @@ const Settings =()=> {
       return;
     }
 
-    const orderDetails = await createPaymentOrder(selectedPlan);
+    const orderDetails = await createOrder(selectedPlan);
     handlePayment(orderDetails, selectedPlan);
     setShowPaymentModal(false);
   };
@@ -83,10 +84,10 @@ const Settings =()=> {
     <div className="min-h-screen bg-navy-900 text-white py-20 px-4">
       <div className="max-w-7xl mx-auto">
         <div className="text-center mb-16">
-          <h1 className="text-5xl font-bold mb-6">
+          <h1 className="text-5xl text-black dark:text-white font-bold mb-6">
             Transform Your Dental Practice<br />with AI-Powered CRM
           </h1>
-          <p className="text-gray-400 max-w-2xl mx-auto">
+          <p className="text-black dark:text-white max-w-2xl mx-auto">
             Choose the perfect plan for your practice. From essential management tools to advanced AI capabilities, 
             we're revolutionizing dental practice management.
           </p>
