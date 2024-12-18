@@ -35,10 +35,11 @@
    };
 
    const updateTreatment = async (id, treatmentData) => {
+    console.log(treatmentData);
      const { data, error } = await supabase
        .from('treatments')
        .update(treatmentData)
-       .eq('id', id);
+       .eq('treatment_id', id);
 
      if (error) {
        console.error("Error updating treatment:", error);
@@ -52,7 +53,7 @@
      const { data, error } = await supabase
        .from('treatments')
        .delete()
-       .eq('id', id);
+       .eq('treatment_id', id);
 
      if (error) {
        console.error("Error deleting treatment:", error);

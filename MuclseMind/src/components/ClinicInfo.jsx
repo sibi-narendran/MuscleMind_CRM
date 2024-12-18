@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Modal, Form, Input, InputNumber, Select, Button, Table, Upload, DatePicker, List, Typography, message, TimePicker, Checkbox, Image } from 'antd';
+import { Modal, Form, Input, InputNumber, Select, Button, Table, Upload, DatePicker, List, Typography, message, TimePicker, Checkbox, Image, Space } from 'antd';
 import { PlusOutlined, EditOutlined, DeleteOutlined, UploadOutlined } from '@ant-design/icons';
 import moment from 'moment';
 import { getOperatingHours, updateOperatingHours,getTreatments, addTreatment, editTreatment, deleteTreatment  } from '../api.services/services';
@@ -60,6 +60,9 @@ const ClinicInfo = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   
 
+  const [operatingHours, setOperatingHours] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+
   useEffect(() => {
     const fetchClinicData = async () => {
       try {
@@ -102,11 +105,13 @@ const ClinicInfo = () => {
     try {
       const response = await getTreatments();
       if (response.success) {
+        console.log('Fetched treatments:', response.data);
         setTreatments(response.data);
       } else {
         message.error('Failed to fetch treatments');
       }
     } catch (error) {
+      console.error('Error fetching treatments:', error);
       message.error('Error fetching treatments');
     }
   };
@@ -116,19 +121,40 @@ const ClinicInfo = () => {
   }, []);
   
 
+  const fetchOperatingHours = async () => {
+    try {
+      setIsLoading(true);
+      const response = await getOperatingHours();
+      if (response.success) {
+        setOperatingHours(response.data);
+      } else {
+        message.error('Failed to fetch operating hours');
+      }
+    } catch (error) {
+      console.error('Error fetching operating hours:', error);
+      message.error('Error fetching operating hours');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchOperatingHours();
+  }, []);
+
   const handleSaveOperatingHours = async (values) => {
     try {
       const updatedData = Object.entries(values).map(([day, { status, open, close }]) => ({
         day: day.toLowerCase(),
         status: status || 'closed',
-        open_time: open || null,
-        close_time: close || null,
+        open_time: open ? moment(open).format('HH:mm') : null,
+        close_time: close ? moment(close).format('HH:mm') : null,
       }));
 
       const response = await updateOperatingHours(updatedData);
       if (response.success) {
         message.success('Operating hours updated successfully');
-        setClinicData(prev => ({ ...prev, operatingHours: updatedData }));
+        setOperatingHours(updatedData);
       } else {
         message.error('Failed to update operating hours');
       }
@@ -140,37 +166,48 @@ const ClinicInfo = () => {
   };
 
   const handleEditTreatment = (record) => {
-    setEditTreatmentData(record);
+    if (!record || !record.treatment_id) {
+      message.error('Invalid treatment data');
+      return;
+    }
+    
+    // Get the original minutes value before it was converted for display
+    const originalMinutes = treatments.find(t => t.treatment_id === record.treatment_id)?.duration;
+    
+    const editData = {
+      ...record,
+      duration: originalMinutes ? convertMinutesToHours(originalMinutes) : '0 hr' // Use original minutes value
+    };
+    
+    console.log('Edit data:', editData); // Debug log
+    setEditTreatmentData(editData);
     setIsTreatmentModalVisible(true);
   };
 
   const handleAddOrEditTreatment = async (values) => {
     try {
       const payload = {
-        ...values,
+        category: values.category,
         procedure_name: values.procedure_name,
-        duration: String(values.duration),
+        cost: values.cost,
+        duration: values.duration // This will be in "X hr Y mins" format
       };
-      delete payload.name; // Remove 'name' if it exists
 
       let response;
-      if (editTreatmentData) {
-        response = await editTreatment(editTreatmentData.id, payload);
-        if (response.success) {
-          message.success('Treatment updated successfully');
-        } else {
-          message.error('Failed to update treatment');
-        }
+      if (editTreatmentData && editTreatmentData.treatment_id) {
+        response = await editTreatment(editTreatmentData.treatment_id, payload);
       } else {
         response = await addTreatment(payload);
-        if (response.success) {
-          message.success('Treatment added successfully');
-        } else {
-          message.error('Failed to add treatment');
-        }
       }
-      fetchTreatments();
+
+      if (response.success) {
+        message.success(`Treatment ${editTreatmentData ? 'updated' : 'added'} successfully`);
+        fetchTreatments();
+      } else {
+        message.error(`Failed to ${editTreatmentData ? 'update' : 'add'} treatment`);
+      }
     } catch (error) {
+      console.error('Error saving treatment:', error);
       message.error('Error saving treatment');
     } finally {
       setEditTreatmentData(null);
@@ -179,17 +216,33 @@ const ClinicInfo = () => {
   };
 
   const handleDeleteTreatment = async (id) => {
-    try {
-      const response = await deleteTreatment(id);
-      if (response.success) {
-        message.success('Treatment deleted successfully');
-        setTreatments(treatments.filter(t => t.id !== id));
-      } else {
-        message.error('Failed to delete treatment');
-      }
-    } catch (error) {
-      message.error('Error deleting treatment');
+    if (!id) {
+      message.error('Invalid treatment ID');
+      return;
     }
+
+    Modal.confirm({
+      title: 'Delete Treatment',
+      content: 'Are you sure you want to delete this treatment?',
+      okText: 'Yes',
+      okType: 'danger',
+      cancelText: 'No',
+      async onOk() {
+        try {
+          console.log("Deleting treatment with ID:", id);
+          const response = await deleteTreatment(id);
+          if (response.success) {
+            message.success('Treatment deleted successfully');
+            await fetchTreatments();
+          } else {
+            message.error('Failed to delete treatment');
+          }
+        } catch (error) {
+          console.error('Error deleting treatment:', error);
+          message.error('Error deleting treatment');
+        }
+      },
+    });
   };
 
   const fetchMedications = async () => {
@@ -372,7 +425,12 @@ const ClinicInfo = () => {
     <section className="mb-8">
       <div className="flex flex-col md:flex-row justify-between items-center mb-4">
         <h2 className="text-2xl font-bold">Operating Hours</h2>
-        <Button type="primary" icon={<EditOutlined />} onClick={() => setIsEditOperatingHoursModal(true)}>
+        <Button 
+          type="primary" 
+          icon={<EditOutlined />} 
+          onClick={() => setIsEditOperatingHoursModal(true)}
+          loading={isLoading}
+        >
           Edit
         </Button>
       </div>
@@ -532,31 +590,81 @@ const renderHolidays = () => (
     </section>
   );
 
+  const convertMinutesToHours = (minutes) => {
+    if (!minutes) return '0 hr';
+    const hours = Math.floor(minutes / 60);
+    const remainingMinutes = minutes % 60;
+    if (hours === 0) return `${remainingMinutes} mins`;
+    if (remainingMinutes === 0) return `${hours} hr`;
+    return `${hours} hr ${remainingMinutes} mins`;
+  };
+
+  const convertHoursToMinutes = (timeString) => {
+    const hourMatch = timeString.match(/(\d+)\s*hr/);
+    const minuteMatch = timeString.match(/(\d+)\s*mins/);
+    let totalMinutes = 0;
+    
+    if (hourMatch) totalMinutes += parseInt(hourMatch[1]) * 60;
+    if (minuteMatch) totalMinutes += parseInt(minuteMatch[1]);
+    
+    return totalMinutes;
+  };
+
   const renderTreatments = () => (
     <section className="mb-8">
       <div className="flex flex-col md:flex-row justify-between items-center mb-4">
         <h2 className="text-2xl font-bold">Treatment Procedures & Fees</h2>
-        <Button type="primary" icon={<PlusOutlined />} onClick={() => setIsTreatmentModalVisible(true)}>
+        <Button 
+          type="primary" 
+          icon={<PlusOutlined />} 
+          onClick={() => {
+            setEditTreatmentData(null);
+            setIsTreatmentModalVisible(true);
+          }}
+        >
           Add Treatment
         </Button>
       </div>
       <div className="overflow-x-auto">
         <Table
-          dataSource={treatments}
+          dataSource={treatments.map(treatment => {
+            const displayDuration = convertMinutesToHours(treatment.duration);
+            return {
+              ...treatment,
+              key: treatment.treatment_id,
+              displayDuration // Store converted duration in a separate field
+            };
+          })}
           columns={[
             { title: 'Category', dataIndex: 'category', key: 'category' },
-            { title: 'Procedure Name', dataIndex: 'procedure_name', key: 'name' },
+            { title: 'Procedure Name', dataIndex: 'procedure_name', key: 'procedure_name' },
             { title: 'Cost', dataIndex: 'cost', key: 'cost' },
-            { title: 'Duration', dataIndex: 'duration', key: 'duration' },
+            { 
+              title: 'Duration', 
+              dataIndex: 'displayDuration', // Use the display duration
+              key: 'duration'
+            },
             {
               title: 'Action',
               key: 'action',
               render: (_, record) => (
-                <Button type="link" icon={<EditOutlined />} onClick={() => handleEditTreatment(record)}>
-                  Edit
-                </Button>
+                <Space>
+                  <Button 
+                    type="link" 
+                    onClick={() => handleEditTreatment(record)}
+                  >
+                    Edit
+                  </Button>
+                  <Button 
+                    type="link" 
+                    danger 
+                    onClick={() => handleDeleteTreatment(record.treatment_id)}
+                  >
+                    Delete
+                  </Button>
+                </Space>
               ),
-            },
+            }
           ]}
           pagination={false}
           className="min-w-full"

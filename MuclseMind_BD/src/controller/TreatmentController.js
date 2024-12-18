@@ -24,8 +24,10 @@ const getTreatmentsController = async (req, res) => {
 
 const editTreatmentController = async (req, res) => {
   const { id } = req.params;
+  console.log(req.body);
   try {
     const updatedTreatment = await editTreatment(id, req.body);
+    console.log(updatedTreatment);
     res.status(200).json(createResponse(true, 'Treatment updated successfully', updatedTreatment));
   } catch (error) {
     res.status(500).json(createResponse(false, 'Failed to update treatment', null, error.message));
