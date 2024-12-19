@@ -103,42 +103,85 @@ export default function EditPrescriptionForm({ selectedPrescription, onUpdate })
             <Form.Item label="Medicines">
               <div className="space-y-4">
                 {medicines.map((medicine, index) => (
-                  <div key={index} className="space-y-2 p-4 border rounded-lg">
-                    <p className="text-sm text-gray-600">Medicine {index + 1}</p>
+                  <div key={index} className="relative space-y-2 p-4 border rounded-lg bg-gray-50">
+                    <button
+                      type="button"
+                      onClick={() => handleRemoveMedicine(index)}
+                      className="absolute top-2 right-2 p-1 rounded-full hover:bg-red-100 text-red-500 transition-colors"
+                    >
+                      <svg 
+                        xmlns="http://www.w3.org/2000/svg" 
+                        className="h-5 w-5" 
+                        viewBox="0 0 20 20" 
+                        fill="currentColor"
+                      >
+                        <path 
+                          fillRule="evenodd" 
+                          d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" 
+                          clipRule="evenodd" 
+                        />
+                      </svg>
+                    </button>
+
+                    <p className="text-sm text-gray-600 font-medium">Medicine {index + 1}</p>
                     <Input 
+                      placeholder="Medicine Name"
                       value={medicine.name} 
                       onChange={(e) => handleMedicineChange(index, 'name', e.target.value)} 
                     />
                     <p className="text-sm text-gray-600">Dosage</p>
                     <Input
+                      placeholder="e.g., 1 tablet"
                       value={medicine.dosage}
                       onChange={(e) => handleMedicineChange(index, 'dosage', e.target.value)}
                     />
                     <p className="text-sm text-gray-600">Duration</p>
                     <Input
+                      placeholder="e.g., 7 days"
                       value={medicine.duration}
                       onChange={(e) => handleMedicineChange(index, 'duration', e.target.value)}
                     />
-                    <Checkbox
-                      checked={medicine.morning}
-                      onChange={(e) => handleMedicineChange(index, 'morning', e.target.checked)}
-                    >Morning</Checkbox>
-                    <Checkbox
-                      checked={medicine.afternoon}
-                      onChange={(e) => handleMedicineChange(index, 'afternoon', e.target.checked)}
-                    >Afternoon</Checkbox>
-                    <Checkbox
-                      checked={medicine.night}
-                      onChange={(e) => handleMedicineChange(index, 'night', e.target.checked)}
-                    >Night</Checkbox>
+                    <div className="flex gap-4 mt-2">
+                      <Checkbox
+                        checked={medicine.morning}
+                        onChange={(e) => handleMedicineChange(index, 'morning', e.target.checked)}
+                      >Morning</Checkbox>
+                      <Checkbox
+                        checked={medicine.afternoon}
+                        onChange={(e) => handleMedicineChange(index, 'afternoon', e.target.checked)}
+                      >Afternoon</Checkbox>
+                      <Checkbox
+                        checked={medicine.night}
+                        onChange={(e) => handleMedicineChange(index, 'night', e.target.checked)}
+                      >Night</Checkbox>
+                    </div>
                     <p className="text-sm text-gray-600">Special Instructions</p>
                     <Input
+                      placeholder="Any special instructions"
                       value={medicine.instructions}
                       onChange={(e) => handleMedicineChange(index, 'instructions', e.target.value)}
                     />
                   </div>
                 ))}
-                <Button type="dashed" onClick={addMedicine}>Add Medicine</Button>
+                <Button 
+                  type="dashed" 
+                  onClick={addMedicine} 
+                  className="w-full"
+                  icon={<svg 
+                    xmlns="http://www.w3.org/2000/svg" 
+                    className="h-5 w-5" 
+                    viewBox="0 0 20 20" 
+                    fill="currentColor"
+                  >
+                    <path 
+                      fillRule="evenodd" 
+                      d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" 
+                      clipRule="evenodd" 
+                    />
+                  </svg>}
+                >
+                  Add Medicine
+                </Button>
               </div>
             </Form.Item>
 

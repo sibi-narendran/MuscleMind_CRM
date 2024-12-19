@@ -452,11 +452,20 @@ export const updateBilling = async (id, data) => {
   } catch (error) {
     throw error.response?.data || error;
   }
-};
+};  
 
 export const deleteBilling = async (id) => {
   try {
     const res = await interceptors.delete(`v1/billing/delete-billing/${id}`);
+    return res.data;
+  } catch (error) {
+    throw error.response?.data || error;
+  }
+};
+
+export const generateInvoice = async (id, data) => {
+  try {
+    const res = await interceptors.put(`v1/ai/generate-invoice/${id}`, data);
     return res.data;
   } catch (error) {
     throw error.response?.data || error;
@@ -549,6 +558,16 @@ export const verifyPayment = async (data) => {
     const res = await interceptors.post("v1/payments/verify-payment", data);
     return res.data;
   } catch (error) {
+    throw error.response?.data || error;
+  }
+};
+
+export const generatePrescription = async (prescriptionId) => {
+  try {
+    const response = await interceptors.put(`/v1/ai/generate-prescription/${prescriptionId}`);
+    return response.data;
+  } catch (error) {
+    console.error('Error in generatePrescription:', error);
     throw error.response?.data || error;
   }
 };

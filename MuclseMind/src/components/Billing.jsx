@@ -1,12 +1,13 @@
 import React, { useState, useEffect } from "react";
 import { DollarSign, Download, Filter, Trash2, Edit, Search, X } from "lucide-react";
-import { Modal, message, Spin } from "antd";
+import { Modal, message, Spin, Tooltip } from "antd";
 import { getBillings, deleteBilling } from "../api.services/services";
 import { generateBillingPDF } from "../lib/BillGenerator";
 import EditBillingModal from "./EditBillingModal";
 import AddInvoiceModal from "./AddInvoiceModal";
 import invoicePNG from "../assets/invoice.png";
-import { getUserProfile } from "../api.services/services";
+import { getUserProfile, generateInvoice } from "../api.services/services";
+import GeminiIcon from "../Images/google-gemini-icon.svg";
 
 const Billing = () => {
   const [billings, setBillings] = useState([]);
@@ -20,6 +21,8 @@ const Billing = () => {
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [sortOrder, setSortOrder] = useState('desc');
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [isGeneratingInvoice, setIsGeneratingInvoice] = useState(false);
+  const [generatedDescription, setGeneratedDescription] = useState('');
 
   useEffect(() => {
     fetchBillings();
@@ -369,6 +372,68 @@ const Billing = () => {
     }
   };
 
+  const handleGeminiClick = async (billing) => {
+    if (!billing || !billing.id) {
+      message.error('Invalid billing data');
+      return;
+    }
+
+    try {
+      setIsGeneratingInvoice(true);
+      const response = await generateInvoice(billing.id);
+
+      if (response.success) {
+        setGeneratedDescription(response.data.description);
+        message.success('Description generated successfully');
+        
+        // Refresh billing data to show new description
+        await fetchBillings();
+      } else {
+        message.error(response.message || 'Failed to generate description');
+      }
+    } catch (error) {
+      console.error('Error generating description:', error);
+      message.error('Error generating description');
+    } finally {
+      setIsGeneratingInvoice(false);
+    }
+  };
+
+  const handleGenerateAIDescription = async (billing) => {
+    if (!billing || !billing.id) {
+      message.error('Billing ID is required');
+      return;
+    }
+
+    try {
+      setIsGeneratingInvoice(true);
+      const response = await generateInvoice(billing.id, {
+        appointmentId: billing.appointment_id,
+        // Add any other necessary data
+      });
+
+      if (response.success) {
+        setGeneratedDescription(response.data.description);
+        message.success('Description generated successfully');
+        
+        // Update form with generated description
+        form.setFieldsValue({
+          description: response.data.description
+        });
+        
+        // Refresh billing data
+        await fetchBillings();
+      } else {
+        message.error('Failed to generate description');
+      }
+    } catch (error) {
+      console.error('Error generating description:', error);
+      message.error('Error generating description');
+    } finally {
+      setIsGeneratingInvoice(false);
+    }
+  };
+
   return (
     <div className="p-6 dark:bg-boxdark">
       <div className="flex flex-col md:flex-row justify-between items-center mb-6">
@@ -487,20 +552,42 @@ const Billing = () => {
                           {billing.invoice_status}
                         </span>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="flex items-center gap-2">
+                      <td className="px-4 py-2 whitespace-nowrap">
+                        <div className="flex items-center gap-1 md:gap-2">
+                          <Tooltip 
+                            title="AI Generator" 
+                            placement="top" 
+                            className="cursor-pointer"
+                          >
+                            <button
+                              onClick={() => handleGeminiClick(billing)}
+                              className="p-1.5 rounded-lg text-blue-600 hover:bg-blue-100 active:bg-blue-200 transition-colors duration-200"
+                              disabled={isGeneratingInvoice}
+                            >
+                              {isGeneratingInvoice ? (
+                                <Spin size="small" />
+                              ) : (
+                                <img 
+                                  src={GeminiIcon} 
+                                  alt="Gemini AI" 
+                                  className="w-6 h-6 min-w-[24px] min-h-[24px] max-w-[24px] max-h-[24px] object-contain"
+                                  style={{ width: '24px', height: '24px' }}
+                                />
+                              )}
+                            </button>
+                          </Tooltip>
                           {renderDownloadButton(billing)}
                           <button
                             onClick={() => handleEditClick(billing)}
-                            className="p-2 rounded-lg text-primary hover:bg-primary/10 active:bg-primary/20"
+                            className="p-1.5 md:p-2 rounded-lg text-primary hover:bg-primary/10 active:bg-primary/20"
                           >
-                            <Edit size={18} />
+                              <Edit className="w-[16px] h-[16px] md:w-[18px] md:h-[18px]" />
                           </button>
                           <button
                             onClick={() => handleDeleteBilling(billing.id)}
-                            className="p-2 rounded-lg text-danger hover:bg-danger/10 active:bg-danger/20"
+                            className="p-1.5 md:p-2 rounded-lg text-danger hover:bg-danger/10 active:bg-danger/20"
                           >
-                            <Trash2 size={18} />
+                            <Trash2 className="w-[16px] h-[16px] md:w-[18px] md:h-[18px]" />
                           </button>
                         </div>
                       </td>

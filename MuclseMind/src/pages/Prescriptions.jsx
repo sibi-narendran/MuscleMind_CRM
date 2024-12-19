@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { Button, Input, Table, Card, Space, Typography, Modal, message } from 'antd';
+import { Button, Input, Table, Card, Space, Typography, Modal, message, Spin, Tooltip } from 'antd';
 import { DownloadOutlined, DeleteOutlined, PlusOutlined, EditOutlined, SearchOutlined } from '@ant-design/icons';
 import EditPrescriptionForm from './EditPrescriptionForm';
 import AddPrescriptionForm from './AddPrescriptionForm';
-import { deletePrescriptions, GetPrescription, getUserProfile } from '../api.services/services';
+import { deletePrescriptions, GetPrescription, getUserProfile, generatePrescription } from '../api.services/services';
 import { generatePDF } from '../lib/pdfGenerator';
 import { z } from 'zod';
+import GeminiIcon from "../Images/google-gemini-icon.svg";
 
 const { Search } = Input;
 const { Title } = Typography;
@@ -26,29 +27,29 @@ export const prescriptionSchema = z.object({
   })),
 });
 
-export default function Prescriptions() {
+const Prescriptions = () => {
   const [prescriptions, setPrescriptions] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [selectedPrescription, setSelectedPrescription] = useState(null);
+  const [isGeneratingPrescription, setIsGeneratingPrescription] = useState(false);
 
-
-    const fetchPrescriptions = async () => {
-      try {
-        const response = await GetPrescription();
-        if (response.success && Array.isArray(response.data)) {
-          setPrescriptions(response.data);
-        } else {
-          console.error('Failed to fetch prescriptions:', response.message);
-          setPrescriptions([]);
-        }
-      } catch (error) {
-        console.error('Error fetching prescriptions:', error);
+  const fetchPrescriptions = async () => {
+    try {
+      const response = await GetPrescription();
+      if (response.success && Array.isArray(response.data)) {
+        setPrescriptions(response.data);
+      } else {
+        console.error('Failed to fetch prescriptions:', response.message);
         setPrescriptions([]);
       }
-    };
-    useEffect(() => {
+    } catch (error) {
+      console.error('Error fetching prescriptions:', error);
+      setPrescriptions([]);
+    }
+  };
+  useEffect(() => {
     fetchPrescriptions();
   }, [searchTerm]);
 
@@ -111,6 +112,29 @@ export default function Prescriptions() {
     }
   };
 
+  const handleGeminiClick = async (prescription) => {
+    if (!prescription || !prescription.id) {
+      message.error('Invalid prescription data');
+      return;
+    }
+
+    setIsGeneratingPrescription(true);
+    try {
+      const response = await generatePrescription(prescription.id);
+      if (response.success) {
+        message.success('Description generated successfully');
+        fetchPrescriptions(); // Refresh the list
+      } else {
+        message.error(response.message || 'Failed to generate medicine');
+      }
+    } catch (error) {
+      console.error('Error generating medicine:', error);
+      message.error('Error generating medicine');
+    } finally {
+      setIsGeneratingPrescription(false);
+    }
+  };
+
   const getMedicinesSummary = (prescription) => {
     return prescription.medicines ? prescription.medicines.length : 0;
   };
@@ -163,6 +187,28 @@ export default function Prescriptions() {
       key: 'actions',
       render: (_, prescription) => (
         <Space>
+          <Tooltip 
+            title="AI Generator" 
+            placement="top" 
+            className="cursor-pointer"
+          >
+            <button
+              onClick={() => handleGeminiClick(prescription)}
+              className="p-1.5 rounded-lg text-blue-600 hover:bg-blue-100 active:bg-blue-200 transition-colors duration-200"
+              disabled={isGeneratingPrescription}
+            >
+              {isGeneratingPrescription ? (
+                <Spin size="small" />
+              ) : (
+                <img 
+                  src={GeminiIcon} 
+                  alt="Gemini AI" 
+                  className="w-6 h-6 min-w-[24px] min-h-[24px] max-w-[24px] max-h-[24px] object-contain"
+                  style={{ width: '24px', height: '24px' }}
+                />
+              )}
+            </button>
+          </Tooltip>
           <Button
             type="text"
             icon={<DownloadOutlined />}
@@ -236,4 +282,6 @@ export default function Prescriptions() {
       </Modal>
     </div>
   );
-}
+};
+
+export default Prescriptions;

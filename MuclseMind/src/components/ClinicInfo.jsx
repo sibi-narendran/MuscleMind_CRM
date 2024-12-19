@@ -79,15 +79,8 @@ const ClinicInfo = () => {
           message.error('Failed to fetch operating hours');
           return;
         }
-
-        // Combine both responses
-        setClinicData({
-          ...clinicResponse.data,
-          operatingHours: hoursResponse.data
-        });
-
       } catch (error) {
-        console.error('Error fetching data:', error);
+        console.error('Error in fetchClinicData:', error);
         message.error('Error fetching clinic information');
       }
     };
@@ -140,7 +133,13 @@ const ClinicInfo = () => {
       setIsLoading(true);
       const response = await getOperatingHours();
       if (response.success) {
-        setOperatingHours(response.data);
+        // Format the times properly when receiving data
+        const formattedHours = response.data.map(hour => ({
+          ...hour,
+          open_time: hour.open_time ? moment(hour.open_time, 'HH:mm:ss').format('HH:mm:ss') : null,
+          close_time: hour.close_time ? moment(hour.close_time, 'HH:mm:ss').format('HH:mm:ss') : null
+        }));
+        setOperatingHours(formattedHours);
       } else {
         message.error('Failed to fetch operating hours');
       }
@@ -158,21 +157,42 @@ const ClinicInfo = () => {
 
   const handleSaveOperatingHours = async (values) => {
     try {
-      const updatedData = Object.entries(values).map(([day, { status, open, close }]) => ({
-        day: day.toLowerCase(),
-        status: status || 'closed',
-        open_time: open ? moment(open).format('HH:mm') : null,
-        close_time: close ? moment(close).format('HH:mm') : null,
-      }));
+      const updatedData = Object.entries(values).map(([day, { status, open, close }]) => {
+        // Add seconds to the time values
+        const openTime = status === 'open' && open 
+          ? `${open}:00`
+          : null;
+        
+        const closeTime = status === 'open' && close 
+          ? `${close}:00`
+          : null;
+
+        console.log(`Processing ${day}:`, { 
+          originalOpen: open, 
+          originalClose: close,
+          convertedOpen: openTime,
+          convertedClose: closeTime
+        });
+
+        return {
+          day: day.toLowerCase(),
+          status: status || 'closed',
+          open_time: openTime,
+          close_time: closeTime
+        };
+      });
+
+      console.log('Final data to be sent:', updatedData);
 
       const response = await updateOperatingHours(updatedData);
       if (response.success) {
         message.success('Operating hours updated successfully');
-        setOperatingHours(updatedData);
+        await fetchOperatingHours();
       } else {
         message.error('Failed to update operating hours');
       }
     } catch (error) {
+      console.error('Error updating operating hours:', error);
       message.error('Error updating operating hours');
     } finally {
       setIsEditOperatingHoursModal(false);
@@ -450,18 +470,28 @@ const ClinicInfo = () => {
       </div>
       <div className="overflow-x-auto">
         <Table
-          dataSource={clinicData.operatingHours?.map((entry, index) => ({
+          loading={isLoading}
+          dataSource={operatingHours.map((entry, index) => ({
             key: index,
             day: capitalize(entry.day),
-            status: entry.status,
-            open: entry.open_time ? entry.open_time.slice(0, 5) : 'N/A',
-            close: entry.close_time ? entry.close_time.slice(0, 5) : 'N/A',
-          })) || []}
+            status: capitalize(entry.status),
+            open: entry.status === 'open' ? moment(entry.open_time, 'HH:mm:ss').format('hh:mm A') : '-',
+            close: entry.status === 'open' ? moment(entry.close_time, 'HH:mm:ss').format('hh:mm A') : '-'
+          }))}
           columns={[
             { title: 'Day', dataIndex: 'day', key: 'day' },
-            { title: 'Status', dataIndex: 'status', key: 'status' },
-            { title: 'Open', dataIndex: 'open', key: 'open' },
-            { title: 'Close', dataIndex: 'close', key: 'close' },
+            { 
+              title: 'Status', 
+              dataIndex: 'status', 
+              key: 'status',
+              render: (status) => (
+                <span className={status.toLowerCase() === 'open' ? 'text-green-600' : 'text-red-600'}>
+                  {status}
+                </span>
+              )
+            },
+            { title: 'Opening Time', dataIndex: 'open', key: 'open' },
+            { title: 'Closing Time', dataIndex: 'close', key: 'close' }
           ]}
           pagination={false}
           className="min-w-full"
@@ -811,19 +841,22 @@ const renderHolidays = () => (
       footer={null}
     >
       <Form
-        initialValues={clinicData.operatingHours && Array.isArray(clinicData.operatingHours) ? clinicData.operatingHours.reduce((acc, { day, status, open_time, close_time }) => {
-          acc[day] = { status, open: open_time, close: close_time };
-          return acc;
-        }, {}) : {}}
+        initialValues={operatingHours.reduce((acc, curr) => ({
+          ...acc,
+          [curr.day]: {
+            status: curr.status,
+            open: curr.status === 'open' && curr.open_time ? curr.open_time.slice(0, 5) : null,
+            close: curr.status === 'open' && curr.close_time ? curr.close_time.slice(0, 5) : null
+          }
+        }), {})}
         onFinish={handleSaveOperatingHours}
         layout="vertical"
       >
-        {['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'].map(day => (
-          <div key={day} className="flex items-center space-x-4 mb-4">
+        {operatingHours.map(day => (
+          <div key={day.day} className="mb-4">
             <Form.Item
-              name={[day, 'status']}
-              label={`${capitalize(day)} Status`}
-              className="flex-1"
+              name={[day.day, 'status']}
+              label={`${capitalize(day.day)} Status`}
             >
               <Select>
                 <Option value="open">Open</Option>
@@ -831,24 +864,55 @@ const renderHolidays = () => (
               </Select>
             </Form.Item>
             <Form.Item
-              name={[day, 'open']}
-              label={`${capitalize(day)} Open`}
-              className="flex-1"
+              noStyle
+              shouldUpdate={(prevValues, currentValues) =>
+                prevValues[day.day]?.status !== currentValues[day.day]?.status
+              }
             >
-              <Input type="time" />
-            </Form.Item>
-            <Form.Item
-              name={[day, 'close']}
-              label={`${capitalize(day)} Close`}
-              className="flex-1"
-            >
-              <Input type="time" />
+              {({ getFieldValue }) =>
+                getFieldValue([day.day, 'status']) === 'open' && (
+                  <div className="flex gap-4">
+                    <Form.Item
+                      name={[day.day, 'open']}
+                      label="Open"
+                      className="flex-1"
+                      rules={[{ required: true, message: 'Please select opening time' }]}
+                    >
+                      <Input 
+                        type="time" 
+                        className="w-full"
+                        onChange={(e) => {
+                          console.log('Selected open time:', e.target.value);
+                        }}
+                      />
+                    </Form.Item>
+                    <Form.Item
+                      name={[day.day, 'close']}
+                      label="Close"
+                      className="flex-1"
+                      rules={[{ required: true, message: 'Please select closing time' }]}
+                    >
+                      <Input 
+                        type="time" 
+                        className="w-full"
+                        onChange={(e) => {
+                          console.log('Selected close time:', e.target.value);
+                        }}
+                      />
+                    </Form.Item>
+                  </div>
+                )
+              }
             </Form.Item>
           </div>
         ))}
-        <div className="flex justify-end space-x-2">
-          <Button onClick={() => setIsEditOperatingHoursModal(false)}>Cancel</Button>
-          <Button type="primary" htmlType="submit">Save</Button>
+        <div className="flex justify-end gap-2">
+          <Button onClick={() => setIsEditOperatingHoursModal(false)}>
+            Cancel
+          </Button>
+          <Button type="primary" htmlType="submit">
+            Save
+          </Button>
         </div>
       </Form>
     </Modal>
