@@ -14,7 +14,7 @@ const MyProfile = lazy(() => import('../components/Profile'));
 const Prescriptions = lazy(() => import('../pages/Prescriptions'));
 const Settings = lazy(() => import('../components/Settings'));
 
-const coreRoutes = [
+const coreRoutes = [  
   { path: '/', title: 'Login', component: Login },
   { path: '/create-account', title: 'Create Account', component: CreateAccount },
   { path: '/forgot-password', title: 'Forgot Password', component: ForgotPassword },

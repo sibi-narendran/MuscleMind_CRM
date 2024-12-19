@@ -66,14 +66,28 @@ const ClinicInfo = () => {
   useEffect(() => {
     const fetchClinicData = async () => {
       try {
-        const response = await clinicInfo();
-        if (response.success) {
-          setClinicData(response.data);
-        } else {
-          message.error('Failed to fetch clinic information');
+        // Fetch clinic info
+        const clinicResponse = await clinicInfo();
+        if (!clinicResponse.success) {
+          message.error('Failed to fetch clinic data');
+          return;
         }
+
+        // Fetch operating hours
+        const hoursResponse = await getOperatingHours();
+        if (!hoursResponse.success) {
+          message.error('Failed to fetch operating hours');
+          return;
+        }
+
+        // Combine both responses
+        setClinicData({
+          ...clinicResponse.data,
+          operatingHours: hoursResponse.data
+        });
+
       } catch (error) {
-        console.error('Error in fetchClinicData:', error);
+        console.error('Error fetching data:', error);
         message.error('Error fetching clinic information');
       }
     };
