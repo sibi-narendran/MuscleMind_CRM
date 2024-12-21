@@ -1,9 +1,11 @@
 const express = require('express');
-const controller = require('../../controller/paymentController');
+const { createOrder, verifyPayment } = require('../../controller/paymentController');
 const { authenticateJWTUserID } = require('../../middleware/authMiddleware');
+
 const paymentRouter = express.Router();
 
-paymentRouter.post('/create-order', authenticateJWTUserID, controller.createOrder);
-paymentRouter.post('/verify-payment', authenticateJWTUserID, controller.verifyPayment);
+// Define routes with their respective controller functions
+paymentRouter.post('/create-order', authenticateJWTUserID, createOrder);
+paymentRouter.post('/verify-payment', authenticateJWTUserID, verifyPayment);
 
 module.exports = paymentRouter;

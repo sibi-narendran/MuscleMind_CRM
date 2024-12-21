@@ -1,51 +1,31 @@
 const prescriptionAnalyzerModel = require('../models/prescriptionAnalyzerModel');
 
-const generatePrescription = async (appointmentId, userId) => {
+const generatePrescription = async (id, userId, prescriptionData) => {
   try {
-    // Get appointment details
-    const appointment = await prescriptionAnalyzerModel.getAppointmentDetails(appointmentId);
-    if (!appointment) {
-      throw new Error(`Appointment not found: ${appointmentId}`);
-    }
-
-    // Get all medications
-    const allMedications = await prescriptionAnalyzerModel.getAllMedications();
+    // Get user-specific medications
+    const allMedications = await prescriptionAnalyzerModel.getAllMedications(userId);
     if (!allMedications?.length) {
-      throw new Error('No medications found in database');
+      throw new Error('No medications found for this user');
     }
 
-    // Generate new prescription number
-    const newRxNumber = `RX${String(allMedications.length + 1).padStart(4, '0')}`;
-
-    // Get AI suggestions
+    // Get AI suggestions using provided data and user-specific medications
     const suggestedMedicines = await prescriptionAnalyzerModel.analyzeMedicationsWithAI(
-      appointment.treatment_name,
+      prescriptionData.treatment_name,
       {
-        patient_name: appointment.patient_name,
-        age: appointment.age,
-        gender: appointment.gender
+        patient_name: prescriptionData.patient_name,
+        age: prescriptionData.age,
+        gender: prescriptionData.gender
       },
-      allMedications
+      allMedications,
+      userId
     );
 
     if (!suggestedMedicines?.length) {
       throw new Error('No medications were suggested');
     }
 
-    // Create prescription
-    const prescriptionData = {
-      prescription_no: newRxNumber,
-      patient_name: appointment.patient_name,
-      age: appointment.age,
-      gender: appointment.gender,
-      date: new Date().toISOString().split('T')[0],
-      medicines: suggestedMedicines,
-      user_id: userId,
-      treatment_name: appointment.treatment_name,
-      appointment_id: appointmentId
-    };
-
-    return await prescriptionAnalyzerModel.createPrescription(prescriptionData);
+    // Update prescription with new medicines
+    return await prescriptionAnalyzerModel.updatePrescriptionMedicines(id, suggestedMedicines);
 
   } catch (error) {
     console.error('Error in generatePrescription service:', error);

@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import Header from '../components/Header';
 import Sidebar from '../components/Sidebar';
+// import ChatBot from '../components/ChatBot';
 import { Outlet } from 'react-router-dom';
 
 const DefaultLayout = () => {
@@ -17,6 +18,7 @@ const DefaultLayout = () => {
               <Outlet />
             </div>
           </main>
+          {/* <ChatBot /> */}
         </div>
       </div>
     </div>

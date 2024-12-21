@@ -1,9 +1,9 @@
 const express = require('express');
 const router = express.Router();
-const { authenticateToken } = require('../middleware/auth');
-const { generatePrescription } = require('../controllers/prescriptionAnalyzerController');
+const { authenticateJWTUserID } = require('../../middleware/authMiddleware');
+const { generatePrescription } = require('../controller/prescriptionAnalyzerController');
 
 // Generate prescription using AI
-router.put('/prescription/:appointmentId', authenticateToken, generatePrescription);
+router.post('/prescription/:id', authenticateJWTUserID, generatePrescription);
 
 module.exports = router;

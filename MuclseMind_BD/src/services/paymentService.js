@@ -7,7 +7,7 @@ const razorpay = new Razorpay({
   key_secret: process.env.RAZORPAY_KEY_SECRET
 });
 
-const createOrder = async (amount, userId, planId) => {
+const createOrder = async (amount, userId, planId, isAnnual) => {
   try {
     const order = await razorpay.orders.create({
       amount: amount * 100, // Convert to paise
@@ -19,6 +19,7 @@ const createOrder = async (amount, userId, planId) => {
       order_id: order.id,
       amount: amount * 100,
       plan_id: planId,
+      is_annual: isAnnual,
       status: 'pending'
     });
 
@@ -31,7 +32,7 @@ const createOrder = async (amount, userId, planId) => {
   }
 };
 
-const verifyPayment = async (orderId, paymentDetails) => {
+const verifyPayment = async (orderId, paymentDetails, userId) => {
   try {
     const shasum = crypto.createHmac('sha256', process.env.RAZORPAY_KEY_SECRET);
     shasum.update(`${orderId}|${paymentDetails.razorpay_payment_id}`);

@@ -6,11 +6,23 @@ const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
 const supabase = createClient(supabaseUrl, supabaseKey);
+
 const createPaymentRecord = async (paymentData) => {
   try {
+    // Ensure all required fields are present
+    const paymentRecord = {
+      user_id: paymentData.user_id,
+      order_id: paymentData.order_id,
+      amount: paymentData.amount,
+      plan_id: paymentData.plan_id,
+      is_annual: paymentData.is_annual || false,
+      status: paymentData.status || 'pending',
+      currency: paymentData.currency || 'INR'
+    };
+
     const { data, error } = await supabase
       .from('payments')
-      .insert([paymentData])
+      .insert([paymentRecord])
       .select()
       .single();
 

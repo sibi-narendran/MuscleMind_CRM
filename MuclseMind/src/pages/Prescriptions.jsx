@@ -118,9 +118,16 @@ const Prescriptions = () => {
       return;
     }
 
+    const prescriptionData = {
+      patient_name: prescription.patient_name,
+      age: prescription.age,
+      gender: prescription.gender,
+      date: prescription.date
+    };
+
     setIsGeneratingPrescription(true);
     try {
-      const response = await generatePrescription(prescription.id);
+      const response = await generatePrescription(prescription.id, prescriptionData);
       if (response.success) {
         message.success('Description generated successfully');
         fetchPrescriptions(); // Refresh the list

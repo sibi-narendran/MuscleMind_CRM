@@ -562,9 +562,12 @@ export const verifyPayment = async (data) => {
   }
 };
 
-export const generatePrescription = async (prescriptionId) => {
+export const generatePrescription = async (id, prescriptionData) => {
   try {
-    const response = await interceptors.put(`/v1/ai/generate-prescription/${prescriptionId}`);
+    const response = await interceptors.post(
+      `/v1/ai/prescription/${id}`, 
+      prescriptionData  // Send prescription data in request body
+    );
     return response.data;
   } catch (error) {
     console.error('Error in generatePrescription:', error);

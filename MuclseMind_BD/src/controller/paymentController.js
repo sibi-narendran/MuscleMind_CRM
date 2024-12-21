@@ -1,12 +1,13 @@
 const paymentService = require('../services/paymentService');
 const { createResponse } = require('../utils/responseUtil');
 
+// Create order controller
 const createOrder = async (req, res) => {
   try {
-    const { amount, planId } = req.body;
+    const { amount, planId, isAnnual } = req.body;
     const userId = req.user.userId;
 
-    const result = await paymentService.createOrder(amount, userId, planId);
+    const result = await paymentService.createOrder(amount, userId, planId, isAnnual);
     
     if (!result.success) {
       return res.status(400).json(
@@ -18,18 +19,19 @@ const createOrder = async (req, res) => {
       createResponse(true, 'Order created successfully', result.data)
     );
   } catch (error) {
-    console.error('Error in createOrder controller:', error);
     res.status(500).json(
       createResponse(false, 'Failed to create order', null, error.message)
     );
   }
 };
 
+// Verify payment controller
 const verifyPayment = async (req, res) => {
   try {
     const { orderId, paymentDetails } = req.body;
-    
-    const result = await paymentService.verifyPayment(orderId, paymentDetails);
+    const userId = req.user.userId;
+
+    const result = await paymentService.verifyPayment(orderId, paymentDetails, userId);
     
     if (!result.success) {
       return res.status(400).json(
@@ -41,13 +43,13 @@ const verifyPayment = async (req, res) => {
       createResponse(true, 'Payment verified successfully', result.data)
     );
   } catch (error) {
-    console.error('Error in verifyPayment controller:', error);
     res.status(500).json(
       createResponse(false, 'Payment verification failed', null, error.message)
     );
   }
 };
 
+// Make sure to export all controller functions
 module.exports = {
   createOrder,
   verifyPayment

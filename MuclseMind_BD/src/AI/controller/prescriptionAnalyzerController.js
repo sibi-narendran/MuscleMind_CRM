@@ -1,27 +1,32 @@
 const prescriptionAnalyzerService = require('../services/prescriptionAnalyzerService');
-const { createResponse } = require('../utils/responseUtil');
+const { createResponse } = require('../../utils/responseUtil');
 
 const generatePrescription = async (req, res) => {
   try {
-    const { appointmentId } = req.params;
+    const { id } = req.params;
     const userId = req.user.userId;
+    const prescriptionData = req.body;
 
-    const prescription = await prescriptionAnalyzerService.generatePrescription(appointmentId, userId);
+    const updatedPrescription = await prescriptionAnalyzerService.generatePrescription(
+      id, 
+      userId,
+      prescriptionData
+    );
     
-    if (!prescription) {
+    if (!updatedPrescription) {
       return res.status(404).json(
-        createResponse(false, 'Failed to generate prescription', null)
+        createResponse(false, 'Failed to update prescription medicines', null)
       );
     }
 
     res.status(200).json(
-      createResponse(true, 'Prescription generated successfully', prescription)
+      createResponse(true, 'Prescription medicines updated successfully', updatedPrescription)
     );
 
   } catch (error) {
     console.error('Error in generatePrescription:', error);
     res.status(500).json(
-      createResponse(false, 'Error generating prescription', null, error.message)
+      createResponse(false, 'Error updating prescription medicines', null, error.message)
     );
   }
 };

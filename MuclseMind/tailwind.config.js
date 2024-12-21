@@ -2,7 +2,11 @@ import defaultTheme from 'tailwindcss/defaultTheme';
 
 /** @type {import('tailwindcss').Config} */
 module.exports = {
-  content: ['./index.html', './src/**/*.{js,ts,jsx,tsx}'],
+  content: [
+    './index.html', 
+    './src/**/*.{js,ts,jsx,tsx}',
+    'node_modules/flowbite-react/lib/esm/**/*.js'
+  ],
   darkMode: 'class',
   theme: {
     extend: {
@@ -254,14 +258,17 @@ module.exports = {
   },
   
   plugins: [
+    require('flowbite/plugin'),
+    require('@tailwindcss/typography'),
+    require('tailwind-scrollbar'),
     function({ addUtilities }) {
       const newUtilities = {
         '.hide-scrollbar': {
-          'scrollbar-width': 'none', /* Firefox */
-          '-ms-overflow-style': 'none', /* Internet Explorer 10+ */
+          'scrollbar-width': 'none',
+          '-ms-overflow-style': 'none',
         },
         '.hide-scrollbar::-webkit-scrollbar': {
-          display: 'none', /* Safari and Chrome */
+          display: 'none',
         },
       }
       addUtilities(newUtilities)
