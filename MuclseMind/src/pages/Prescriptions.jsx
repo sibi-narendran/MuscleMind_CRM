@@ -127,9 +127,9 @@ const Prescriptions = () => {
 
     setIsGeneratingPrescription(true);
     try {
-      const response = await generatePrescription(prescription.id, prescriptionData);
+      const response = await generatePrescription(prescription.id, prescriptionData); 
       if (response.success) {
-        message.success('Description generated successfully');
+        message.success('prescription medicine generated successfully');
         fetchPrescriptions(); // Refresh the list
       } else {
         message.error(response.message || 'Failed to generate medicine');

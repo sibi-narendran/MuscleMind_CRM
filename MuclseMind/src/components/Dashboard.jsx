@@ -2,12 +2,13 @@ import { Users, Calendar, Activity, TrendingUp, PieChart, CheckCircle, LineChart
 import { Line, Bar } from 'react-chartjs-2';
 import 'chart.js/auto';
 import React, { useEffect, useState } from 'react';
-import { getDashboardStats, getAppointments, getDashboardPatientGrowth } from '../api.services/services';
+import { getDashboardStats, getTodayAppointments, getDashboardPatientGrowth } from '../api.services/services';
 import { format } from 'date-fns';
 
 const Dashboard = () => {
   const [stats, setStats] = useState([]);
   const [upcomingAppointments, setUpcomingAppointments] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
   const [appointments, setAppointments] = useState([]);
   const [patientGrowthData, setPatientGrowthData] = useState({
     labels: [],
@@ -45,26 +46,31 @@ const Dashboard = () => {
   }, []);
 
   useEffect(() => {
-    fetchAppointments();
+    fetchTodayAppointments();
   }, []);
 
   useEffect(() => {
     fetchPatientGrowthData();
   }, []);
 
-  const fetchAppointments = async () => {
+  const fetchTodayAppointments = async () => {
     try {
-      const response = await getAppointments();
+      setIsLoading(true);
+      const response = await getTodayAppointments();
+      console.log('Today\'s appointments response:', response);
+
       if (response.success) {
-        const today = new Date().toISOString().split('T')[0]; // Get today's date in YYYY-MM-DD format
-        const todayAppointments = response.data.filter(apt => apt.date === today);
-        setUpcomingAppointments(todayAppointments);
-        setAppointments(response.data);
+        setUpcomingAppointments(response.data);
+        console.log('Fetched appointments:', response.data);
       } else {
         console.error('Failed to fetch appointments:', response.message);
+        message.error('Failed to fetch today\'s appointments');
       }
     } catch (error) {
-      console.error('Failed to fetch appointments:', error);
+      console.error('Error fetching appointments:', error);
+      message.error('Error loading appointments');
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -174,55 +180,62 @@ const Dashboard = () => {
             <h2 className="text-lg font-semibold text-black dark:text-white">Today's Schedule</h2>
             <Calendar className="h-5 w-5 text-gray-400 dark:text-white" />
           </div>
-          <div className="space-y-4">
-            {upcomingAppointments.map((apt) => (
-              <div
-                key={apt.id}
-                className="flex flex-col sm:flex-row items-start sm:items-center p-4 bg-meta-9 dark:bg-boxdark rounded-lg dark:hover:bg-meta-3 mb-4"
-                onClick={() => handleAppointmentClick(apt)}
-              >
-                <div className="flex-shrink-0 w-full sm:w-20 mb-2 sm:mb-0">
-                  <div className="flex items-center">
-                    <Clock className="h-4 w-4 text-gray-400 dark:text-meta-2 mr-1" />
-                    <span className="text-sm font-medium text-black dark:text-meta-2">
-                      {format(new Date(apt.date), 'MMM dd')} {format(new Date(`1970-01-01T${apt.time}`), 'hh:mm a')}
-                    </span>
-                  </div>
-                </div>
-                <div className='ml-2 mr-4'>
-                  <span className="text-sm font-medium text-black dark:text-meta-2 ml-4">
-                    {apt.appointment_id}
-                  </span>
-                </div>
-                <div className="ml-4 flex-grow">
-                  <p className="text-sm font-medium text-black dark:text-white">
-                    {apt.patient_name}
-                  </p>
-                  <p className="text-sm text-black dark:text-meta-2">
-                    {apt.treatment_name}
-                  </p>
-                </div>
-                <div className="ml-4">
-                  <span
-                    className={`px-2 py-1 text-xs font-medium rounded-full ${
-                      apt.status === 'Scheduled'
-                        ? 'text-meta-6 bg-meta-4 dark:bg-green-900'
-                        : apt.status === 'Completed'
-                        ? 'text-meta-3 bg-meta-4 dark:bg-yellow-900'
-                        : apt.status === 'Cancelled'
-                        ? 'text-meta-1 bg-meta-4 dark:bg-red-900'
-                        : ''
-                    }`}
+          
+          {isLoading ? (
+            <div className="flex justify-center items-center h-40">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900 dark:border-white"></div>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              {upcomingAppointments.length > 0 ? (
+                upcomingAppointments.map((apt) => (
+                  <div
+                    key={apt.id}
+                    className="flex flex-col sm:flex-row items-start sm:items-center p-4 bg-meta-9 dark:bg-boxdark rounded-lg dark:hover:bg-meta-3 mb-4"
                   >
-                    {apt.status}
-                  </span>
-                </div>
-              </div>
-            ))}
-            {upcomingAppointments.length === 0 && (
-              <p className="text-sm text-black dark:text-meta-2">No appointments for today.</p>
-            )}
-          </div>
+                    <div className="flex-shrink-0 w-full sm:w-20 mb-2 sm:mb-0">
+                      <div className="flex items-center">
+                        <Clock className="h-4 w-4 text-gray-400 dark:text-meta-2 mr-1" />
+                        <span className="text-sm font-medium text-black dark:text-meta-2">
+                          {format(new Date(apt.date), 'MMM dd')} {format(new Date(`1970-01-01T${apt.time}`), 'hh:mm a')}
+                        </span>
+                      </div>
+                    </div>
+                    <div className='ml-2 mr-4'>
+                      <span className="text-sm font-medium text-black dark:text-meta-2 ml-4">
+                        {apt.appointment_id}
+                      </span>
+                    </div>
+                    <div className="ml-4 flex-grow">
+                      <p className="text-sm font-medium text-black dark:text-white">
+                        {apt.patient_name}
+                      </p>
+                      <p className="text-sm text-black dark:text-meta-2">
+                        {apt.treatment_name}
+                      </p>
+                    </div>
+                    <div className="ml-4">
+                      <span
+                        className={`px-2 py-1 text-xs font-medium rounded-full ${
+                          apt.status === 'Scheduled'
+                            ? 'text-meta-6 bg-meta-4 dark:bg-green-900'
+                            : apt.status === 'Completed'
+                            ? 'text-meta-3 bg-meta-4 dark:bg-yellow-900'
+                            : apt.status === 'Cancelled'
+                            ? 'text-meta-1 bg-meta-4 dark:bg-red-900'
+                            : ''
+                        }`}
+                      >
+                        {apt.status}
+                      </span>
+                    </div>
+                  </div>
+                ))
+              ) : (
+                <p className="text-sm text-black dark:text-meta-2">No appointments for today.</p>
+              )}
+            </div>
+          )}
         </div>
 
         <div className="bg-white dark:bg-meta-4 dark:border-strokedark dark:text-white p-6 rounded-xl shadow-sm border border-gray-100">

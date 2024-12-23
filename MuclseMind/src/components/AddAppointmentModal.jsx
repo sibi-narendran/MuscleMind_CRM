@@ -1,9 +1,9 @@
 import React, { useEffect, useState } from 'react';
-import { Modal, Form, Input, Button, DatePicker, TimePicker, Select, message } from 'antd';
+import { Modal, Form, Input, Button, DatePicker, Select, message, TimePicker } from 'antd';
 import moment from 'moment';
 import { getPatients, addAppointment, getTreatments, getTeamMembers } from '../api.services/services';
 import AddPatientModal from './AddPatientModal';
-import { addPatient } from '../api.services/services';
+import { LoadingOutlined } from '@ant-design/icons';
 
 const { Option } = Select;
 
@@ -14,6 +14,8 @@ const AddAppointmentModal = ({ visible, onClose, onAdd }) => {
   const [showAddPatientModal, setShowAddPatientModal] = useState(false);
   const [selectedPatientDetails, setSelectedPatientDetails] = useState(null);
   const [showAll, setShowAll] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [form] = Form.useForm();
 
   useEffect(() => {
     if (visible) {
@@ -58,28 +60,40 @@ const AddAppointmentModal = ({ visible, onClose, onAdd }) => {
 
   const handleAdd = async (values) => {
     try {
+      setIsLoading(true);
       const selectedPatient = patients.find(patient => patient.id === values.patient);
-      const patientName = selectedPatient ? selectedPatient.name : '';
-
+      const selectedDoctor = carePersons.find(doctor => doctor.name === values.care_person);
       const selectedTreatment = treatments.find(treatment => treatment.treatment_id === values.treatment);
+      
       const treatmentName = selectedTreatment ? `${selectedTreatment.category} - ${selectedTreatment.procedure_name}` : '';
+
+      const timeValue = typeof values.time === 'string' 
+        ? moment(values.time, 'HH:mm').format('HH:mm')
+        : values.time.format('HH:mm');
 
       const appointmentData = {
         patient_id: values.patient,
-        patient_name: patientName,
-        age: selectedPatient.age,
-        gender: selectedPatient.gender,
+        patient_name: selectedPatient ? selectedPatient.name : '',
+        patient_email: selectedPatient ? selectedPatient.email : '',
+        patient_phone: selectedPatient ? selectedPatient.phone : '',
+        age: selectedPatient ? selectedPatient.age : '',
+        gender: selectedPatient ? selectedPatient.gender : '',
         date: values.date.format('YYYY-MM-DD'),
-        time: values.time.format('HH:mm'),
+        time: timeValue,
         treatment_id: values.treatment,
         treatment_name: treatmentName,
         care_person: values.care_person,
+        doctor_email: selectedDoctor ? selectedDoctor.email : '',
+        doctor_phone: selectedDoctor ? selectedDoctor.phone : '',
+        clinic_name: selectedDoctor ? selectedDoctor.clinic_name : '',
+        clinic_phone: selectedDoctor ? selectedDoctor.clinic_phone : '',
+        status: 'Scheduled',
       };
 
-   
       const response = await addAppointment(appointmentData);
       if (response.success) {
         message.success('Appointment added successfully');
+        form.resetFields();
         onAdd(response.data);
         onClose();
       } else {
@@ -87,6 +101,8 @@ const AddAppointmentModal = ({ visible, onClose, onAdd }) => {
       }
     } catch (error) {
       message.error(error.error);
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -126,15 +142,19 @@ const AddAppointmentModal = ({ visible, onClose, onAdd }) => {
         footer={null}
         bodyStyle={{ padding: '20px' }}
       >
-        <Form layout="vertical" onFinish={handleAdd}>
+        <Form 
+          form={form}
+          layout="vertical" 
+          onFinish={handleAdd}
+          className="space-y-4"
+        >
           <Form.Item
-            label={<span style={{ fontWeight: 'bold' }}>Patient</span>}
+            label={<span className="font-semibold">Patient</span>}
             name="patient"
             rules={[{ required: true, message: 'Please select a patient' }]}
           >
             <Select
               placeholder="Select a patient"
-              style={{ width: '100%' }}
               showSearch
               optionFilterProp="children"
               filterOption={(input, option) =>
@@ -143,23 +163,14 @@ const AddAppointmentModal = ({ visible, onClose, onAdd }) => {
               onDropdownVisibleChange={handleDropdownVisibleChange}
               onChange={handlePatientSelect}
               dropdownRender={menu => (
-                <>
+                <div>
                   {menu}
-                  <div
-                    style={{
-                      display: 'flex',
-                      justifyContent: 'center',
-                      padding: 8,
-                    }}
-                  >
-                    <Button
-                      type="link"
-                      onClick={() => setShowAddPatientModal(true)}
-                    >
+                  <div className="p-2 text-center border-t">
+                    <Button type="link" onClick={() => setShowAddPatientModal(true)}>
                       Add New Patient
                     </Button>
                   </div>
-                </>
+                </div>
               )}
             >
               {(showAll ? patients : patients.slice(0, 3)).map((patient) => (
@@ -171,58 +182,31 @@ const AddAppointmentModal = ({ visible, onClose, onAdd }) => {
           </Form.Item>
 
           {selectedPatientDetails && (
-            <>
-              <Form.Item label={<span style={{ fontWeight: 'bold' }}>Age</span>}>
-                <Input 
-                  value={selectedPatientDetails.age}
-                  disabled
-                  style={{ width: '100%' }}
-                />
-              </Form.Item>
-              <Form.Item label={<span style={{ fontWeight: 'bold' }}>Gender</span>}>
-                <Input 
-                  value={selectedPatientDetails.gender}
-                  disabled
-                  style={{ width: '100%' }}
-                />
-              </Form.Item>
-              <Form.Item
-                label={<span style={{ fontWeight: 'bold' }}>Care of</span>}
-                name="care_person"
-                initialValue={selectedPatientDetails.care_person}
-                rules={[{ required: true, message: 'Please select a care person' }]}
-              >
-                <Select
-                  showSearch
-                  placeholder="Search and select care person"
-                  optionFilterProp="children"
-                  filterOption={(input, option) =>
-                    (option?.children ?? '').toLowerCase().includes(input.toLowerCase())
-                  }
-                  style={{ width: '100%' }}
-                >
-                  {carePersons.map((doctor) => (
-                    <Option key={doctor.name} value={doctor.name}>
-                      {doctor.name}
-                    </Option>
-                  ))}
-                </Select>
-              </Form.Item>
-            </>
+            <div className="bg-gray-50 dark:bg-navy-800 p-4 rounded-lg mb-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="font-semibold">Age</label>
+                  <Input value={selectedPatientDetails.age} disabled />
+                </div>
+                <div>
+                  <label className="font-semibold">Gender</label>
+                  <Input value={selectedPatientDetails.gender} disabled />
+                </div>
+              </div>
+            </div>
           )}
 
           <Form.Item
-            label={<span style={{ fontWeight: 'bold' }}>Treatment</span>}
+            label={<span className="font-semibold">Treatment</span>}
             name="treatment"
             rules={[{ required: true, message: 'Please select a treatment' }]}
           >
             <Select
               placeholder="Select a treatment"
-              style={{ width: '100%' }}
               showSearch
               optionFilterProp="children"
               filterOption={(input, option) =>
-                option.children.toLowerCase().indexOf(input.toLowerCase()) >= 0
+                option.children.toLowerCase().includes(input.toLowerCase())
               }
             >
               {treatments.map((treatment) => (
@@ -232,29 +216,73 @@ const AddAppointmentModal = ({ visible, onClose, onAdd }) => {
               ))}
             </Select>
           </Form.Item>
+
+          <div className="grid grid-cols-2 gap-4">
+            <Form.Item
+              label={<span className="font-semibold">Date</span>}
+              name="date"
+              rules={[{ required: true, message: 'Please select the date' }]}
+            >
+              <DatePicker 
+                className="w-full" 
+                disabledDate={disabledDate}
+                format="YYYY-MM-DD"
+              />
+            </Form.Item>
+
+            <Form.Item
+              label={<span className="font-semibold">Time</span>}
+              name="time"
+              rules={[{ required: true, message: 'Please enter the time' }]}
+            >
+              <TimePicker 
+                className="w-full"
+                format="HH:mm"
+                minuteStep={15}
+                showNow={false}
+                use12Hours
+                inputReadOnly={false}
+              />
+            </Form.Item>
+          </div>
+
           <Form.Item
-            label={<span style={{ fontWeight: 'bold' }}>Date</span>}
-            name="date"
-            rules={[{ required: true, message: 'Please select the date' }]}
+            label={<span className="font-semibold">Care Person</span>}
+            name="care_person"
+            rules={[{ required: true, message: 'Please select a care person' }]}
           >
-            <DatePicker style={{ width: '100%' }} disabledDate={disabledDate} />
+            <Select
+              showSearch
+              placeholder="Search and select care person"
+              optionFilterProp="children"
+              filterOption={(input, option) =>
+                (option?.children ?? '').toLowerCase().includes(input.toLowerCase())
+              }
+            >
+              {carePersons.map((doctor) => (
+                <Option key={doctor.name} value={doctor.name}>
+                  {doctor.name}
+                </Option>
+              ))}
+            </Select>
           </Form.Item>
-          <Form.Item
-            label={<span style={{ fontWeight: 'bold' }}>Time</span>}
-            name="time"
-            rules={[{ required: true, message: 'Please select the time' }]}
-          >
-            <TimePicker style={{ width: '100%' }} format="h:mm a" use12Hours />
-          </Form.Item>
-          <Form.Item>
-            <Button type="primary" htmlType="submit" style={{ width: '100%' }}>
-              Add Appointment
+
+          <div className="flex justify-end space-x-4 mt-6">
+            <Button onClick={onClose} disabled={isLoading}>
+              Cancel
             </Button>
-          </Form.Item>
+            <Button 
+              type="primary" 
+              htmlType="submit"
+              disabled={isLoading}
+              icon={isLoading ? <LoadingOutlined /> : null}
+            >
+              {isLoading ? 'Adding...' : 'Add Appointment'}
+            </Button>
+          </div>
         </Form>
       </Modal>
 
-      {/* Add Patient Modal */}
       <AddPatientModal
         visible={showAddPatientModal}
         onClose={() => setShowAddPatientModal(false)}

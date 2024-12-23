@@ -355,8 +355,14 @@ const ClinicInfo = () => {
   const handleEditTeamMember = (member) => {
     console.log("Received team member data for editing:", member);
     if (member && member.id) {
+      // Remove +91 prefix for display in form
+      const displayPhone = member.phone?.startsWith('+91') 
+        ? member.phone.substring(3) 
+        : member.phone;
+
       const formattedMember = {
         ...member,
+        phone: displayPhone,
         doj: member.doj ? moment(member.doj, "YYYY-MM-DD") : null
       };
       setEditTeamMemberData(formattedMember);
@@ -386,34 +392,51 @@ const ClinicInfo = () => {
 
   const handleAddOrEditTeamMember = async (values) => {
     try {
-      // Ensure the date is formatted correctly before sending
-      const payload = {
-        ...values,
-        doj: values.doj ? values.doj.format("YYYY-MM-DD") : null
+      // Get clinic details from the current context or state
+      const clinicResponse = await clinicInfo();
+      const clinicData = clinicResponse.success ? clinicResponse.data : {};
+
+      // Format phone number with country code if it doesn't already have one
+      const formattedPhone = values.phone.startsWith('+91') 
+        ? values.phone 
+        : `+91${values.phone.replace(/^0+/, '')}`;  // Remove leading zeros if any
+
+      const teamMemberData = {
+        name: values.name,
+        role: values.role,
+        doj: values.doj.format('YYYY-MM-DD'),
+        salary: values.salary,
+        email: values.email,
+        phone: formattedPhone, // Use formatted phone number
+        // Add clinic details to payload without showing in UI
+        clinic_name: clinicData.clinicName || '',
+        clinic_phone: clinicData.phoneNumber || ''
       };
 
-      let response;
       if (editTeamMemberData) {
-        response = await editTeamMember(editTeamMemberData.id, payload);
+        // Update existing team member
+        const response = await editTeamMember(editTeamMemberData.id, teamMemberData);
         if (response.success) {
           message.success('Team member updated successfully');
+          fetchTeamMembers();
+          setIsTeamMemberModalVisible(false);
+          setEditTeamMemberData(null);
         } else {
           message.error('Failed to update team member');
         }
       } else {
-        response = await addTeamMember(payload);
+        // Add new team member
+        const response = await addTeamMember(teamMemberData);
         if (response.success) {
           message.success('Team member added successfully');
+          fetchTeamMembers();
+          setIsTeamMemberModalVisible(false);
         } else {
           message.error('Failed to add team member');
         }
       }
-      fetchTeamMembers(); // Refetch team members after add/edit
     } catch (error) {
-      message.error('Error saving team member');
-    } finally {
-      setEditTeamMemberData(null);
-      setIsTeamMemberModalVisible(false);
+      message.error('Error: ' + error.message);
     }
   };
 
@@ -615,15 +638,32 @@ const renderHolidays = () => (
           columns={[
             { title: 'Name', dataIndex: 'name', key: 'name' },
             { title: 'Role', dataIndex: 'role', key: 'role' },
-            { title: 'Date of joining', dataIndex: 'doj', key: 'doj' },
-            { title: 'Salary Per Month', dataIndex: 'salary', key: 'salary' },
+            { 
+              title: 'Contact Info', 
+              key: 'contact', 
+              render: (_, record) => (
+                <div className="flex flex-col">
+                  <span>{record.email}</span>
+                  <span>{record.phone?.startsWith('+91') ? record.phone : `+91${record.phone}`}</span>
+                </div>
+              ) 
+            },
+            { 
+              title: 'Date of Joining', 
+              dataIndex: 'doj', 
+              key: 'doj', 
+              render: (date) => moment(date).format('DD/MM/YYYY') 
+            },
+            { title: 'Salary', dataIndex: 'salary', key: 'salary' },
             {
               title: 'Action',
               key: 'action',
               render: (_, record) => (
-                <Button type="link" onClick={() => handleEditTeamMember(record)}>
-                  Edit
-                </Button>
+                <Space size="middle">
+                  <Button type="link" onClick={() => handleEditTeamMember(record)}>
+                    Edit
+                  </Button>
+                </Space>
               ),
             },
           ]}
@@ -1090,80 +1130,138 @@ const renderAddHolidayModal = () => {
     </Modal>
   );
 
-  const TeamMemberForm = () => (
-    <Modal
-      title={editTeamMemberData ? "Edit Team Member" : "Add Team Member"}
-      visible={isTeamMemberModalVisible}
-      onCancel={() => setIsTeamMemberModalVisible(false)}
-      footer={null}
-    >
-     <Form
-  initialValues={{
-    name: editTeamMemberData ? editTeamMemberData.name : '',
-    role: editTeamMemberData ? editTeamMemberData.role : '',
-    doj: editTeamMemberData && editTeamMemberData.doj ? moment(editTeamMemberData.doj) : null,
-    salary: editTeamMemberData ? editTeamMemberData.salary : ''
-  }}
-  onFinish={handleAddOrEditTeamMember}
-  layout="vertical"
->
-        <Form.Item name="name" label="Name" rules={[{ required: true, message: 'Please enter a name!' }]}>
-          <Input />
-        </Form.Item>
-        <Form.Item name="role" label="Role" rules={[{ required: true, message: 'Please enter a role!' }]}>
-          <Input />
-        </Form.Item>
-        <Form.Item
-            name="doj"
-          label="Date of Joining"
-          rules={[{ required: true, message: 'Please enter date of joining!' }]}
-        >
-          <DatePicker
-            style={{ width: '100%' }}
-            format="YYYY-MM-DD"
-              placeholder="Select date"
-          />
-        </Form.Item>
-        <Form.Item name="salary" label="Salary Per Month" rules={[{ required: true, message: 'Please enter salary!' }]}>
-          <Input />
-        </Form.Item>
-        <div className="flex justify-end space-x-2">
-          <Button onClick={() => setIsTeamMemberModalVisible(false)}>Cancel</Button>
-          <Button type="primary" htmlType="submit">Save</Button>
-          {editTeamMemberData && (
-            <Button type="danger" onClick={() => confirmDeleteTeamMember(editTeamMemberData.id)}>Delete</Button>
-          )}
-        </div>
-      </Form>
-    </Modal>
-  );
+  const TeamMemberModal = () => {
+    const [form] = Form.useForm();
 
-  // Function to confirm and handle deletion
-  const confirmDeleteTeamMember = (id) => {
-    Modal.confirm({
-      title: 'Are you sure you want to delete this team member?',
-      content: 'This action cannot be undone.',
-      okText: 'Yes, delete it',
-      okType: 'danger',
-      cancelText: 'No, cancel',
-      onOk: async () => {
-        try {
-          const response = await deleteTeamMember(id);
-          if (response.success) {
-            message.success('Team member deleted successfully');
-            fetchTeamMembers(); // Refresh the list after deletion
-            setIsTeamMemberModalVisible(false);
-          } else {
-            message.error('Failed to delete team member');
-          }
-        } catch (error) {
-          message.error('Error deleting team member');
-        }
-      },
-      onCancel() {
-        console.log('Cancel deletion');
-      },
-    });
+    useEffect(() => {
+      if (editTeamMemberData) {
+        // When editing, format the phone number to include +91 if it doesn't have it
+        const formattedPhone = editTeamMemberData.phone?.startsWith('+91')
+          ? editTeamMemberData.phone
+          : `+91${editTeamMemberData.phone}`;
+
+        form.setFieldsValue({
+          ...editTeamMemberData,
+          phone: formattedPhone,
+          doj: editTeamMemberData.doj ? moment(editTeamMemberData.doj) : null
+        });
+      } else {
+        // For new entries, initialize with +91
+        form.setFieldsValue({
+          phone: '+91'
+        });
+      }
+    }, [editTeamMemberData, form]);
+
+    return (
+      <Modal
+        title={editTeamMemberData ? "Edit Team Member" : "Add Team Member"}
+        open={isTeamMemberModalVisible}
+        onCancel={() => {
+          setIsTeamMemberModalVisible(false);
+          setEditTeamMemberData(null);
+          form.resetFields();
+        }}
+        footer={null}
+      >
+        <Form
+          form={form}
+          layout="vertical"
+          onFinish={handleAddOrEditTeamMember}
+          initialValues={{ phone: '+91' }}
+        >
+          <Form.Item
+            name="name"
+            label="Name"
+            rules={[{ required: true, message: 'Please enter name' }]}
+          >
+            <Input />
+          </Form.Item>
+
+          <Form.Item
+            name="role"
+            label="Role"
+            rules={[{ required: true, message: 'Please select role' }]}
+          >
+            <Select>
+              <Select.Option value="Doctor">Doctor</Select.Option>
+              <Select.Option value="Nurse">Nurse</Select.Option>
+              <Select.Option value="Receptionist">Receptionist</Select.Option>
+              <Select.Option value="Assistant">Assistant</Select.Option>
+            </Select>
+          </Form.Item>
+
+          <Form.Item
+            name="phone"
+            label="Phone Number"
+            rules={[
+              { required: true, message: 'Please enter phone number' },
+              {
+                pattern: /^\+91[1-9]\d{9}$/,
+                message: 'Please enter a valid phone number with +91'
+              }
+            ]}
+            normalize={(value) => {
+              // Always ensure +91 prefix
+              if (!value) return '+91';
+              if (!value.startsWith('+91')) return '+91' + value.replace(/^\+91/, '');
+              return value;
+            }}
+          >
+            <Input 
+              placeholder="+91XXXXXXXXXX"
+              maxLength={13}
+              onFocus={(e) => {
+                // Ensure cursor is placed after +91
+                if (e.target.value === '+91') {
+                  e.target.setSelectionRange(3, 3);
+                }
+              }}
+            />
+          </Form.Item>
+
+          <Form.Item
+            name="email"
+            label="Email"
+            rules={[
+              { required: true, message: 'Please enter email' },
+              { type: 'email', message: 'Please enter a valid email' }
+            ]}
+          >
+            <Input />
+          </Form.Item>
+
+          <Form.Item
+            name="doj"
+            label="Date of Joining"
+            rules={[{ required: true, message: 'Please select date of joining' }]}
+          >
+            <DatePicker className="w-full" />
+          </Form.Item>
+
+          <Form.Item
+            name="salary"
+            label="Salary"
+            rules={[{ required: true, message: 'Please enter salary' }]}
+          >
+            <Input type="number" />
+          </Form.Item>
+
+          <div className="flex justify-end space-x-2">
+            <Button onClick={() => {
+              setIsTeamMemberModalVisible(false);
+              setEditTeamMemberData(null);
+              form.resetFields();
+            }}>
+              Cancel
+            </Button>
+            <Button type="primary" htmlType="submit">
+              {editTeamMemberData ? 'Update' : 'Add'}
+            </Button>
+          </div>
+        </Form>
+      </Modal>
+    );
   };
 
   const handleSaveClinicInfo = async (values) => {
@@ -1384,7 +1482,7 @@ const renderAddHolidayModal = () => {
       {renderAddHolidayModal()}
       <TreatmentForm />
       <MedicationForm />
-      <TeamMemberForm />
+      <TeamMemberModal />
       <PreviewHeader />
       <Button type="primary" onClick={handleSubmit} loading={isSubmitting}>
         Submit Images
