@@ -71,7 +71,7 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }) => {
     >
       {/* SIDEBAR HEADER */}
       <div className="flex items-center justify-between gap-2 px-6 py-5.5 ">
-        <NavLink to="/" className="flex items-center gap-2 mt-4">
+        <NavLink to="/dashboard" className="flex items-center gap-2 mt-4">
           <Stethoscope className="w-10 h-10 text-white" />
           <span className="text-white">Dental CRM</span>
         </NavLink>

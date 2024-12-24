@@ -3,8 +3,8 @@ import { PricingToggle } from '../components/PricingToggle';
 import { PricingCard } from '../components/PricingCard';
 import { PaymentModal } from '../components/PaymentModal';
 import { initializeRazorpay, createOrder, handlePayment } from '../services/payment';
-import { Button, message } from 'antd';
-import { DownloadOutlined, AppleFilled, AndroidFilled, GlobalOutlined } from '@ant-design/icons';
+import { Button, message, Modal } from 'antd';
+import {AppleFilled, AndroidFilled, GlobalOutlined } from '@ant-design/icons';
 
 const pricingTiers = [
   {
@@ -63,6 +63,7 @@ const Settings = () => {
   const [deferredPrompt, setDeferredPrompt] = useState(null);
   const [isInstallable, setIsInstallable] = useState(false);
   const [platform, setPlatform] = useState('');
+  const [isModalVisible, setIsModalVisible] = useState(false);
 
   useEffect(() => {
     // Detect platform
@@ -79,7 +80,7 @@ const Settings = () => {
 
     detectPlatform();
 
-    const handleBeforeInstallPrompt = (e) => {
+    const   handleBeforeInstallPrompt = (e) => {
       e.preventDefault();
       setDeferredPrompt(e);
       setIsInstallable(true);
@@ -110,35 +111,40 @@ const Settings = () => {
     }
   };
 
-  const handleInstall = async () => {
-    if (!deferredPrompt) {
-      // Platform specific messages
-      if (platform === 'iOS') {
-        message.info(
-          'To install: tap the share button and select "Add to Home Screen"'
-        );
-      } else if (platform === 'Android') {
-        message.info(
-          'Please use Chrome browser and select "Add to Home Screen" from the menu'
-        );
-      } else {
-        message.info(
-          'Install option not available. Please use a supported browser.'
-        );
-      }
-      return;
+  const getInstructions = () => {
+    switch (platform) {
+      case 'iOS':
+        return [
+          '1. Open Safari browser',
+          '2. Tap the Share button at the bottom',
+          '3. Scroll down and tap "Add to Home Screen"',
+          '4. Tap "Add" to confirm'
+        ].join('\n');
+      case 'Android':
+        return [
+          '1. Open Chrome browser',
+          '2. Tap the three dots menu (⋮)',
+          '3. Tap "Add to Home screen"',
+          '4. Tap "Add" to confirm'
+        ].join('\n');
+      default:
+        return [
+          '1. Open Chrome, Edge, or Firefox',
+          '2. Click the install icon in address bar',
+          '3. Click "Install" to confirm'
+        ].join('\n');
     }
+  };
 
-    try {
-      await deferredPrompt.prompt();
-      const { outcome } = await deferredPrompt.userChoice;
-      console.log('Install prompt outcome:', outcome);
-      setDeferredPrompt(null);
-      setIsInstallable(false);
-    } catch (error) {
-      console.error('Error installing app:', error);
-      message.error('Failed to install application');
-    }
+  const handleInstall = () => {
+    message.info({
+      content: getInstructions(),
+      duration: 10,
+      style: {
+        whiteSpace: 'pre-line',
+        marginTop: '20vh'
+      }
+    });
   };
 
   const handlePlanSelection = (plan) => {
@@ -172,6 +178,24 @@ const Settings = () => {
       >
         Install {platform === 'Desktop' ? 'App' : `for ${platform}`}
       </Button>
+
+      <Modal
+        title={`Install Instructions for ${platform}`}
+        open={isModalVisible}
+        onOk={() => setIsModalVisible(false)}
+        onCancel={() => setIsModalVisible(false)}
+        footer={[
+          <Button key="ok" type="primary" onClick={() => setIsModalVisible(false)}>
+            Got it
+          </Button>
+        ]}
+      >
+        <div className="py-4">
+          <p className="mb-4">Follow these steps to install the app:</p>
+          {getInstructions()}
+        </div>
+      </Modal>
+
       <div className="max-w-7xl mx-auto">
         <div className="text-center mb-16">
           <h1 className="text-5xl text-black dark:text-white font-bold mb-6">
