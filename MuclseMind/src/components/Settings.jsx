@@ -1,8 +1,10 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { PricingToggle } from '../components/PricingToggle';
 import { PricingCard } from '../components/PricingCard';
 import { PaymentModal } from '../components/PaymentModal';
 import { initializeRazorpay, createOrder, handlePayment } from '../services/payment';
+import { Button, message } from 'antd';
+import { DownloadOutlined, AppleFilled, AndroidFilled, GlobalOutlined } from '@ant-design/icons';
 
 const pricingTiers = [
   {
@@ -54,10 +56,90 @@ const pricingTiers = [
   }
 ];
 
-const Settings =()=> {
+const Settings = () => {
   const [isAnnual, setIsAnnual] = useState(false);
   const [selectedPlan, setSelectedPlan] = useState(null);
   const [showPaymentModal, setShowPaymentModal] = useState(false);
+  const [deferredPrompt, setDeferredPrompt] = useState(null);
+  const [isInstallable, setIsInstallable] = useState(false);
+  const [platform, setPlatform] = useState('');
+
+  useEffect(() => {
+    // Detect platform
+    const detectPlatform = () => {
+      const userAgent = window.navigator.userAgent.toLowerCase();
+      if (/iphone|ipad|ipod/.test(userAgent)) {
+        setPlatform('iOS');
+      } else if (/android/.test(userAgent)) {
+        setPlatform('Android');
+      } else {
+        setPlatform('Desktop');
+      }
+    };
+
+    detectPlatform();
+
+    const handleBeforeInstallPrompt = (e) => {
+      e.preventDefault();
+      setDeferredPrompt(e);
+      setIsInstallable(true);
+    };
+
+    window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+
+    // Check if the app is already installed
+    if (window.matchMedia('(display-mode: standalone)').matches) {
+      setIsInstallable(false);
+    } else {
+      setIsInstallable(true); // Show button by default
+    }
+
+    return () => {
+      window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+    };
+  }, []);
+
+  const getInstallIcon = () => {
+    switch (platform) {
+      case 'iOS':
+        return <AppleFilled />;
+      case 'Android':
+        return <AndroidFilled />;
+      default:
+        return <GlobalOutlined />;
+    }
+  };
+
+  const handleInstall = async () => {
+    if (!deferredPrompt) {
+      // Platform specific messages
+      if (platform === 'iOS') {
+        message.info(
+          'To install: tap the share button and select "Add to Home Screen"'
+        );
+      } else if (platform === 'Android') {
+        message.info(
+          'Please use Chrome browser and select "Add to Home Screen" from the menu'
+        );
+      } else {
+        message.info(
+          'Install option not available. Please use a supported browser.'
+        );
+      }
+      return;
+    }
+
+    try {
+      await deferredPrompt.prompt();
+      const { outcome } = await deferredPrompt.userChoice;
+      console.log('Install prompt outcome:', outcome);
+      setDeferredPrompt(null);
+      setIsInstallable(false);
+    } catch (error) {
+      console.error('Error installing app:', error);
+      message.error('Failed to install application');
+    }
+  };
 
   const handlePlanSelection = (plan) => {
     if (plan.comingSoon) {
@@ -82,6 +164,14 @@ const Settings =()=> {
 
   return (
     <div className="min-h-screen bg-navy-900 text-white py-20 px-4">
+      <Button
+        type="primary"
+        icon={getInstallIcon()}
+        onClick={handleInstall}
+        className="bg-meta-5 hover:bg-meta-4 fixed top-4 left-4 z-50"
+      >
+        Install {platform === 'Desktop' ? 'App' : `for ${platform}`}
+      </Button>
       <div className="max-w-7xl mx-auto">
         <div className="text-center mb-16">
           <h1 className="text-5xl text-black dark:text-white font-bold mb-6">
@@ -114,6 +204,8 @@ const Settings =()=> {
             onInitiatePayment={handlePaymentInitiation}
           />
         )}
+
+
       </div>
     </div>
   );
