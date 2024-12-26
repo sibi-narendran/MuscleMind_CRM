@@ -1,43 +1,55 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { initializeRazorpay, createOrder, handlePayment } from '../services/payment';
-import { createPaymentOrder } from '../api.services/services';
+import { message } from 'antd';
+import { getUserProfile } from '../api.services/services';
 
 export function PaymentModal({ isOpen, onClose, selectedPlan, onSuccess }) {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [userDetails, setUserDetails] = useState(null);
 
-  if (!isOpen) return null;
+  useEffect(() => {
+    const fetchUserProfile = async () => {
+      try {
+        const response = await getUserProfile();
+        if (response.success) {
+          setUserDetails(response.data);
+        } else {
+          throw new Error(response.message || 'Failed to fetch user profile');
+        }
+      } catch (error) {
+        console.error('Error fetching user profile:', error);
+        message.error('Failed to load user details');
+      }
+    };
 
-  const taxRate = 0.18;
-  const taxAmount = selectedPlan.price * taxRate;
-  const totalAmount = selectedPlan.price + taxAmount;
+    if (isOpen) {
+      fetchUserProfile();
+    }
+  }, [isOpen]);
 
   const handlePayNow = async () => {
     try {
       setIsLoading(true);
       setError(null);
 
-      // 1. Load Razorpay SDK
       const isLoaded = await initializeRazorpay();
       if (!isLoaded) {
         throw new Error('Razorpay SDK failed to load');
       }
 
-      // 2. Create order
       const orderDetails = await createOrder({
         ...selectedPlan,
         price: totalAmount
       });
 
-      // 3. Handle payment
       const paymentResult = await handlePayment(orderDetails, selectedPlan, {
-        // Add user details if available from your auth context/state
-        name: 'Test User',
-        email: 'test@example.com',
-        phone: '9999999999'
+        name: userDetails?.username || 'User',
+        email: userDetails?.email || '',
+        phone: userDetails?.phoneNumber || '',
+        clinicName: userDetails?.clinicName || ''
       });
 
-      // 4. Handle success
       onSuccess(paymentResult);
       onClose();
     } catch (error) {
@@ -48,11 +60,26 @@ export function PaymentModal({ isOpen, onClose, selectedPlan, onSuccess }) {
     }
   };
 
+  if (!isOpen) return null;
+
+  const taxRate = 0.18;
+  const taxAmount = selectedPlan.price * taxRate;
+  const totalAmount = selectedPlan.price + taxAmount;
+
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
       <div className="bg-white dark:bg-black rounded-2xl p-8 max-w-md w-full mx-4 shadow-xl">
         <h3 className="text-2xl font-bold text-black dark:text-white mb-6">Complete Payment</h3>
         
+        {userDetails && (
+          <div className="mb-6 space-y-2 text-black dark:text-white">
+            <p><span className="font-semibold">Name:</span> {userDetails.username}</p>
+            <p><span className="font-semibold">Email:</span> {userDetails.email}</p>
+            <p><span className="font-semibold">Phone:</span> {userDetails.phoneNumber}</p>
+            <p><span className="font-semibold">Clinic:</span> {userDetails.clinicName}</p>
+          </div>
+        )}
+
         <div className="space-y-6">
           <div className="flex justify-between text-black dark:text-white">
             <span>Plan</span>

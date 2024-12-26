@@ -13,6 +13,8 @@ const ChatBot = () => {
   const [inputMessage, setInputMessage] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const messagesEndRef = useRef(null);
+  const chatRef = useRef(null);
+  const buttonRef = useRef(null);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -21,6 +23,25 @@ const ChatBot = () => {
   useEffect(() => {
     scrollToBottom();
   }, [messages]);
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (
+        chatRef.current && 
+        !chatRef.current.contains(event.target) &&
+        buttonRef.current &&
+        !buttonRef.current.contains(event.target)
+      ) {
+        setIsOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
 
   const handleSendMessage = async (e) => {
     e.preventDefault();
@@ -67,6 +88,7 @@ const ChatBot = () => {
     <>
       {/* Chat Toggle Button - Added responsive classes */}
       <button
+        ref={buttonRef}
         onClick={() => setIsOpen(!isOpen)}
         className="fixed bottom-4 right-7 inline-flex items-center justify-center text-sm font-medium rounded-full w-14 h-14 bg-gradient-to-r from-slate-800 to-indigo-900 hover:from-slate-900 hover:to-indigo-950 shadow-lg transition-all duration-300"
         type="button"
@@ -84,6 +106,7 @@ const ChatBot = () => {
       <AnimatePresence>
         {isOpen && (
           <motion.div
+            ref={chatRef}
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: 20 }}
@@ -107,14 +130,15 @@ const ChatBot = () => {
                   />
                 </div>
                 <div>
-                  <h2 className="font-semibold text-base text-white">AI Assistant</h2>
+                  <h2 className="font-semibold text-base text-white">Dental AI Assistant</h2>
                   <p className="text-xs text-white/70">Always here to help</p>
                 </div>
               </div>
             </div>
 
             {/* Messages Container */}
-            <div className="p-4 h-[calc(100%-8rem)] overflow-y-auto scrollbar-thin scrollbar-thumb-gray-200 dark:scrollbar-thumb-gray-800">
+            <div className="p-4 h-[calc(100%-8rem)] overflow-y-auto scrollbar-thin 
+              scrollbar-thumb-gray-200 dark:scrollbar-thumb-gray-800 mb-16">
               {messages.map((message, index) => (
                 <div key={index} className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'} mb-4`}>
                   <div className={`flex items-start gap-2.5 ${message.role === 'user' ? 'flex-row-reverse' : ''}`}>
@@ -124,23 +148,19 @@ const ChatBot = () => {
                         : 'items-start'
                     }`}>
                       <div className={`flex items-center space-x-2 rtl:space-x-reverse mb-1`}>
-                        <span className="text-sm font-semibold text-gray-900 dark:text-white">
+                        <span className="text-sm font-semibold text-white">
                           {message.role === 'user' ? 'You' : 'AI Assistant'}
                         </span>
-                        <span className="text-sm font-normal text-gray-500 dark:text-gray-400">
+                        <span className="text-sm font-normal text-gray-300">
                           {message.timestamp && format(message.timestamp, 'HH:mm')}
                         </span>
                       </div>
                       <div className={`flex flex-col leading-1.5 p-4 border-gray-200 ${
                         message.role === 'user'
                           ? 'bg-blue-500 text-white rounded-s-xl rounded-ee-xl'
-                          : 'bg-gray-100 dark:bg-gray-700 rounded-e-xl rounded-es-xl'
+                          : 'bg-gray-700 text-white rounded-e-xl rounded-es-xl'
                       }`}>
-                        <p className={`text-sm font-normal ${
-                          message.role === 'user'
-                            ? 'text-white'
-                            : 'text-gray-900 dark:text-white'
-                        }`}>
+                        <p className="text-sm font-normal text-white">
                           <ReactMarkdown>{message.content}</ReactMarkdown>
                         </p>
                       </div>
@@ -185,22 +205,26 @@ const ChatBot = () => {
               <div ref={messagesEndRef} />
             </div>
 
-            {/* Input Form - Adjusted padding for mobile */}
-            <div className="p-4 sm:p-4 bg-gradient-to-r from-slate-800 to-indigo-900">
-              <form onSubmit={handleSendMessage} className="flex items-center gap-2">
+            {/* Input Form - Adjusted for both themes */}
+            <div className="p-2 sm:p-2 bg-gradient-to-r from-slate-800 to-indigo-900 absolute bottom-0 left-0 right-0">
+              <form onSubmit={handleSendMessage} className="flex items-center justify-center gap-2">
                 <input
                   type="text"
                   value={inputMessage}
                   onChange={(e) => setInputMessage(e.target.value)}
                   placeholder="Type your message..."
-                  className="flex-1 p-2 text-sm text-white bg-slate-700/50 rounded-lg border border-slate-600 focus:ring-slate-500 focus:border-slate-500 placeholder-slate-300"
+                  className="flex-1 p-2 text-sm text-white bg-slate-700/50 rounded-lg border border-slate-600 
+                    focus:ring-slate-500 focus:border-slate-500 
+                    placeholder-slate-300 
+                    dark:text-white dark:placeholder-slate-300"
                 />
                 <button
                   type="submit"
                   disabled={!inputMessage.trim() || isLoading}
-                  className="inline-flex justify-center p-2 text-white bg-slate-700 hover:bg-slate-800 rounded-lg transition-all duration-300 disabled:opacity-50"
+                  className="inline-flex justify-center p-3 text-white bg-slate-700 hover:bg-slate-800 
+                    rounded-lg transition-all duration-300 disabled:opacity-50"
                 >
-                  <Send className="w-4 h-4" />
+                  <Send className="w-5 h-5" />
                 </button>
               </form>
             </div>

@@ -19,6 +19,10 @@ export const generateBillingPDF = async (billing, userProfileResponse) => {
       throw new Error('User profile data is missing');
     }
 
+    // Split patient info (format: "id-name")
+    const [patientId, ...patientNameParts] = billing.patient_name.split('-');
+    const patientName = patientNameParts.join('-'); // Rejoin in case name contains hyphens
+
     const headerImageUrl = userProfileResponse.data.header_image_url;
     const gst_number = userProfileResponse.data.gst_number;
     console.log('Header Image URL:', headerImageUrl);
@@ -59,9 +63,10 @@ export const generateBillingPDF = async (billing, userProfileResponse) => {
              <!-- Patient Info - Left Side -->
              <div>
                <h3 style="font-size: 1.25rem; font-weight: 600; margin-bottom: 1rem; color: #000000;">Patient Information</h3>
-               <p style="margin-bottom: 0.5rem; color: #000000;"><span style="font-weight: 600;">Name:</span> ${billing.patient_name}</p>
+               <p style="margin-bottom: 0.5rem; color: #000000;"><span style="font-weight: 600;">Patient ID:</span> ${patientId}</p>
+               <p style="margin-bottom: 0.5rem; color: #000000;"><span style="font-weight: 600;">Name:</span> ${patientName}</p>
              </div>
- 
+      
              <!-- Invoice Details - Right Side -->
              <div style="text-align: right;">
                <h2 style="font-size: 1.5rem; font-weight: bold; margin-bottom: 1rem; color: #000000;">INVOICE</h2>

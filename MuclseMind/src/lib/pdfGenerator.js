@@ -117,8 +117,7 @@ export const generatePDF = async (data, userProfileResponse) => {
         </div>
 
         <!-- Footer -->
-        <div style="width: 100%; height: 70mm; position: absolute; bottom: 0;">
-          <div style="width: 100%; height: 1mm; background-color: #000;"></div>
+        <div style="width: 100%; height: 65mm; position: absolute; bottom: 0;">
           <img src="${footerImageUrl}" style="width: 100%; height: 100%; object-fit: cover;" />
         </div>
       `;
