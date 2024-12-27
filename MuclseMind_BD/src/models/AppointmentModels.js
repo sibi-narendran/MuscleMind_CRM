@@ -73,10 +73,19 @@ const updateAppointment = async (id, updatedData) => {
   const { data, error } = await supabase
     .from('appointments')
     .update(updatedData)
-    .eq('id', id);
+    .eq('id', id)
+    .select()
+    .single();
 
-  if (error) throw error;
-  return data;
+  if (error) {
+    throw error;
+  }
+
+  return {
+    success: true,
+    data: data,
+    message: 'Appointment updated successfully'
+  };
 };
 
 const deleteAppointment = async (id) => {

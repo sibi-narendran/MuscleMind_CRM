@@ -15,20 +15,23 @@ const { Option } = Select;
 const capitalize = (str) => str.charAt(0).toUpperCase() + str.slice(1);
 const ClinicInfo = () => {
   const [clinicData, setClinicData] = useState({
-    name: '',
-    clinic_name: '',
-    address: '', 
+    username: '',
+    email: '',
+    phoneNumber: '',
+    clinicName: '',
+    address: '',
     state: '',
     city: '',
     pincode: '',
-    phone: '',
-    email: '',
-    GST_Number: '',
-    License_Number: '',
+    gst_number: '',
+    license_number: '',
     socialMedia: {
       facebook: '',
       instagram: '',
     },
+    gmapLink: '',
+    header_image_url: '',
+    footer_image_url: ''
   });
 
   const [teamMembers, setTeamMembers] = useState();
@@ -66,18 +69,11 @@ const ClinicInfo = () => {
   useEffect(() => {
     const fetchClinicData = async () => {
       try {
-        // Fetch clinic info
         const clinicResponse = await clinicInfo();
-        if (!clinicResponse.success) {
+        if (clinicResponse.success) {
+          setClinicData(clinicResponse.data);
+        } else {
           message.error('Failed to fetch clinic data');
-          return;
-        }
-
-        // Fetch operating hours
-        const hoursResponse = await getOperatingHours();
-        if (!hoursResponse.success) {
-          message.error('Failed to fetch operating hours');
-          return;
         }
       } catch (error) {
         console.error('Error in fetchClinicData:', error);
@@ -464,7 +460,7 @@ const ClinicInfo = () => {
         </Button>
       </div>
       <div className="space-y-2">
-        <p><strong>Name:</strong> {clinicData.username}</p>
+        <p><strong>Doctor Name:</strong> {clinicData.username}</p>
         <p><strong>Clinic Name:</strong> {clinicData.clinicName}</p>
         <p><strong>Address:</strong> {clinicData.address}</p>
         <p><strong>State:</strong> {clinicData.state}</p>
@@ -472,8 +468,14 @@ const ClinicInfo = () => {
         <p><strong>Pincode:</strong> {clinicData.pincode}</p>
         <p><strong>Phone:</strong> {clinicData.phoneNumber}</p>
         <p><strong>Email:</strong> {clinicData.email}</p>
-        <p><strong>GST Number:</strong> {clinicData.gst_number}</p>
-        <p><strong>License Number:</strong> {clinicData.license_number}</p>
+        <p><strong>GST Number:</strong> {clinicData.gst_number || 'Not provided'}</p>
+        <p><strong>License Number:</strong> {clinicData.license_number || 'Not provided'}</p>
+        <p><strong>Social Media:</strong></p>
+        <ul className="ml-4">
+          <li><strong>Facebook:</strong> <a href={clinicData.socialMedia?.facebook} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">{clinicData.socialMedia?.facebook}</a></li>
+          <li><strong>Instagram:</strong> <a href={clinicData.socialMedia?.instagram} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">{clinicData.socialMedia?.instagram}</a></li>
+        </ul>
+        <p><strong>Google Maps:</strong> <a href={clinicData.gmapLink} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">View Location</a></p>
       </div>
     </section>
   );

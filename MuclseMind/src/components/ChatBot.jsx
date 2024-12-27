@@ -86,11 +86,14 @@ const ChatBot = () => {
 
   return (
     <>
-      {/* Chat Toggle Button - Added responsive classes */}
+      {/* Chat Toggle Button - Added bounce animation */}
       <button
         ref={buttonRef}
         onClick={() => setIsOpen(!isOpen)}
-        className="fixed bottom-4 right-7 inline-flex items-center justify-center text-sm font-medium rounded-full w-14 h-14 bg-gradient-to-r from-slate-800 to-indigo-900 hover:from-slate-900 hover:to-indigo-950 shadow-lg transition-all duration-300"
+        className="fixed bottom-4 right-7 inline-flex items-center justify-center text-sm font-medium 
+          rounded-full w-14 h-14 bg-gradient-to-r from-slate-800 to-indigo-900 
+          hover:from-slate-900 hover:to-indigo-950 shadow-lg transition-all duration-300
+          animate-bounce-slow"
         type="button"
         aria-haspopup="dialog"
         aria-expanded={isOpen}

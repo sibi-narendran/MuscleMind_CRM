@@ -1,9 +1,23 @@
-const DashboardStatsModel = require('../models/DashboardStatsModel');
+const {
+  getDashboardStatsModel,
+  getPatientGrowthModel,
+  getTodayAppointmentsModel
+} = require("../models/DashboardStatsModel");
 
-const getDashboardStats = async (user) => {
-  // Pass user details to the model
-  const stats = await DashboardStatsModel.getDashboardStats(user);
-  return stats;
+const getDashboardStats = async (userId) => {
+  return await getDashboardStatsModel(userId);
 };
 
-module.exports = { getDashboardStats };
+const getPatientGrowth = async (userId) => {
+  return await getPatientGrowthModel(userId);
+};
+
+const getTodayAppointments = async (userId) => {
+  return await getTodayAppointmentsModel(userId);
+};
+
+module.exports = {
+  getDashboardStats,
+  getPatientGrowth,
+  getTodayAppointments
+};

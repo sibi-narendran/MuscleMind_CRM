@@ -33,7 +33,7 @@ const Prescriptions = () => {
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [selectedPrescription, setSelectedPrescription] = useState(null);
-  const [isGeneratingPrescription, setIsGeneratingPrescription] = useState(false);
+  const [generatingPrescriptions, setGeneratingPrescriptions] = useState({});
 
   const fetchPrescriptions = async () => {
     try {
@@ -125,20 +125,21 @@ const Prescriptions = () => {
       date: prescription.date
     };
 
-    setIsGeneratingPrescription(true);
+    setGeneratingPrescriptions(prev => ({ ...prev, [prescription.id]: true }));
+    
     try {
       const response = await generatePrescription(prescription.id, prescriptionData); 
       if (response.success) {
         message.success('prescription medicine generated successfully');
-        fetchPrescriptions(); // Refresh the list
+        fetchPrescriptions();
       } else {
         message.error(response.message || 'Failed to generate medicine');
       }
     } catch (error) {
       console.error('Error generating medicine:', error);
-      message.error('Error generating medicine');
+      message.error('No medications were suggested by AI');
     } finally {
-      setIsGeneratingPrescription(false);
+      setGeneratingPrescriptions(prev => ({ ...prev, [prescription.id]: false }));
     }
   };
 
@@ -151,6 +152,7 @@ const Prescriptions = () => {
       title: 'Prescription No',
       dataIndex: 'prescription_no',
       key: 'prescription_no',
+      responsive: ['md'],
     },
     {
       title: 'Patient Name',
@@ -162,9 +164,10 @@ const Prescriptions = () => {
         record.patient_name.toLowerCase().includes(value.toLowerCase()),
     },
     {
-      title: 'Treatment Name',
+      title: 'Treatment',
       dataIndex: 'treatment_name',
       key: 'treatment_name',
+      responsive: ['sm'],
       filteredValue: [searchTerm],
       onFilter: (value, record) => 
         record.treatment_name && 
@@ -175,6 +178,7 @@ const Prescriptions = () => {
       dataIndex: 'date',
       key: 'date',
       render: (date) => new Date(date).toLocaleDateString(),
+      responsive: ['sm'],
     },
     {
       title: 'Medicines',
@@ -202,9 +206,9 @@ const Prescriptions = () => {
             <button
               onClick={() => handleGeminiClick(prescription)}
               className="p-1.5 rounded-lg text-blue-600 hover:bg-blue-100 active:bg-blue-200 transition-colors duration-200"
-              disabled={isGeneratingPrescription}
+              disabled={generatingPrescriptions[prescription.id]}
             >
-              {isGeneratingPrescription ? (
+              {generatingPrescriptions[prescription.id] ? (
                 <Spin size="small" />
               ) : (
                 <img 
@@ -233,10 +237,10 @@ const Prescriptions = () => {
   ];
 
   return (
-    <div className="p-6">
+    <div className="p-2 sm:p-6">
       <Card className="bg-white dark:bg-boxdark">
-        <div className="flex justify-between items-center mb-6">
-          <Title level={2} className="dark:text-white">Prescriptions</Title>
+        <div className="flex flex-col sm:flex-row justify-between items-center mb-6 gap-4">
+          <Title level={2} className="dark:text-white text-xl sm:text-2xl m-0">Prescriptions</Title>
           <Button type="primary" icon={<PlusOutlined />} onClick={handleOpenAddForm}>
             New Prescription
           </Button>
@@ -249,16 +253,27 @@ const Prescriptions = () => {
             enterButton={<SearchOutlined />}
             size="small"
             onChange={(e) => setSearchTerm(e.target.value)}
-            style={{ width: 200 }}
+            className="w-full sm:w-auto"
+            style={{ maxWidth: '100%', width: '100%', minWidth: 200 }}
           />
         </div>
 
-        <Table
-          columns={columns}
-          dataSource={prescriptions}
-          rowKey="id"
-          pagination={{ pageSize: 10, showSizeChanger: true, showQuickJumper: true }}
-        />
+        <div className="overflow-x-auto">
+          <Table
+            columns={columns}
+            dataSource={prescriptions}
+            rowKey="id"
+            pagination={{ 
+              pageSize: 10, 
+              showSizeChanger: true, 
+              showQuickJumper: true,
+              responsive: true,
+              size: 'small'
+            }}
+            scroll={{ x: 'max-content' }}
+            size="small"
+          />
+        </div>
       </Card>
       
       <Modal

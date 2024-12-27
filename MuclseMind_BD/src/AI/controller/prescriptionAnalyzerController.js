@@ -26,7 +26,7 @@ const generatePrescription = async (req, res) => {
   } catch (error) {
     console.error('Error in generatePrescription:', error);
     res.status(500).json(
-      createResponse(false, 'Error updating prescription medicines', null, error.message)
+      createResponse(false, 'No medications were suggested', null, error.message)
     );
   }
 };

@@ -118,15 +118,9 @@ Appointment completed for:
           to: appointmentData.patient_phone,
           from: process.env.TWILIO_PHONE_NUMBER
         });
-        notificationResults.patient.sms = patientSMS;
-        console.log('✅ Patient SMS sent successfully:', {
-          to: appointmentData.patient_phone,
-          sid: patientSMS.sid,
-          status: patientSMS.status
-        });
+        console.log('✅ Patient SMS sent:', patientSMS.sid);
       } catch (error) {
-        console.error('❌ Failed to send patient SMS:', error.message);
-        notificationResults.patient.sms = error;
+        console.error('❌ Patient SMS failed:', error.message);
       }
 
       // WhatsApp to patient
@@ -136,15 +130,9 @@ Appointment completed for:
           to: `whatsapp:${appointmentData.patient_phone}`,
           from: `whatsapp:${process.env.TWILIO_WHATSAPP_NUMBER}`
         });
-        notificationResults.patient.whatsapp = patientWhatsApp;
-        console.log('✅ Patient WhatsApp sent successfully:', {
-          to: appointmentData.patient_phone,
-          sid: patientWhatsApp.sid,
-          status: patientWhatsApp.status
-        });
+        console.log('✅ Patient WhatsApp sent:', patientWhatsApp.sid);
       } catch (error) {
-        console.error('❌ Failed to send patient WhatsApp:', error.message);
-        notificationResults.patient.whatsapp = error;
+        console.error('❌ Patient WhatsApp failed:', error.message);
       }
     }
 
@@ -159,15 +147,9 @@ Appointment completed for:
           to: appointmentData.doctor_phone,
           from: process.env.TWILIO_PHONE_NUMBER
         });
-        notificationResults.doctor.sms = doctorSMS;
-        console.log('✅ Doctor SMS sent successfully:', {
-          to: appointmentData.doctor_phone,
-          sid: doctorSMS.sid,
-          status: doctorSMS.status
-        });
+        console.log('✅ Doctor SMS sent:', doctorSMS.sid);
       } catch (error) {
-        console.error('❌ Failed to send doctor SMS:', error.message);
-        notificationResults.doctor.sms = error;
+        console.error('❌ Doctor SMS failed:', error.message);
       }
 
       // WhatsApp to doctor
@@ -177,15 +159,9 @@ Appointment completed for:
           to: `whatsapp:${appointmentData.doctor_phone}`,
           from: `whatsapp:${process.env.TWILIO_WHATSAPP_NUMBER}`
         });
-        notificationResults.doctor.whatsapp = doctorWhatsApp;
-        console.log('✅ Doctor WhatsApp sent successfully:', {
-          to: appointmentData.doctor_phone,
-          sid: doctorWhatsApp.sid,
-          status: doctorWhatsApp.status
-        });
+        console.log('✅ Doctor WhatsApp sent:', doctorWhatsApp.sid);
       } catch (error) {
-        console.error('❌ Failed to send doctor WhatsApp:', error.message);
-        notificationResults.doctor.whatsapp = error;
+        console.error('❌ Doctor WhatsApp failed:', error.message);
       }
     }
 

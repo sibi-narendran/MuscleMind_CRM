@@ -119,14 +119,14 @@ const fetchAppointments = async (userId) => {
   return await getAppointments(userId);
 };
 
-const modifyAppointment = async (id, updatedData, userId) => {
+const modifyAppointment = async (id, updatedData) => {
   try {
     // Ensure proper data types
     const sanitizedData = {
       ...updatedData,
       patient_id: updatedData.patient_id?.toString(),
       treatment_id: Number(updatedData.treatment_id),
-      user_id: userId?.toString(),
+      user_id: updatedData.user_id?.toString(),
       duration: Number(updatedData.duration)
     };
 
@@ -134,8 +134,6 @@ const modifyAppointment = async (id, updatedData, userId) => {
     if (!sanitizedData.patient_id || !sanitizedData.treatment_id) {
       throw new Error('Missing required fields');
     }
-
-    // Perform your validations here...
 
     // Update the appointment with sanitized data
     const result = await updateAppointment(id, sanitizedData);
@@ -149,7 +147,11 @@ const modifyAppointment = async (id, updatedData, userId) => {
 
   } catch (error) {
     console.error('Error in modifyAppointment:', error);
-    throw error;
+    return {
+      success: false,
+      message: 'Failed to update appointment',
+      error: error.message
+    };
   }
 };
 

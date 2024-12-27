@@ -80,7 +80,8 @@ const Settings = () => {
 
     detectPlatform();
 
-    const   handleBeforeInstallPrompt = (e) => {
+    // Handle PWA install prompt
+    const handleBeforeInstallPrompt = (e) => {
       e.preventDefault();
       setDeferredPrompt(e);
       setIsInstallable(true);
@@ -88,15 +89,17 @@ const Settings = () => {
 
     window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
 
-    // Check if the app is already installed
-    if (window.matchMedia('(display-mode: standalone)').matches) {
-      setIsInstallable(false);
-    } else {
-      setIsInstallable(true); // Show button by default
-    }
+    // Check if app is already installed
+    const checkInstalled = () => {
+      if (window.matchMedia('(display-mode: standalone)').matches) {
+        setIsInstallable(true);
+      }
+    };
+
+    checkInstalled();
 
     return () => {
-      window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+        window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
     };
   }, []);
 
@@ -136,16 +139,28 @@ const Settings = () => {
     }
   };
 
-  const handleInstall = () => {
-    message.info({
-      content: getInstructions(),
-      duration: 10,
-      style: {
-        whiteSpace: 'pre-line',
-        marginTop: '20vh'
+  const handleInstall = async () => {
+    if (platform === 'iOS' || platform === 'Android') {
+      setIsModalVisible(true);
+    } else if (deferredPrompt) {
+      try {
+        deferredPrompt.prompt();
+        const { outcome } = await deferredPrompt.userChoice;
+        if (outcome === 'accepted') {
+          setIsInstallable(false);
+        }
+        setDeferredPrompt(null);
+      } catch (error) {
+        console.error('Install error:', error);
+        message.error('Failed to install app');
       }
-    });
+    } else {
+      message.info(getInstructions(), 10);
+    }
   };
+
+  // Only show install button if the app is installable or on mobile platforms
+  const showInstallButton = isInstallable || platform === 'iOS' || platform === 'Android';
 
   const handlePlanSelection = (plan) => {
     if (plan.comingSoon) {
@@ -170,14 +185,16 @@ const Settings = () => {
 
   return (
     <div className="min-h-screen bg-navy-900 text-white py-20 px-4">
-      <Button
-        type="primary"
-        icon={getInstallIcon()}
-        onClick={handleInstall}
-        className="bg-meta-5 hover:bg-meta-4 fixed top-4 left-4 z-50"
-      >
-        Install {platform === 'Desktop' ? 'App' : `for ${platform}`}
-      </Button>
+      {showInstallButton && (
+        <Button
+          type="primary"
+          icon={getInstallIcon()}
+          onClick={handleInstall}
+          className="bg-meta-5 hover:bg-meta-4 fixed top-4 left-4 z-50"
+        >
+          Install {platform === 'Desktop' ? 'App' : `for ${platform}`}
+        </Button>
+      )}
 
       <Modal
         title={`Install Instructions for ${platform}`}
@@ -192,7 +209,7 @@ const Settings = () => {
       >
         <div className="py-4">
           <p className="mb-4">Follow these steps to install the app:</p>
-          {getInstructions()}
+          <pre className="whitespace-pre-line">{getInstructions()}</pre>
         </div>
       </Modal>
 

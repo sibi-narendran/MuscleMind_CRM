@@ -22,6 +22,16 @@ const Dashboard = () => {
       },
     ],
   });
+  const [appointmentStats, setAppointmentStats] = useState({
+    scheduled: 0,
+    completed: 0,
+    cancelled: 0
+  });
+  const [todayAppointmentStats, setTodayAppointmentStats] = useState({
+    scheduled: 0,
+    completed: 0,
+    cancelled: 0
+  });
 
   useEffect(() => {
     const fetchDashboardStats = async () => {
@@ -29,73 +39,125 @@ const Dashboard = () => {
         const response = await getDashboardStats();
         if (response.success) {
           setStats([
-            { icon: Calendar, label: "Today's Appointments", value: response.data.todayAppointments || 0, change: '3 pending' },
-            { icon: Users, label: 'New Patients', value: response.data.newPatients || 0, change: '+10%' },
-            { icon: Activity, label: 'Present Staff Members', value: response.data.presentStaff || 0, change: '3 on leave' },
-            { icon: CheckCircle, label: 'Appointments Completed', value: response.data.completedAppointments || 0, change: '+5% from last month' },
+            { 
+              icon: Calendar, 
+              label: "Today's Appointments", 
+              value: response.data.todayAppointments || 0, 
+              change: `${response.data.pendingAppointments || 0} pending` 
+            },
+            { 
+              icon: Users, 
+              label: 'New Patients', 
+              value: response.data.newPatients || 0, 
+              change: `${response.data.patientGrowthRate || 0}%` 
+            },
+            { 
+              icon: Activity, 
+              label: 'Present Staff Members', 
+              value: response.data.presentStaff || 0, 
+              change: `${response.data.staffOnLeave || 0} on leave` 
+            },
+            { 
+              icon: CheckCircle, 
+              label: 'Appointments Completed', 
+              value: response.data.completedAppointments || 0, 
+              change: `${response.data.completionRate || 0}% from last month` 
+            },
           ]);
+
+          setAppointmentStats({
+            scheduled: response.data.appointmentStats?.scheduled || 0,
+            completed: response.data.appointmentStats?.completed || 0,
+            cancelled: response.data.appointmentStats?.cancelled || 0
+          });
         } else {
           console.error('Failed to fetch stats:', response.message);
+          message.error('Failed to load dashboard statistics');
         }
       } catch (error) {
         console.error('Error fetching dashboard stats:', error);
+        message.error('Error loading dashboard data');
       }
     };
 
+    const fetchPatientGrowthData = async () => {
+      try {
+        const response = await getDashboardPatientGrowth();
+        if (response.success) {
+          const months = Object.keys(response.data.patientGrowth || {}).sort();
+          const counts = months.map(month => response.data.patientGrowth[month]);
+
+          setPatientGrowthData({
+            labels: months,
+            datasets: [{
+              label: 'Patient Growth',
+              data: counts,
+              fill: false,
+              borderColor: 'rgb(75, 192, 192)',
+              tension: 0.1
+            }]
+          });
+        } else {
+          console.error('Failed to fetch patient growth data:', response.message);
+        }
+      } catch (error) {
+        console.error('Error fetching patient growth data:', error);
+      }
+    };
+
+    const fetchTodayAppointments = async () => {
+      try {
+        setIsLoading(true);
+        const response = await getTodayAppointments();
+        
+        if (response.success) {
+          setUpcomingAppointments(response.data.map(apt => ({
+            id: apt.id,
+            appointment_id: apt.appointment_id,
+            patient_name: apt.patient_name,
+            treatment_name: apt.treatment_name,
+            date: apt.date,
+            time: apt.time,
+            status: apt.status
+          })));
+
+          const todayStats = response.data.reduce((acc, apt) => {
+            const status = apt.status.toLowerCase();
+            acc[status] = (acc[status] || 0) + 1;
+            return acc;
+          }, {});
+
+          setTodayAppointmentStats({
+            scheduled: todayStats.scheduled || 0,
+            completed: todayStats.completed || 0,
+            cancelled: todayStats.cancelled || 0
+          });
+        } else {
+          console.error('Failed to fetch appointments:', response.message);
+          message.error('Failed to fetch today\'s appointments');
+        }
+      } catch (error) {
+        console.error('Error fetching appointments:', error);
+        message.error('Error loading appointments');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    // Initial data fetch
     fetchDashboardStats();
-  }, []);
-
-  useEffect(() => {
     fetchTodayAppointments();
-  }, []);
-
-  useEffect(() => {
     fetchPatientGrowthData();
+
+    // Optional: Set up refresh interval
+    const refreshInterval = setInterval(() => {
+      fetchDashboardStats();
+      fetchTodayAppointments();
+      fetchPatientGrowthData();
+    }, 300000); // Refresh every 5 minutes
+
+    return () => clearInterval(refreshInterval);
   }, []);
-
-  const fetchTodayAppointments = async () => {
-    try {
-      setIsLoading(true);
-      const response = await getTodayAppointments();
-      console.log('Today\'s appointments response:', response);
-
-      if (response.success) {
-        setUpcomingAppointments(response.data);
-        console.log('Fetched appointments:', response.data);
-      } else {
-        console.error('Failed to fetch appointments:', response.message);
-        message.error('Failed to fetch today\'s appointments');
-      }
-    } catch (error) {
-      console.error('Error fetching appointments:', error);
-      message.error('Error loading appointments');
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const fetchPatientGrowthData = async () => {
-    try {
-      const response = await getDashboardPatientGrowth();
-      if (response.success) {
-        // Extract months and counts from the response data
-        const months = Object.keys(response.data.patientGrowth).sort();
-        const counts = months.map(month => response.data.patientGrowth[month]);
-
-        setPatientGrowthData({
-          labels: months,
-          datasets: [{
-            ...patientGrowthData.datasets[0],
-            data: counts
-          }]
-        });
-      } else {
-        console.error('Failed to fetch patient growth data:', response.message);
-      }
-    } catch (error) {
-      console.error('Error fetching patient growth data:', error);
-    }
-  };
 
   // Calculate the counts of each appointment status
   const statusCounts = appointments.reduce((acc, apt) => {
@@ -103,24 +165,24 @@ const Dashboard = () => {
     return acc;
   }, {});
 
-  const appointmentsOverviewData = {
+  const todayAppointmentsOverviewData = {
     labels: ['Scheduled', 'Completed', 'Cancelled'],
     datasets: [
       {
-        label: 'Appointments Overview',
+        label: "Today's Appointments Overview",
         data: [
-          statusCounts['Scheduled'] || 0,
-          statusCounts['Completed'] || 0,
-          statusCounts['Cancelled'] || 0
+          todayAppointmentStats.scheduled,
+          todayAppointmentStats.completed,
+          todayAppointmentStats.cancelled
         ],
         backgroundColor: [
-          'rgba(75, 192, 192, 0.2)',
-          'rgba(54, 162, 235, 0.2)',
-          'rgba(255, 99, 132, 0.2)'
+          'rgba(255, 206, 86, 0.2)',  // Yellow for scheduled
+          'rgba(75, 192, 192, 0.2)',   // Green for completed
+          'rgba(255, 99, 132, 0.2)'    // Red for cancelled
         ],
         borderColor: [
+          'rgba(255, 206, 86, 1)',
           'rgba(75, 192, 192, 1)',
-          'rgba(54, 162, 235, 1)',
           'rgba(255, 99, 132, 1)'
         ],
         borderWidth: 1,
@@ -166,10 +228,37 @@ const Dashboard = () => {
 
         <div className="bg-meta-2 dark:bg-meta-4 dark:border-strokedark dark:text-white p-6 rounded-xl shadow-sm border border-gray-100">
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Appointments Overview</h2>
-            <BarChart className="h-5 w-5 text-gray-400 dark:text-white" />
+            <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Today's Appointments Overview</h2>
+            <PieChart className="h-5 w-5 text-gray-400 dark:text-white" />
           </div>
-          <Bar data={appointmentsOverviewData} />
+          <Bar 
+            data={todayAppointmentsOverviewData} 
+            options={{
+              responsive: true,
+              plugins: {
+                legend: {
+                  position: 'bottom',
+                  labels: {
+                    color: 'white'
+                  }
+                }
+              },
+              scales: {
+                y: {
+                  beginAtZero: true,
+                  ticks: {
+                    color: 'white',
+                    stepSize: 1
+                  }
+                },
+                x: {
+                  ticks: {
+                    color: 'white'
+                  }
+                }
+              }
+            }}
+          />
         </div>
       </div>
 
@@ -218,11 +307,11 @@ const Dashboard = () => {
                       <span
                         className={`px-2 py-1 text-xs font-medium rounded-full ${
                           apt.status === 'Scheduled'
-                            ? 'text-meta-6 bg-meta-4 dark:bg-green-900'
+                            ? 'text-meta-6 bg-meta-4 '
                             : apt.status === 'Completed'
-                            ? 'text-meta-3 bg-meta-4 dark:bg-yellow-900'
+                            ? 'text-meta-3 bg-meta-4 '
                             : apt.status === 'Cancelled'
-                            ? 'text-meta-1 bg-meta-4 dark:bg-red-900'
+                            ? 'text-meta-1 bg-meta-4'
                             : ''
                         }`}
                       >

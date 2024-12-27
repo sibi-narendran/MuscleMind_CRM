@@ -1,33 +1,54 @@
-const { getDashboardStatsModel, getPatientGrowth } = require('../models/DashboardStatsModel');
-const { createResponse } = require('../utils/responseUtil');
+const {
+  getDashboardStatsModel,
+  getPatientGrowthModel,
+  getTodayAppointmentsModel
+} = require("../models/DashboardStatsModel");
+const { createResponse } = require("../utils/responseUtil");
 
 const getDashboardStats = async (req, res) => {
   try {
-    const stats = await getDashboardStatsModel(req.user);
-    res.status(200).json(createResponse(true, 'Stats fetched successfully', stats));
+    const userId = req.user.id;
+    const result = await getDashboardStatsModel(userId);
+    if (result.success) {
+      return res.json(createResponse(true, "Dashboard stats fetched successfully", result.data));
+    }
+    return res.status(400).json(createResponse(false, "Failed to fetch dashboard stats", null, result.error));
   } catch (error) {
-    console.error('Error fetching dashboard stats:', error);
-    res.status(500).json(createResponse(false, 'Failed to fetch stats', null, error.message));
+    console.error("Dashboard Stats Controller Error:", error);
+    return res.status(500).json(createResponse(false, "Error in dashboard stats controller", null, error.message));
   }
 };
 
-const getDashboardData = async (req, res) => {
-  if (!req.user) {
-    return res.status(401).json(createResponse(false, "User not authenticated"));
-  }
-
+const getPatientGrowth = async (req, res) => {
   try {
-    const stats = await getDashboardStatsModel(req.user);
-    const patientGrowth = await getPatientGrowth(req.user.id);
-
-    res.status(200).json(createResponse(true, 'Dashboard data fetched successfully', {
-      stats,
-      patientGrowth
-    }));
+    const userId = req.user.id;
+    const result = await getPatientGrowthModel(userId);
+    if (result.success) {
+      return res.json(createResponse(true, "Patient growth data fetched successfully", result.data));
+    }
+    return res.status(400).json(createResponse(false, "Failed to fetch patient growth data", null, result.error));
   } catch (error) {
-    console.error('Error fetching dashboard data:', error);
-    res.status(500).json(createResponse(false, 'Failed to fetch dashboard data', null, error.message));
+    console.error("Patient Growth Controller Error:", error);
+    return res.status(500).json(createResponse(false, "Error in patient growth controller", null, error.message));
   }
 };
 
-module.exports = { getDashboardStats, getDashboardData }; 
+const getTodayAppointments = async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const result = await getTodayAppointmentsModel(userId);
+    if (result.success) {
+      return res.json(createResponse(true, "Today's appointments fetched successfully", result.data));
+    }
+    return res.status(400).json(createResponse(false, "Failed to fetch today's appointments", null, result.error));
+  } catch (error) {
+    console.error("Today's Appointments Controller Error:", error);
+    return res.status(500).json(createResponse(false, "Error in today's appointments controller", null, error.message));
+  }
+};
+
+module.exports = {
+  getDashboardStats,
+  getPatientGrowth,
+  getTodayAppointments
+};
