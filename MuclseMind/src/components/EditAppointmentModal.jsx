@@ -166,7 +166,7 @@ const EditAppointmentModal = ({ visible, onClose, onEdit, appointment }) => {
                 key={treatment.treatment_id} 
                 value={treatment.treatment_id}
               >
-                {`${treatment.category} - ${treatment.procedure_name}`}
+                {`${treatment.procedure_name}`}
               </Option>
             ))}
           </Select>

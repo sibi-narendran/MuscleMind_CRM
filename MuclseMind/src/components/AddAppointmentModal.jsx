@@ -65,7 +65,7 @@ const AddAppointmentModal = ({ visible, onClose, onAdd }) => {
       const selectedDoctor = carePersons.find(doctor => doctor.name === values.care_person);
       const selectedTreatment = treatments.find(treatment => treatment.treatment_id === values.treatment);
       
-      const treatmentName = selectedTreatment ? `${selectedTreatment.category} - ${selectedTreatment.procedure_name}` : '';
+      const treatmentName = selectedTreatment ? `${selectedTreatment.procedure_name}` : '';
 
       const timeValue = typeof values.time === 'string' 
         ? moment(values.time, 'HH:mm').format('HH:mm')
@@ -211,7 +211,7 @@ const AddAppointmentModal = ({ visible, onClose, onAdd }) => {
             >
               {treatments.map((treatment) => (
                 <Option key={treatment.treatment_id} value={treatment.treatment_id}>
-                  {`${treatment.category} - ${treatment.procedure_name}`}
+                  {`${treatment.procedure_name}`}
                 </Option>
               ))}
             </Select>
