@@ -16,6 +16,7 @@ const CreateAccount = () => {
   const [otpSent, setOtpSent] = useState(false);
   const [otp, setOtp] = useState(new Array(6).fill(""));
   const [otpLoading, setOtpLoading] = useState(false);
+  const [selectedTitle, setSelectedTitle] = useState('dr');
 
   const initialValues = {
     username: "",
@@ -101,9 +102,9 @@ const CreateAccount = () => {
 
     try {
       const response = await userRegister({
-        username: values.username,
+        username: `${selectedTitle.toUpperCase()}. ${values.username}`,
         email: values.email,
-        clinicName:values.clinicName,
+        clinicName: values.clinicName,
         phoneNumber: values.phoneNumber,
         password: values.password,
         otp: otp.join(""),
@@ -154,9 +155,9 @@ const CreateAccount = () => {
                 </label>
                 <div className="mt-2 flex">
                   <Select
-                    defaultValue="mr"
-                    className="w-1/8"
-                    onChange={(value) => setFieldValue("title", value)}
+                    value={selectedTitle}
+                    className="w-20"
+                    onChange={(value) => setSelectedTitle(value)}
                   >
                     <Option value="mr">Mr</Option>
                     <Option value="mrs">Mrs</Option>
@@ -166,7 +167,7 @@ const CreateAccount = () => {
                     type="text"
                     id="username"
                     name="username"
-                    className="flex-1 block w-full rounded-r-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm"
+                    className="flex-1 block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm"
                   />
                 </div>
                 <ErrorMessage
