@@ -5,6 +5,7 @@ import { Formik, Form, Field, ErrorMessage } from "formik";
 import * as Yup from "yup";
 import { Select } from "antd";
 import { userRegister, otpVerify, sendOtp } from "../api.services/services";
+import cover from '../Images/background.jpg'
 
 const { Option } = Select;
 
@@ -122,10 +123,19 @@ const CreateAccount = () => {
   };
 
   return (
-    <div className="relative w-full h-screen flex items-center justify-center bg-gray-100">
-    
-      <div className="relative z-10 w-full max-w-md p-8 space-y-6 bg-white rounded shadow-md">
-        <h2 className="text-2xl font-bold text-center text-gray-900">
+    <div 
+      className="relative w-full h-screen flex items-center"
+      style={{
+        backgroundImage: `url(${cover})`,
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
+        backgroundRepeat: 'no-repeat'
+      }}
+    >
+      <div className="absolute inset-0 bg-black bg-opacity-50"></div>
+      
+      <div className="relative z-10 w-full max-w-md p-8 space-y-6 bg-opacity-90 backdrop-blur-md rounded-2xl shadow-xl ml-auto mr-8 sm:mr-16 lg:mr-24">
+        <h2 className="text-2xl font-bold text-center text-white">
           Create Account
         </h2>
         <Formik

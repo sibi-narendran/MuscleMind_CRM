@@ -4,6 +4,7 @@ import { message } from 'antd';
 import Loader from '../styles/Loader';
 import { userLogin } from '../api.services/services';
 import cover from '../Images/background.jpg'
+import Logo from '../../public/logo512.png';
 
 const Login = () => {
   const navigate = useNavigate();
@@ -58,8 +59,8 @@ const Login = () => {
               <div className="w-full max-w-sm">
                 <img 
                   className="mx-auto h-10 w-auto" 
-                  src="https://tailwindui.com/plus/img/logos/mark.svg?color=indigo&shade=600" 
-                  alt="Your Company" 
+                  src={Logo} 
+                  alt="MuclseMind" 
                 />
                 <h2 className="mt-10 text-center text-2xl font-bold tracking-tight text-white">
                   Sign in to your account
