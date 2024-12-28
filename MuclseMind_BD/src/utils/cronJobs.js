@@ -10,19 +10,32 @@ const supabase = createClient(supabaseUrl, supabaseKey);
 
 // Function to handle attendance data creation for all users
 async function createAttendanceDataForAllUsers() {
-  const { data: users, error } = await supabase
-    .from('users')
-    .select('id');
+  try {
+    const { data: users, error } = await supabase
+      .from('users')
+      .select('id');
 
-  if (error) {
-    console.error('Failed to fetch users:', error);
-    return;
+    if (error) {
+      console.error('Failed to fetch users:', error);
+      return;
+    }
+
+    // Process users sequentially to avoid overwhelming the database
+    for (const user of users) {
+      try {
+        const result = await StaffAttendancesServices.createAttendanceData(user.id);
+        console.log(`Attendance processing for user ${user.id}:`, result);
+      } catch (error) {
+        console.error(`Error processing attendance for user ${user.id}:`, error);
+      }
+    }
+  } catch (error) {
+    console.error('Error in createAttendanceDataForAllUsers:', error);
   }
-
-  users.forEach(user => {
-    StaffAttendancesServices.createAttendanceData(user.id);
-  });
 }
 
-// Schedule a job to run at 3:30 PM (15:30) every day for all users
-cron.schedule('00 16 * * *', createAttendanceDataForAllUsers); 
+// Schedule a job to run at 6:00 AM (06:00) every day for all users
+cron.schedule('0 6 * * *', createAttendanceDataForAllUsers, {
+  scheduled: true,
+  timezone: "Asia/Kolkata"
+}); 
