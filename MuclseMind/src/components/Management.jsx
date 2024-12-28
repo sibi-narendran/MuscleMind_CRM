@@ -24,6 +24,7 @@ const Management = () => {
   const [attendanceData, setAttendanceData] = useState([]);
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [currentDentalTeamId, setCurrentDentalTeamId] = useState(null);
+  const [responseMessage, setResponseMessage] = useState('');
 
   const handleDateChange = (date, dateString) => {
     setSelectedDate(dateString);
@@ -82,6 +83,7 @@ const Management = () => {
     const data = await fetchAttendances(selectedDate);
     if (data.success) {
       setStaff(data.data);
+      setResponseMessage(data.message);
     } else {
       console.error("Error fetching staff:", data.error);
       message.error("Failed to fetch staff data");
@@ -271,8 +273,8 @@ const Management = () => {
                     ))
                   ) : (
                     <tr>
-                      <td colSpan="6" className="text-center py-4">
-                        No data available
+                      <td colSpan="7" className="text-center pt-6 text-sm font-medium">
+                        {responseMessage || 'No data available'}
                       </td>
                     </tr>
                   )}

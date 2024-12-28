@@ -8,28 +8,22 @@ const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 const supabase = createClient(supabaseUrl, supabaseKey);
 
 const getAttendances = async (date, userId) => {
-  // Fetch the list of all staff members
-  const { data: staffData, error: staffError } = await supabase
-    .from('dental_team')
+  // First check if today is a holiday
+  const { data: holidayData, error: holidayError } = await supabase
+    .from('holidays')
     .select('*')
-    .eq('user_id', userId);
+    .eq('user_id', userId)
+    .eq('date', date);
 
-  if (staffError) {
-    return { error: staffError };
+  if (holidayError) {
+    return { error: holidayError };
   }
 
-  // Fetch the attendance data for the selected date
-  const { data: attendanceData, error: attendanceError } = await supabase
-    .from('staff_attendances')
-    .select('*, dental_team(doj)')
-    .eq('date', date)
-    .eq('user_id', userId);
-
-  if (attendanceError) {
-    return { error: attendanceError };
+  if (holidayData && holidayData.length > 0) {
+    return { message: `Today is a holiday: ${holidayData[0].name}`, data: [] };
   }
 
-  // Fetch the operating hours for the selected date
+  // Check operating hours for the day
   const dayOfWeek = moment(date).format('dddd').toLowerCase();
   const { data: operatingHoursData, error: operatingHoursError } = await supabase
     .from('operating_hours')
@@ -41,41 +35,40 @@ const getAttendances = async (date, userId) => {
     return { error: operatingHoursError };
   }
 
-  // Fetch the list of holidays
-  const { data: holidayData, error: holidayError } = await supabase
-    .from('holidays')
-    .select('*');
-
-  if (holidayError) {
-    return { error: holidayError };
+  // If clinic is closed or no operating hours set
+  if (!operatingHoursData || 
+      operatingHoursData.length === 0 || 
+      operatingHoursData[0].status === 'closed') {
+    return { message: 'The clinic is closed today.', data: [] };
   }
 
-  // Check if the operating hours status is closed or if the day is a holiday
-  if (operatingHoursData && operatingHoursData.length > 0 && operatingHoursData[0].status === 'closed' || holidayData.some(holiday => moment(holiday.date).isSame(moment(date), 'day'))) {    return { message: 'The clinic is closed today.' };
+  // Rest of your existing code for fetching staff and attendance data
+  const { data: staffData, error: staffError } = await supabase
+    .from('dental_team')
+    .select('*')
+    .eq('user_id', userId);
+
+  if (staffError) {
+    return { error: staffError };
   }
 
-  // Create attendance data for each staff member if it doesn't exist
-  for (const staffMember of staffData) {
-    if (!attendanceData.some(attendance => attendance.staff_member_id === staffMember.id)) {
-      const status = moment(staffMember.doj).isAfter(moment(date)) || holidayData.some(holiday => moment(holiday.date).isSame(moment(date), 'day')) || operatingHoursData[0].status === 'closed' ? 'Holiday' : 'Working';
-      await supabase
-        .from('staff_attendances')
-        .insert([{ date, staff_member_id: staffMember.id, attendance_status: status, user_id: userId }]);
-    }
+  // If no staff members found
+  if (!staffData || staffData.length === 0) {
+    return { message: 'No staff members found.', data: [] };
   }
 
-  // Fetch the updated attendance data
-  const { data: updatedAttendanceData, error: updatedAttendanceError } = await supabase
+  // Your existing attendance data fetching code
+  const { data: attendanceData, error: attendanceError } = await supabase
     .from('staff_attendances')
     .select('*, dental_team(doj)')
     .eq('date', date)
     .eq('user_id', userId);
 
-  if (updatedAttendanceError) {
-    return { error: updatedAttendanceError };
+  if (attendanceError) {
+    return { error: attendanceError };
   }
 
-  return { data: updatedAttendanceData };
+  return { data: attendanceData || [] };
 };
 
 const updateAttendanceStatus = async (id, status, userId) => {

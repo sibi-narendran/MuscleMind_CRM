@@ -6,15 +6,20 @@ const fetchAttendances = async (req, res) => {
     const { date } = req.params;
     const userId = req.user.userId;
     const result = await model.getAttendances(date, userId);
+    
     if (result.error) {
-        res.status(500).json(createResponse(false, 'Failed to fetch attendances', null, result.error));
-    } else {
-        if (result.data && result.data.length > 0) {
-            res.status(200).json(createResponse(true, 'Attendances fetched successfully', result.data));
-        } else {
-            res.status(200).json(createResponse(true, 'No attendances data for the given date', []));
-        }
+        return res.status(500).json(createResponse(false, 'Failed to fetch attendances', null, result.error));
     }
+    
+    if (result.message) {
+        return res.status(200).json(createResponse(true, result.message, result.data || []));
+    }
+    
+    if (!result.data || result.data.length === 0) {
+        return res.status(200).json(createResponse(true, 'No attendances data for the given date', []));
+    }
+    
+    return res.status(200).json(createResponse(true, 'Attendances fetched successfully', result.data));
 };
 
 const editAttendanceStatus = async (req, res) => {
