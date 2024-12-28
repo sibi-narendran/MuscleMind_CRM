@@ -288,25 +288,25 @@ const Billing = () => {
     return [
       {
         title: "Total Revenue",
-        value: `$${totalRevenue.toFixed(2)}`,
+        value: `₹${totalRevenue.toFixed(2)}`,
         trend: `${paidThisMonthCount} invoices paid`,
         trendColor: "text-green-600",
       },
       {
         title: "Outstanding",
-        value: `$${outstandingAmount.toFixed(2)}`,
+        value: `₹${outstandingAmount.toFixed(2)}`,
         trend: `${pendingCount} pending invoices`,
         trendColor: "text-red-600",
       },
       {
         title: "Paid This Month",
-        value: `$${thisMonthPaid.toFixed(2)}`,
+        value: `₹${thisMonthPaid.toFixed(2)}`,
         trend: `${paidThisMonthCount} payments received`,
         trendColor: "text-green-600",
       },
       {
         title: "Average Invoice",
-        value: `$${averageInvoice}`,
+        value: `₹${averageInvoice}`,
         trend: "Based on paid invoices",
         trendColor: "text-blue-600",
       },
@@ -545,16 +545,16 @@ const Billing = () => {
                         {formatDate(billing.date)}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-white">
-                        ${parseFloat(billing.cost || 0).toFixed(2)}
+                        ₹{parseFloat(billing.cost || 0).toFixed(2)}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
-                        <span className={`px-2 py-1 text-xs font-medium rounded-full ${getStatusColor(billing.invoice_status)}`}>
+                        <span className={`px-2 py-1 text-xs font-medium rounded-full ₹{getStatusColor(billing.invoice_status)}`}>
                           {billing.invoice_status}
                         </span>
                       </td>
                       <td className="px-4 py-2 whitespace-nowrap">
                         <div className="flex items-center gap-1 md:gap-2">
-                          <Tooltip 
+                          {/* <Tooltip 
                             title="AI Generator" 
                             placement="top" 
                             className="cursor-pointer"
@@ -575,7 +575,7 @@ const Billing = () => {
                                 />
                               )}
                             </button>
-                          </Tooltip>
+                          </Tooltip> */}
                           {renderDownloadButton(billing)}
                           <button
                             onClick={() => handleEditClick(billing)}

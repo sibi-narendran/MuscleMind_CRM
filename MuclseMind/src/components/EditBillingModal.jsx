@@ -149,7 +149,7 @@ const EditBillingModal = ({ isOpen, onClose, billing, onUpdate }) => {
                     value={treatment.cost}
                     onChange={(e) => handleTreatmentCostChange(index, e.target.value)}
                     className="w-24"
-                    prefix="$"
+                    prefix="₹"
                   />
                   <Button
                     type="text"
@@ -188,7 +188,7 @@ const EditBillingModal = ({ isOpen, onClose, billing, onUpdate }) => {
                       onClick={() => handleAddTreatment(treatment)}
                     >
                       <span>{treatment.procedure_name}</span>
-                      <span>${treatment.cost}</span>
+                      <span>₹{treatment.cost}</span>
                     </div>
                   ))}
                 </div>
@@ -210,7 +210,7 @@ const EditBillingModal = ({ isOpen, onClose, billing, onUpdate }) => {
                     placeholder="Cost"
                     value={customTreatment.cost}
                     onChange={(e) => setCustomTreatment(prev => ({ ...prev, cost: e.target.value }))}
-                    prefix="$"
+                    prefix="₹"
                   />
                   <div className="flex justify-end gap-2">
                     <Button onClick={() => setShowCustomForm(false)}>Cancel</Button>
@@ -223,7 +223,7 @@ const EditBillingModal = ({ isOpen, onClose, billing, onUpdate }) => {
 
           <div className="flex justify-between items-center pt-4 border-t">
             <div className="text-lg font-medium">
-              Total: ${selectedTreatments.reduce((sum, t) => sum + (parseFloat(t.cost) || 0), 0).toFixed(2)}
+              Total: ₹{selectedTreatments.reduce((sum, t) => sum + (parseFloat(t.cost) || 0), 0).toFixed(2)}
             </div>
             <div className="flex gap-2">
               <Button onClick={onClose}>Cancel</Button>

@@ -230,7 +230,7 @@ const AddInvoiceModal = ({ isOpen, onClose, onSuccess }) => {
           <Input
             value={totalCost.toFixed(2)}
             disabled
-            prefix="$"
+            prefix="₹"
           />
         </div>
       </div>

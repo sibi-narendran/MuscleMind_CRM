@@ -1036,7 +1036,7 @@ const renderAddHolidayModal = () => {
           <Input />
         </Form.Item>
         <Form.Item name="cost" label="Cost" rules={[{ required: true, message: 'Please enter a cost!' }]}>
-          <InputNumber prefix="$" />
+          <InputNumber prefix="₹" />
         </Form.Item>
         <Form.Item name="duration" label="Duration" rules={[{ required: true, message: 'Please select a duration!' }]}>
           <Select placeholder="Select duration">
@@ -1077,16 +1077,32 @@ const renderAddHolidayModal = () => {
           name: '', 
           brand: '', 
           dosage: { adult: '', child: '', infant: '' },
-          times: [], // New field for checkboxes
-          foodInstructions: [], // New field for checkboxes
-          specialNote: '' // New field
+          times: [],
+          foodInstructions: [],
+          specialNote: ''
         }}
         onFinish={handleAddOrEditMedication}
         layout="vertical"
       >
-        <Form.Item name="condition" label="Medical Condition" rules={[{ required: true, message: 'Please enter a medical condition!' }]}>
-          <Input />
+        <Form.Item 
+          name="condition" 
+          label="Medical Condition" 
+          rules={[{ required: true, message: 'Please select a medical condition!' }]}
+        >
+          <Select
+            showSearch
+            placeholder="Select a treatment procedure"
+            optionFilterProp="children"
+            filterOption={(input, option) =>
+              (option?.label ?? '').toLowerCase().includes(input.toLowerCase())
+            }
+            options={treatments.map(treatment => ({
+              value: treatment.procedure_name,
+              label: treatment.procedure_name
+            }))}
+          />
         </Form.Item>
+
         <Form.Item name="name" label="Medication Name" rules={[{ required: true, message: 'Please enter a medication name!' }]}>
           <Input />
         </Form.Item>
