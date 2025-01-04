@@ -1,0 +1,16 @@
+# Ignore environment files and PDFs
+/
+*.pdf
+
+# Python virtual environment
+.venv/
+__pycache__/
+*.pyc
+
+# IDE files
+.vscode/
+.idea/ 
+
+# Add .env files and Jupyter notebooks to .gitignore
+.env
+*.ipynb 

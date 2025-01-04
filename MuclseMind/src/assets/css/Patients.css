@@ -1,0 +1,99 @@
+.scrollbar-hide {
+  -ms-overflow-style: none;  /* IE and Edge */
+  scrollbar-width: none;     /* Firefox */
+}
+
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;             /* Chrome, Safari and Opera */
+}
+@media 
+only screen and (max-width: 425px),
+(min-device-width: 320px) and (max-device-width: 425px) {
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+
+  thead {
+    display: none; /* Keep headers visible */
+  }
+
+  tr {
+    display: flex;
+    flex-direction: column;
+    margin-bottom: 15px;
+    border: 1px solid #ccc;
+  }
+
+  th, td {
+    display: block;
+    padding: 10px;
+    text-align: left;
+    border-bottom: 1px solid #eee;
+  }
+
+  th {
+    background-color: #f2f2f2;
+    font-weight: bold;
+  }
+
+  td:before {
+    content: attr(data-label);
+    font-weight: bold;
+    display: inline-block;
+    width: 100px; /* Adjust width as needed */
+  }
+
+  .mtb{
+    display: flex;
+  }
+
+  .mtb-btn{
+    font-size: 12px;
+  }
+
+  .small-button {
+    margin-left: 10px;
+    font-size: 12px; /* Smaller font size */
+    border-radius: 4px;
+    height: min-content;
+  }
+
+
+  .bill-mtb{
+    display: flex;
+    justify-content: space-between;
+  }
+
+  
+}
+
+/* Add data-label attributes to your HTML for each td */
+
+/* Pagination styles */
+.ant-pagination-item {
+  background-color: transparent !important;
+  border-color: #e5e7eb !important;
+}
+
+.ant-pagination-item-active {
+  border-color: #1890ff !important;
+}
+
+.ant-pagination-item a {
+  color: inherit !important;
+}
+
+.dark .ant-pagination-item a {
+  color: #fff !important;
+}
+
+.dark .ant-pagination-item-active {
+  background-color: #1890ff !important;
+}
+
+.dark .ant-pagination-prev button,
+.dark .ant-pagination-next button {
+  color: #fff !important;
+}
