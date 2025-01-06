@@ -129,13 +129,8 @@ const ClinicInfo = () => {
       setIsLoading(true);
       const response = await getOperatingHours();
       if (response.success) {
-        // Format the times properly when receiving data
-        const formattedHours = response.data.map(hour => ({
-          ...hour,
-          open_time: hour.open_time ? moment(hour.open_time, 'HH:mm:ss').format('HH:mm:ss') : null,
-          close_time: hour.close_time ? moment(hour.close_time, 'HH:mm:ss').format('HH:mm:ss') : null
-        }));
-        setOperatingHours(formattedHours);
+        console.log('Fetched operating hours:', response.data); // Debug log
+        setOperatingHours(response.data);
       } else {
         message.error('Failed to fetch operating hours');
       }
@@ -153,32 +148,14 @@ const ClinicInfo = () => {
 
   const handleSaveOperatingHours = async (values) => {
     try {
-      const updatedData = Object.entries(values).map(([day, { status, open, close }]) => {
-        // Add seconds to the time values
-        const openTime = status === 'open' && open 
-          ? `${open}:00`
-          : null;
-        
-        const closeTime = status === 'open' && close 
-          ? `${close}:00`
-          : null;
-
-        console.log(`Processing ${day}:`, { 
-          originalOpen: open, 
-          originalClose: close,
-          convertedOpen: openTime,
-          convertedClose: closeTime
-        });
-
-        return {
-          day: day.toLowerCase(),
-          status: status || 'closed',
-          open_time: openTime,
-          close_time: closeTime
-        };
-      });
-
-      console.log('Final data to be sent:', updatedData);
+      const updatedData = Object.entries(values).map(([day, data]) => ({
+        day,
+        status: data.status,
+        shift_1_open_time: data.status === 'open' && data.shift_1_open ? `${data.shift_1_open}:00` : null,
+        shift_1_close_time: data.status === 'open' && data.shift_1_close ? `${data.shift_1_close}:00` : null,
+        shift_2_open_time: data.status === 'open' && data.shift_2_open ? `${data.shift_2_open}:00` : null,
+        shift_2_close_time: data.status === 'open' && data.shift_2_close ? `${data.shift_2_close}:00` : null
+      }));
 
       const response = await updateOperatingHours(updatedData);
       if (response.success) {
@@ -501,50 +478,192 @@ const ClinicInfo = () => {
     </section>
   );
 
-  const renderOperatingHours = () => (
-    <section className="mb-8">
-      <div className="flex flex-col md:flex-row justify-between items-center mb-4">
-        <h2 className="text-2xl font-bold">Operating Hours</h2>
-        <Button 
-          type="primary" 
-          icon={<EditOutlined />} 
-          onClick={() => setIsEditOperatingHoursModal(true)}
-          loading={isLoading}
-        >
-          Edit
-        </Button>
-      </div>
-      <div className="overflow-x-auto">
+  const renderOperatingHours = () => {
+    return (
+      <section className="mb-8">
+        <div className="flex justify-between items-center mb-4">
+          <h2 className="text-2xl font-bold text-white dark:text-white">Operating Hours</h2>
+          <Button 
+            type="primary" 
+            icon={<EditOutlined />} 
+            onClick={() => setIsEditOperatingHoursModal(true)}
+          >
+            Edit
+          </Button>
+        </div>
+
         <Table
           loading={isLoading}
-          dataSource={operatingHours.map((entry, index) => ({
-            key: index,
+          dataSource={operatingHours.map(entry => ({
+            key: entry.day,
             day: capitalize(entry.day),
-            status: capitalize(entry.status),
-            open: entry.status === 'open' ? moment(entry.open_time, 'HH:mm:ss').format('hh:mm A') : '-',
-            close: entry.status === 'open' ? moment(entry.close_time, 'HH:mm:ss').format('hh:mm A') : '-'
+            status: entry.status,
+            shift1: entry.status === 'open' ? {
+              open: entry.shift_1_open_time ? moment(entry.shift_1_open_time, 'HH:mm:ss').format('hh:mm A') : '-',
+              close: entry.shift_1_close_time ? moment(entry.shift_1_close_time, 'HH:mm:ss').format('hh:mm A') : '-'
+            } : null,
+            shift2: entry.status === 'open' ? {
+              open: entry.shift_2_open_time ? moment(entry.shift_2_open_time, 'HH:mm:ss').format('hh:mm A') : '-',
+              close: entry.shift_2_close_time ? moment(entry.shift_2_close_time, 'HH:mm:ss').format('hh:mm A') : '-'
+            } : null
           }))}
           columns={[
-            { title: 'Day', dataIndex: 'day', key: 'day' },
-            { 
-              title: 'Status', 
-              dataIndex: 'status', 
+            {
+              title: 'Day',
+              dataIndex: 'day',
+              key: 'day',
+              className: 'text-black'
+            },
+            {
+              title: 'Status',
+              dataIndex: 'status',
               key: 'status',
               render: (status) => (
-                <span className={status.toLowerCase() === 'open' ? 'text-green-600' : 'text-red-600'}>
-                  {status}
+                <span className={`${status === 'open' ? 'text-green-500' : 'text-red-500'}`}>
+                  {capitalize(status)}
                 </span>
               )
             },
-            { title: 'Opening Time', dataIndex: 'open', key: 'open' },
-            { title: 'Closing Time', dataIndex: 'close', key: 'close' }
+            {
+              title: 'Shift 1',
+              dataIndex: 'shift1',
+              key: 'shift1',
+              render: (shift, record) => (
+                record.status === 'open' ? (
+                  <div className="text-black">
+                    {shift.open !== '-' && shift.close !== '-' ? 
+                      `${shift.open} - ${shift.close}` : 
+                      'No timing set'
+                    }
+                  </div>
+                ) : (
+                  <span className="text-gray-500">Closed</span>
+                )
+              )
+            },
+            {
+              title: 'Shift 2',
+              dataIndex: 'shift2',
+              key: 'shift2',
+              render: (shift, record) => (
+                record.status === 'open' ? (
+                  <div className="text-black">
+                    {shift.open !== '-' && shift.close !== '-' ? 
+                      `${shift.open} - ${shift.close}` : 
+                      'No timing set'
+                    }
+                  </div>
+                ) : (
+                  <span className="text-gray-500">Closed</span>
+                )
+              )
+            }
           ]}
           pagination={false}
-          className="min-w-full"
+          className="bg-boxdark"
         />
-      </div>
-    </section>
-  );
+
+        <Modal
+          title="Edit Operating Hours"
+          open={isEditOperatingHoursModal}
+          onCancel={() => setIsEditOperatingHoursModal(false)}
+          footer={null}
+          width={800}
+        >
+          <Form
+            initialValues={operatingHours.reduce((acc, curr) => ({
+              ...acc,
+              [curr.day]: {
+                status: curr.status,
+                shift_1_open: curr.shift_1_open_time?.slice(0, 5) || null,
+                shift_1_close: curr.shift_1_close_time?.slice(0, 5) || null,
+                shift_2_open: curr.shift_2_open_time?.slice(0, 5) || null,
+                shift_2_close: curr.shift_2_close_time?.slice(0, 5) || null
+              }
+            }), {})}
+            onFinish={handleSaveOperatingHours}
+            layout="vertical"
+          >
+            {operatingHours.map(day => (
+              <div key={day.day} className="mb-6 border-b pb-4">
+                <Form.Item
+                  name={[day.day, 'status']}
+                  label={<span className="text-lg font-medium">{capitalize(day.day)}</span>}
+                >
+                  <Select>
+                    <Option value="open">Open</Option>
+                    <Option value="closed">Closed</Option>
+                  </Select>
+                </Form.Item>
+
+                <Form.Item
+                  noStyle
+                  shouldUpdate={(prevValues, currentValues) => 
+                    prevValues[day.day]?.status !== currentValues[day.day]?.status
+                  }
+                >
+                  {({ getFieldValue }) => 
+                    getFieldValue([day.day, 'status']) === 'open' && (
+                      <div className="ml-4">
+                        <div className="mb-4">
+                          <h4 className="font-medium mb-2">Shift 1</h4>
+                          <div className="flex gap-4">
+                            <Form.Item
+                              name={[day.day, 'shift_1_open']}
+                              label="Open"
+                              className="flex-1"
+                            >
+                              <Input type="time" />
+                            </Form.Item>
+                            <Form.Item
+                              name={[day.day, 'shift_1_close']}
+                              label="Close"
+                              className="flex-1"
+                            >
+                              <Input type="time" />
+                            </Form.Item>
+                          </div>
+                        </div>
+
+                        <div>
+                          <h4 className="font-medium mb-2">Shift 2</h4>
+                          <div className="flex gap-4">
+                            <Form.Item
+                              name={[day.day, 'shift_2_open']}
+                              label="Open"
+                              className="flex-1"
+                            >
+                              <Input type="time" />
+                            </Form.Item>
+                            <Form.Item
+                              name={[day.day, 'shift_2_close']}
+                              label="Close"
+                              className="flex-1"
+                            >
+                              <Input type="time" />
+                            </Form.Item>
+                          </div>
+                        </div>
+                      </div>
+                    )
+                  }
+                </Form.Item>
+              </div>
+            ))}
+
+            <div className="flex justify-end gap-2">
+              <Button onClick={() => setIsEditOperatingHoursModal(false)}>
+                Cancel
+              </Button>
+              <Button type="primary" htmlType="submit">
+                Save Changes
+              </Button>
+            </div>
+          </Form>
+        </Modal>
+      </section>
+    );
+  };
 
   const handleDeleteHoliday = async () => {
     if (editHoliday && editHoliday.id) {
@@ -910,91 +1029,6 @@ const renderHolidays = () => (
         <div className="flex justify-end space-x-2">
           <Button onClick={() => setIsEditClinicModal(false)}>Cancel</Button>
           <Button type="primary" htmlType="submit">Save</Button>
-        </div>
-      </Form>
-    </Modal>
-  );
-
-  const EditOperatingHoursModal = () => (
-    <Modal
-      title="Edit Operating Hours"
-      open={isEditOperatingHoursModal}
-      onCancel={() => setIsEditOperatingHoursModal(false)}
-      footer={null}
-    >
-      <Form
-        initialValues={operatingHours.reduce((acc, curr) => ({
-          ...acc,
-          [curr.day]: {
-            status: curr.status,
-            open: curr.status === 'open' && curr.open_time ? curr.open_time.slice(0, 5) : null,
-            close: curr.status === 'open' && curr.close_time ? curr.close_time.slice(0, 5) : null
-          }
-        }), {})}
-        onFinish={handleSaveOperatingHours}
-        layout="vertical"
-      >
-        {operatingHours.map(day => (
-          <div key={day.day} className="mb-4">
-            <Form.Item
-              name={[day.day, 'status']}
-              label={`${capitalize(day.day)} Status`}
-            >
-              <Select>
-                <Option value="open">Open</Option>
-                <Option value="closed">Closed</Option>
-              </Select>
-            </Form.Item>
-            <Form.Item
-              noStyle
-              shouldUpdate={(prevValues, currentValues) =>
-                prevValues[day.day]?.status !== currentValues[day.day]?.status
-              }
-            >
-              {({ getFieldValue }) =>
-                getFieldValue([day.day, 'status']) === 'open' && (
-                  <div className="flex gap-4">
-                    <Form.Item
-                      name={[day.day, 'open']}
-                      label="Open"
-                      className="flex-1"
-                      rules={[{ required: true, message: 'Please select opening time' }]}
-                    >
-                      <Input 
-                        type="time" 
-                        className="w-full"
-                        onChange={(e) => {
-                          console.log('Selected open time:', e.target.value);
-                        }}
-                      />
-                    </Form.Item>
-                    <Form.Item
-                      name={[day.day, 'close']}
-                      label="Close"
-                      className="flex-1"
-                      rules={[{ required: true, message: 'Please select closing time' }]}
-                    >
-                      <Input 
-                        type="time" 
-                        className="w-full"
-                        onChange={(e) => {
-                          console.log('Selected close time:', e.target.value);
-                        }}
-                      />
-                    </Form.Item>
-                  </div>
-                )
-              }
-            </Form.Item>
-          </div>
-        ))}
-        <div className="flex justify-end gap-2">
-          <Button onClick={() => setIsEditOperatingHoursModal(false)}>
-            Cancel
-          </Button>
-          <Button type="primary" htmlType="submit">
-            Save
-          </Button>
         </div>
       </Form>
     </Modal>
@@ -1617,7 +1651,6 @@ const renderAddHolidayModal = () => {
 
       {/* Modals */}
       <EditClinicModal />
-      <EditOperatingHoursModal />
       {renderAddHolidayModal()}
       <TreatmentForm />
       <MedicationForm />

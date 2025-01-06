@@ -60,6 +60,7 @@ const EditAppointmentModal = ({ visible, onClose, onEdit, appointment }) => {
   };
 
   const handleFinish = async (values) => {
+    if (loading) return; // Prevent double submission
     try {
       setLoading(true);
       
@@ -112,10 +113,15 @@ const EditAppointmentModal = ({ visible, onClose, onEdit, appointment }) => {
       onCancel={onClose}
       footer={null}
       destroyOnClose
+      maskClosable={false}  // Prevent closing by clicking outside
     >
       <Form
         form={form}
         layout="vertical"
+        onFinish={handleFinish}
+        onFinishFailed={(errorInfo) => {
+          console.log('Failed:', errorInfo);
+        }}
         initialValues={{
           patient: appointment.patient_id,
           treatment: appointment.treatment_id,
@@ -124,7 +130,6 @@ const EditAppointmentModal = ({ visible, onClose, onEdit, appointment }) => {
           status: appointment.status,
           care_person: appointment.care_person
         }}
-        onFinish={handleFinish}
       >
         <Form.Item
           label="Patient"
@@ -218,7 +223,12 @@ const EditAppointmentModal = ({ visible, onClose, onEdit, appointment }) => {
           </Select>
         </Form.Item>
         <Form.Item>
-          <Button type="primary" htmlType="submit" loading={loading}>
+          <Button 
+            type="primary" 
+            htmlType="submit" 
+            loading={loading}
+            disabled={loading}  // Disable button while loading
+          >
             Save
           </Button>
         </Form.Item>
