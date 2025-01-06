@@ -605,33 +605,8 @@ export const updateStaffAttendance = async (id, data) => {
   }
 };
 
-// Consultant attendance services
-export const getConsultantAttendance = async () => {
-  try {
-    const res = await interceptors.get("v1/consultant-attendances/get-attendance");
-    return res.data;
-  } catch (error) {
-    throw error.response?.data || error;
-  }
-};
 
-export const getConsultantAttendanceByDate = async (date) => {
-  try {
-    const res = await interceptors.get(`v1/consultant-attendances/get-attendance/${date}`);
-    return res.data;
-  } catch (error) {
-    throw error.response?.data || error;
-  }
-};
 
-export const updateConsultantAttendance = async (id, data) => {
-  try {
-    const res = await interceptors.put(`v1/consultant-attendances/update-attendance/${id}`, data);
-    return res.data;
-  } catch (error) {
-    throw error.response?.data || error;
-  }
-};
 
 
 export const fetchStaffAttendances = async (date) => {
@@ -657,28 +632,128 @@ export const updateAttendanceStatus = async (id, status) => {
   }
 };
 
-export const fetchConsultantAttendances = async (date) => {
-  try {
-    const res = await interceptors.get(`v1/attendances/consultant-attendances/${date}`);
-    return res.data;
-  } catch (error) {
-    throw error.response?.data || error;
-  }
-};
-export const updateConsultantAttendanceStatus = async (id, status) => {
-  try {
-    const res = await interceptors.put(`v1/attendances/consultant-attendance-update/${id}`, { status });
-    return res.data;
-  } catch (error) {
-    throw error.response?.data || error;
-  }
-};
+
 
 export const createManualAttendance = async (data) => {
   try {
     const res = await interceptors.post("v1/attendances/create-attendance", data);
     return res.data;
   } catch (error) {
+    throw error.response?.data || error;
+  }
+};
+
+// Add these new functions
+export const getStaffDetails = async (id, date) => {
+  try {
+    console.log('Fetching staff details:', { id, date });
+    const res = await interceptors.get(`v1/attendances/staff-details/${id}/${date}`);
+    return res.data;
+  } catch (error) {
+    console.error('Error in getStaffDetails:', error);
+    throw error.response?.data || error;
+  }
+};
+
+export const downloadStaffReport = async (id, startDate, endDate) => {
+  try {
+    console.log('Downloading report for:', { id, startDate, endDate });
+    const response = await interceptors.get(
+      `/v1/attendances/staff-report/${id}`,
+      {
+        params: { startDate, endDate },
+        responseType: 'blob'  // Changed to blob since backend sends Excel file
+      }
+    );
+    
+    // For blob response, we return directly
+    return response;
+  } catch (error) {
+    console.error('Download report error:', error);
+    throw error.response?.data || error;
+  }
+};
+
+
+// Consultant details view
+
+
+// Consultant Attendance Services
+export const getConsultantAttendances = async (date) => {
+  try {
+    const res = await interceptors.get(`v1/consultant-attendances/consultant/${date}`);
+    return res.data;
+  } catch (error) {
+    console.error('Error fetching consultant attendances:', error);
+    throw error.response?.data || error;
+  }
+};
+
+export const updateConsultantAttendanceStatus = async (id, payload) => {
+  try {
+    const res = await interceptors.put(
+      `v1/consultant-attendances/consultant-attendance-update/${id}`, 
+      payload
+    );
+    return res.data;
+  } catch (error) {
+    console.error('Error updating consultant attendance:', error);
+    throw error.response?.data || error;
+  }
+};
+
+export const downloadConsultantReport = async (id, startDate, endDate) => {
+  try {
+    console.log('Downloading consultant report:', { id, startDate, endDate });
+    const response = await interceptors.get(
+      `/v1/consultant-attendances/consultant-report/${id}`,
+      {
+        params: { startDate, endDate },
+        responseType: 'blob'
+      }
+    );
+    return response;
+  } catch (error) {
+    console.error('Error downloading consultant report:', error);
+    throw error.response?.data || error;
+  }
+};
+
+// Helper function to calculate consultant payable amount
+export const calculateConsultantPayable = (attendance) => {
+  if (!attendance || !attendance.dental_team) return 0;
+  
+  // Consultants only get paid for present days
+  if (attendance.attendance_status === 'present') {
+    return attendance.dental_team.salary;
+  }
+  return 0;
+};
+
+// Helper function to get status color
+export const getConsultantStatusColor = (status) => {
+  switch (status?.toLowerCase()) {
+    case 'present':
+      return 'text-green-600';
+    case 'absent':
+      return 'text-red-600';
+    default:
+      return 'text-gray-600';
+  }
+};
+
+// Helper function to get status options
+export const consultantStatusOptions = [
+  { value: 'present', label: 'Present', color: 'text-green-600' },
+  { value: 'absent', label: 'Absent', color: 'text-red-600' }
+];
+
+export const getConsultantDetails = async (id, date) => {
+  try {
+    const res = await interceptors.get(`v1/consultant-attendances/consultant-details/${id}/${date}`);
+    return res.data;
+  } catch (error) {
+    console.error('Error fetching consultant details:', error);
     throw error.response?.data || error;
   }
 };

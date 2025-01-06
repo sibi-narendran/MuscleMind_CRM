@@ -23,19 +23,21 @@ router.get(
 );
 
 // Consultant Attendance Routes
-router.get(
-    '/consultant-attendances/:date',
-    authenticateJWT,
-    staffAttendanceController.getConsultantAttendances
-);
 
-router.put(
-    '/consultant-attendance-update/:id',
-    authenticateJWT,
-    staffAttendanceController.updateConsultantAttendanceStatus
-);
 
 router.post('/create-attendance', authenticateJWT, staffAttendanceController.createManualAttendance);
 
+// Add these new routes
+router.get(
+    '/staff-details/:id/:date',
+    authenticateJWT,
+    staffAttendanceController.getStaffDetails
+);
+
+router.get(
+    '/staff-report/:id',
+    authenticateJWT,
+    staffAttendanceController.downloadStaffReport
+);
 
 module.exports = router;

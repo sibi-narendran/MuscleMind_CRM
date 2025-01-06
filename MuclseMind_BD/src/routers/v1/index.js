@@ -16,6 +16,7 @@ const ClinicRoutes = require("./ClinicRoutes.js");
 const PaymentRoutes = require("./paymentRoutes.js");
 const InvoiceRoute = require("../../AI/Routes/Invoice.js");
 const PrescriptionAnalyzerRoutes = require("../../AI/Routes/prescriptionAnalyzerRoutes.js");
+const ConsultantAttendanceRoute = require("./consultantAttendanceRoutes.js");
 
 const Routes = [
   {
@@ -81,6 +82,10 @@ const Routes = [
   {
     path: "/ai",
     route: PrescriptionAnalyzerRoutes,
+  },
+  {
+    path: "/consultant-attendances",
+    route: ConsultantAttendanceRoute,
   },
 ];
 

@@ -9,28 +9,37 @@ import {
   Download,
   Plus
 } from "lucide-react";
-import { Modal, DatePicker, Alert, message, Input, Table, Tabs,Button, Select, InputNumber } from "antd";
+import { Modal, DatePicker, Alert, message, Input, Table, Tabs,Button, Select, InputNumber, Space } from "antd";
 import moment from "moment";
 import {
   fetchStaffAttendances,
-  fetchConsultantAttendances,
   updateAttendanceStatus,
   updateConsultantAttendanceStatus,
   createManualAttendance,
+  getStaffDetails,
+  downloadStaffReport,
+  getConsultantDetails,
+  getConsultantAttendances,
+  downloadConsultantReport,
+  calculateConsultantPayable,
+  getConsultantStatusColor,
+  consultantStatusOptions
 } from "../api.services/services";
 import * as XLSX from 'xlsx';
 import { Box } from '@mui/material';
-import { EyeOutlined } from "@ant-design/icons";
+import { EyeOutlined, DownloadOutlined } from '@ant-design/icons';
+import ExcelJS from 'exceljs';
 
 const { RangePicker } = DatePicker;
 const { Option } = Select;
 
 // 1. First, declare constants outside the component
 const statusOptions = [
-  { value: 'present', label: 'Present', color: 'text-green-500' },
-  { value: 'absent', label: 'Absent', color: 'text-red-500' },
-  { value: 'half-day', label: 'Half Day', color: 'text-yellow-500' },
-  { value: 'day-off', label: 'Day Off', color: 'text-blue-500' }
+  { value: 'present', label: 'Present', color: 'text-green-600' },
+  { value: 'absent', label: 'Absent', color: 'text-red-600' },
+  { value: 'half-day', label: 'Half Day', color: 'text-yellow-600' },
+  { value: 'holiday', label: 'Holiday', color: 'text-blue-600' },
+  { value: 'day-off', label: 'Day Off', color: 'text-purple-600' }
 ];
 
 const getStatusClass = (status) => {
@@ -118,6 +127,16 @@ const Management = () => {
     totalAbsent: 0
   });
   const [searchText, setSearchText] = useState("");
+  const [selectedStaff, setSelectedStaff] = useState(null);
+  const [staffDetails, setStaffDetails] = useState(null);
+  const [isDetailsModalVisible, setIsDetailsModalVisible] = useState(false);
+  const [downloadDateRange, setDownloadDateRange] = useState([]);
+  const [selectedEmployee, setSelectedEmployee] = useState(null);
+  const [employeeDetails, setEmployeeDetails] = useState(null);
+  const [modalDate, setModalDate] = useState(moment());
+  const [loadingRows, setLoadingRows] = useState({});
+  const [isConsultantModalVisible, setIsConsultantModalVisible] = useState(false);
+  const [isStaffModalVisible, setIsStaffModalVisible] = useState(false);
 
   // Separate status options for staff and consultants
   const staffStatusOptions = [
@@ -133,48 +152,11 @@ const Management = () => {
   ];
 
   // 4. Handler functions
-  const handleModalClose = () => {
-    try {
-      setIsModalVisible(false);
-      setSelectedRecord(null);
-    } catch (error) {
-      console.error('Error closing modal:', error);
-    }
-  };
 
-  const handleDateChange = (date) => {  
-    setSelectedDate(date.format('YYYY-MM-DD'));
-  };
 
-  const handleStatusChange = async (record, newStatus, newSalary) => {
-    setUpdatingStatus(true);
-    try {
-      const formattedDate = moment(selectedDate).format('YYYY-MM-DD');
-      const updateFunction = record.type === 'staff' 
-        ? updateAttendanceStatus 
-        : updateConsultantAttendanceStatus;
 
-      const payload = {
-        status: newStatus || record.attendance_status,
-        date: formattedDate,
-        salary: newSalary || record.salary
-      };
 
-      const response = await updateFunction(record.id, payload);
 
-      if (response.success) {
-        message.success(response.message || 'Updated successfully');
-        await fetchAttendanceData(formattedDate);
-      } else {
-        message.error(response.message || 'Failed to update');
-      }
-    } catch (error) {
-      console.error('Error updating:', error);
-      message.error('Failed to update');
-    } finally {
-      setUpdatingStatus(false);
-    }
-  };
 
   const fetchAttendanceData = async (date) => {
     try {
@@ -209,67 +191,43 @@ const Management = () => {
 
   // Updated handler with proper payload
   const handleQuickStatusUpdate = async (record, newStatus) => {
-    setUpdatingStatus(true);
     try {
-        const formattedDate = moment(selectedDate).format('YYYY-MM-DD');
-        const updateFunction = record.type === 'staff' 
-            ? updateAttendanceStatus 
-            : updateConsultantAttendanceStatus;
-
-        const response = await updateFunction(
-            record.id,
-            {
-                status: newStatus,
-                date: formattedDate  // Include the date in the request
-            }
-        );
-
-        if (response.success) {
-            message.success(response.message || 'Status updated successfully');
-            await fetchAttendanceData(formattedDate);
-        } else {
-            message.error(response.message || 'Failed to update status');
-        }
-    } catch (error) {
-        console.error('Error updating status:', error);
-        message.error('Failed to update status');
-    } finally {
-        setUpdatingStatus(false);
-    }
-  };
-
-  // Update status for staff
-  const handleModalStatusChange = async (newStatus) => {
-    if (!selectedRecord) return;
-
-    setUpdatingStatus(true);
-    try {
-      const formattedDate = moment(selectedDate).format('YYYY-MM-DD');
-      const updateFunction = selectedRecord.type === 'staff' 
+      setLoadingRows(prev => ({ ...prev, [record.id]: true }));
+      
+      const formattedDate = moment(modalDate).format('YYYY-MM-DD');
+      const updateFunction = record.type === 'staff' 
         ? updateAttendanceStatus 
         : updateConsultantAttendanceStatus;
 
-      await updateFunction(
-        selectedRecord.id,
-        newStatus,
-        formattedDate
-      );
+      const response = await updateFunction(record.id, {
+        status: newStatus,
+        date: formattedDate
+      });
 
-      message.success('Status updated successfully');
-      
-      // Refresh the data with same date
-      if (selectedRecord.type === 'staff') {
-        await fetchStaffData(formattedDate);
+      if (response.success) {
+        // Update both table and modal data
+        if (isModalVisible && selectedRecord?.id === record.id) {
+          setSelectedRecord(prev => ({
+            ...prev,
+            attendance_status: newStatus
+          }));
+        }
+        
+        // Refresh the table data
+        await fetchAttendanceData(formattedDate);
+        message.success('Status updated successfully');
       } else {
-        await fetchConsultantData(formattedDate);
+        message.error(response.message || 'Failed to update status');
       }
     } catch (error) {
       console.error('Error updating status:', error);
       message.error('Failed to update status');
     } finally {
-      setUpdatingStatus(false);
+      setLoadingRows(prev => ({ ...prev, [record.id]: false }));
     }
   };
+
+  // Update status for staff
 
   // 5. Effects
   useEffect(() => {
@@ -278,248 +236,221 @@ const Management = () => {
 
   // 6. Modals - keeping exactly the same
   const renderStaffModal = () => {
-    if (!selectedRecord || selectedRecord.type !== 'staff') return null;
-    
+    if (!selectedRecord) return null;
+
+    // Get appropriate status options based on employee type
+    const statusOptionsToUse = selectedRecord.type === 'staff' 
+      ? staffStatusOptions 
+      : consultantStatusOptions;
+
     return (
       <Modal
         title={
-          <div className="flex justify-between items-center">
-            <h3 className="text-xl font-semibold">
-              {selectedRecord.name}'s Details
-            </h3>
-            <DatePicker
-              value={moment(selectedDate)}
-              onChange={handleDateChange}
+          <div className="flex justify-between items-center border-b pb-3">
+            <h2 className="text-xl font-semibold text-gray-800">{selectedRecord.name}'s Details</h2>
+            <DatePicker 
+              value={modalDate}
+              onChange={handleModalDateChange}
               format="DD MMM YYYY"
-              className="w-44 h-[42px] rounded-xl"
+              className="border rounded-lg"
+              allowClear={false}
+              disabledDate={(current) => {
+                // Disable future dates
+                return current && current > moment().endOf('day');
+              }}
             />
           </div>
         }
-        open={isModalVisible}
-        onCancel={handleModalClose}
-        destroyOnClose={true}
-        maskClosable={false}
+        open={isStaffModalVisible}
+        onCancel={handleStaffModalClose}
         footer={null}
         width={800}
+        className="staff-details-modal"
       >
         <div className="space-y-6">
-          {/* Personal & Employment Information */}
-          <div className="grid grid-cols-2 gap-6">
-            <div className="bg-gray-50  p-6 rounded-xl">
-              <h4 className="text-lg font-semibold text-black dark:text-white mb-4">
-                Personal Information
-              </h4>
-              <div className="space-y-3 text-gray-600 dark:text-gray-300">
-                <p className="flex justify-between">
-                  <span className="font-medium">Name:</span>
-                  <span>{selectedRecord.name}</span>
-                </p>
-                <p className="flex justify-between">
-                  <span className="font-medium">Specialisation:</span>
-                  <span>{selectedRecord.specialisation}</span>
-                </p>
-                <p className="flex justify-between">
-                  <span className="font-medium">Employee Type:</span>
-                  <span className="capitalize">{selectedRecord.type}</span>
-                </p>
-                <p className="flex justify-between">
-                  <span className="font-medium">Date of Joining:</span>
-                  <span>{moment(selectedRecord.doj).format('DD MMM YYYY')}</span>
-                </p>
-              </div>
-            </div>
-
-            <div className="bg-gray-50  p-6 rounded-xl">
-              <h4 className="text-lg font-semibold text-black dark:text-white mb-4">
-                Salary Information
-              </h4>
-              <div className="space-y-3 text-gray-600 dark:text-gray-300">
-                <p className="flex justify-between">
-                  <span className="font-medium">
-                    {selectedRecord.type === 'staff' ? 'Monthly Salary' : 'Daily Rate'}:
-                  </span>
-                  <span>₹{selectedRecord.salary.toLocaleString()}</span>
-                </p>
-            
-                {selectedRecord.type === 'staff' && (
-                  <p className="flex justify-between">
-                    <span className="font-medium">Leave Balance:</span>
-                    <span>{selectedRecord.leave_balances} days</span>
-                  </p>
-                  
-                )}
-                
-              </div>
-            </div>
-          </div>
-
-          {/* Attendance & Payroll Details with Download Button */}
-          <div className="bg-gray-50  p-6 rounded-xl">
-            <div className="flex justify-between items-center mb-4">
-              <h4 className="text-lg font-semibold">
-                Attendance & Payroll Details
-              </h4>
-              <Button
-                type="primary"
-                icon={<Download size={16} />}
-                onClick={() => setIsDownloadModalVisible(true)}
-                className="bg-primary hover:bg-primary/90 flex items-center gap-2"
-              >
-                Download Report
-              </Button>
-            </div>
+          {/* Personal Information Card */}
+          <div className="bg-white rounded-lg p-5 border border-gray-200">
+            <h3 className="text-lg font-semibold mb-4 text-gray-700">Personal Information</h3>
             <div className="grid grid-cols-2 gap-6">
-              <div className="space-y-3 text-gray-600 dark:text-gray-300">
-                <p className="flex justify-between">
-                  <span className="font-medium">Date:</span>
-                  <span>{moment(selectedRecord.date).format('DD MMM YYYY')}</span>
-                </p>
-                <p className="flex justify-between">
-                  <span className="font-medium">Status:</span>
-                  <span className={getStatusClass(selectedRecord.attendance_status)}>
-                    {selectedRecord.attendance_status.toUpperCase()}
-                  </span>
-                </p>
-                <p className="flex justify-between">
-                  <span className="font-medium">Present Days:</span>
-                  <span>{calculateMonthlyDetails(selectedRecord).presentDays}</span>
-                </p>
+              <div className="space-y-3">
+                <div className="flex justify-between">
+                  <span className="text-gray-600">Name:</span>
+                  <span className="font-medium">{selectedRecord.name}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-600">Specialisation:</span>
+                  <span className="font-medium">{selectedRecord.specialisation}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-600">Employee Type:</span>
+                  <span className="font-medium capitalize">{selectedRecord.type}</span>
+                </div>
               </div>
-              <div className="space-y-3 text-gray-600 dark:text-gray-300">
-                <p className="flex justify-between">
-                  <span className="font-medium">Basic Pay:</span>
-                  <span>₹{calculateMonthlyDetails(selectedRecord).monthlyBasic.toFixed(2)}</span>
-                </p>
-                <p className="flex justify-between">
-                  <span className="font-medium">Today's Payable:</span>
-                  <span>₹{calculateMonthlyDetails(selectedRecord).payableAmount.toFixed(2)}</span>
-                </p>
+              <div className="space-y-3">
+                <div className="flex justify-between">
+                  <span className="text-gray-600">Date of Joining:</span>
+                  <span className="font-medium">{moment(selectedRecord.doj).format('DD MMM YYYY')}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-600">Monthly Salary:</span>
+                  <span className="font-medium text-blue-600">₹{selectedRecord.salary?.toLocaleString()}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-600">Leave Balance:</span>
+                  <span className="font-medium">{selectedRecord.leave_balances} days</span>
+                </div>
               </div>
             </div>
           </div>
 
-          {/* Payment History - Optional */}
-          <div className="bg-gray-50  p-6 rounded-xl">
-            <h4 className="text-lg font-semibold text-black dark:text-white mb-4">
-              Payment Summary
-            </h4>
-            <div className="space-y-3">
-              <div className="flex justify-between items-center py-3 border-b border-gray-200 dark:border-gray-700">
-                <span className="font-medium text-gray-600 dark:text-gray-300">Monthly Basic:</span>
-                <span className="text-lg font-semibold text-primary">
-                  ₹{calculateMonthlyDetails(selectedRecord).monthlyBasic.toLocaleString()}
-                </span>
-              </div>
-              <div className="flex justify-between items-center py-3 border-b border-gray-200 dark:border-gray-700">
-                <span className="font-medium text-gray-600 dark:text-gray-300">Daily Rate:</span>
-                <span className="text-lg font-semibold text-primary">
-                  ₹{calculateMonthlyDetails(selectedRecord).dailyRate.toLocaleString()}
-                </span>
-              </div>
-              <div className="flex justify-between items-center py-3">
-                <span className="font-medium text-gray-600 dark:text-gray-300">Today's Payable:</span>
-                <span className="text-xl font-bold text-primary">
-                  ₹{calculateMonthlyDetails(selectedRecord).payableAmount.toLocaleString()}
-                </span>
-              </div>
-            </div>
-          </div>
-
-          {/* Monthly Summary for Consultants */}
-          {selectedRecord.type === 'consultant' && monthlyTotals && (
-            <div className="bg-gray-50  p-6 rounded-xl">
-              <div className="flex justify-between items-center mb-4">
-              <h4 className="text-lg font-semibold text-black  mb-4">
-                Monthly Summary
-              </h4>
-                 <Button
-                type="primary"
-                icon={<Download size={16} />}
-                onClick={() => setIsDownloadModalVisible(true)}
-                className="bg-primary hover:bg-primary/90 flex items-center gap-2"
-              >
-                Download Report
-              </Button>
-              </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-3 text-gray-600 dark:text-gray-300">
-                  <p className="flex justify-between">
-                    <span className="font-medium">Total Working Days:</span>
-                    <span>{monthlyTotals.totalDays}</span>
-                  </p>
-                  <p className="flex justify-between">
-                    <span className="font-medium">Present Days:</span>
-                    <span>{monthlyTotals.presentDays}</span>
-                  </p>
-                  <p className="flex justify-between">
-                    <span className="font-medium">Half Days:</span>
-                    <span>{monthlyTotals.halfDays}</span>
-                  </p>
-                </div>
-                <div className="space-y-3 text-gray-600 dark:text-gray-300">
-                  <p className="flex justify-between">
-                    <span className="font-medium">Daily Rate:</span>
-                    <span>₹{selectedRecord.salary.toLocaleString()}</span>
-                  </p>
-                  <p className="flex justify-between">
-                    <span className="font-medium">Monthly Total:</span>
-                    <span className="text-lg font-semibold text-primary">
-                      {/* ₹{monthlyTotals.totalAmount.toLocaleString()} */}
-                    </span>
-                  </p>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* Attendance Status Section */}
-          <div className="bg-gray-50 p-6 rounded-xl col-span-2">
+          {/* Attendance & Payroll Card */}
+          <div className="bg-white rounded-lg p-5 border border-gray-200">
             <div className="flex justify-between items-center mb-4">
-              <h4 className="text-lg font-semibold">Attendance Status</h4>
+              <h3 className="text-lg font-semibold text-gray-700">Attendance & Payroll Details</h3>
+              <Button 
+                type="primary"
+                icon={<DownloadOutlined />}
+                onClick={() => handleDownloadReport(selectedRecord)}
+                loading={loadingRows[`download_${selectedRecord?.id}`]}
+                className="bg-blue-500 hover:bg-blue-600"
+              >
+                {loadingRows[`download_${selectedRecord?.id}`] ? 'Downloading...' : 'Download Report'}
+              </Button>
+            </div>
+            
+            <div className="grid grid-cols-2 gap-6">
+              {/* Current Day Details */}
+              <div className="bg-gray-50 p-4 rounded-lg">
+                <h4 className="font-medium mb-3 text-gray-700">Today's Status</h4>
+                <div className="space-y-2">
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">Date:</span>
+                    <span>{moment(selectedRecord.date).format('DD MMM YYYY')}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">Status:</span>
+                    <span className={`font-medium ${getStatusClass(selectedRecord.attendance_status)}`}>
+                      {selectedRecord.attendance_status.toUpperCase()}
+                    </span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">Today's Payable:</span>
+                    <span className="text-blue-600 font-medium">
+                      ₹{selectedRecord.monthly_statistics?.daily_rate?.toFixed(2) || '0.00'}
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Monthly Summary */}
+              <div className="bg-gray-50 p-4 rounded-lg">
+                <h4 className="font-medium mb-3 text-gray-700">Monthly Summary</h4>
+                <div className="space-y-2">
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">Monthly Basic:</span>
+                    <span className="text-blue-600 font-medium">₹{selectedRecord.salary?.toLocaleString()}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">Daily Rate:</span>
+                    <span className="font-medium">₹{selectedRecord.monthly_statistics?.daily_rate?.toFixed(2) || '0.00'}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">Total Payable:</span>
+                    <span className="text-blue-600 font-medium">
+                      ₹{selectedRecord.monthly_statistics?.total_payable?.toFixed(2) || '0.00'}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Updated Attendance Status Card */}
+          <div className="bg-white rounded-lg p-5 border border-gray-200">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-lg font-semibold text-gray-700">Update Attendance Status</h3>
               <Select
                 value={selectedRecord.attendance_status}
-                onChange={handleModalStatusChange}
-                loading={updatingStatus}
+                onChange={(newStatus) => handleQuickStatusUpdate(selectedRecord, newStatus)}
                 className="w-40"
-                dropdownClassName="rounded-xl"
+                loading={loadingRows[selectedRecord.id]}
+                disabled={loadingRows[selectedRecord.id]}
               >
-                {statusOptions.map(status => (
-                  <Option key={status.value} value={status.value}>
-                    <span className={status.color}>
-                      {status.label}
-                    </span>
+                {statusOptionsToUse.map(status => (
+                  <Option 
+                    key={status.value} 
+                    value={status.value}
+                    className={`${getStatusClass(status.value)} capitalize`}
+                  >
+                    {status.label}
                   </Option>
                 ))}
               </Select>
             </div>
             
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-2 gap-4 bg-gray-50 p-4 rounded-lg">
               <div className="space-y-3">
-                <p className="flex justify-between">
+                <div className="flex justify-between">
                   <span className="text-gray-600">Current Status:</span>
-                  <span className={`font-medium ${
-                    selectedRecord.attendance_status === 'present' ? 'text-green-500' : 
-                    selectedRecord.attendance_status === 'absent' ? 'text-red-500' : 
-                    selectedRecord.attendance_status === 'half-day' ? 'text-yellow-500' : 
-                    selectedRecord.attendance_status === 'day-off' ? 'text-blue-500' : 
-                    'text-gray-500'
-                  }`}>
+                  <span className={`font-medium ${getStatusClass(selectedRecord.attendance_status)}`}>
                     {selectedRecord.attendance_status.charAt(0).toUpperCase() + 
                      selectedRecord.attendance_status.slice(1)}
                   </span>
-                </p>
-                <p className="flex justify-between">
-                  <span className="text-gray-600">Date:</span>
-                  <span>{moment(selectedDate).format('DD MMM YYYY')}</span>
-                </p>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-600">Selected Date:</span>
+                  <span>{moment(modalDate).format('DD MMM YYYY')}</span>
+                </div>
               </div>
               <div className="space-y-3">
-                <p className="flex justify-between">
+                <div className="flex justify-between">
+                  <span className="text-gray-600">Daily Rate:</span>
+                  <span className="font-medium">
+                    ₹{selectedRecord.monthly_statistics?.daily_rate?.toFixed(2) || '0.00'}
+                  </span>
+                </div>
+                <div className="flex justify-between">
                   <span className="text-gray-600">Payable Amount:</span>
                   <span className="font-medium text-primary">
                     ₹{calculatePayableAmount(selectedRecord).toLocaleString()}
                   </span>
-                </p>
+                </div>
+              </div>
+            </div>
+
+            {/* Status Change History or Additional Info */}
+            <div className="mt-4 text-sm text-gray-500">
+              <p>Last updated: {moment(selectedRecord.updated_at).format('DD MMM YYYY, hh:mm A')}</p>
+            </div>
+          </div>
+
+          {/* Attendance Statistics Card */}
+          <div className="bg-white rounded-lg p-5 border border-gray-200">
+            <h3 className="text-lg font-semibold mb-4 text-gray-700">Monthly Attendance Statistics</h3>
+            <div className="grid grid-cols-2 gap-x-6 gap-y-3">
+              <div className="flex justify-between items-center p-3 bg-green-50 rounded-lg">
+                <span className="text-gray-600">Present Days:</span>
+                <span className="font-medium text-green-600">{selectedRecord.monthly_statistics?.present_days || 0}</span>
+              </div>
+              <div className="flex justify-between items-center p-3 bg-red-50 rounded-lg">
+                <span className="text-gray-600">Absent Days:</span>
+                <span className="font-medium text-red-600">{selectedRecord.monthly_statistics?.absent_days || 0}</span>
+              </div>
+              <div className="flex justify-between items-center p-3 bg-yellow-50 rounded-lg">
+                <span className="text-gray-600">Half Days:</span>
+                <span className="font-medium text-yellow-600">{selectedRecord.monthly_statistics?.half_days || 0}</span>
+              </div>
+              <div className="flex justify-between items-center p-3 bg-orange-50 rounded-lg">
+                <span className="text-gray-600">LOP Days:</span>
+                <span className="font-medium text-orange-600">{selectedRecord.monthly_statistics?.lop_days || 0}</span>
+              </div>
+              <div className="flex justify-between items-center p-3 bg-blue-50 rounded-lg">
+                <span className="text-gray-600">Holiday Days:</span>
+                <span className="font-medium text-blue-600">{selectedRecord.monthly_statistics?.holiday_days || 0}</span>
+              </div>
+              <div className="flex justify-between items-center p-3 bg-purple-50 rounded-lg">
+                <span className="text-gray-600">Working Days:</span>
+                <span className="font-medium text-purple-600">{selectedRecord.monthly_statistics?.working_days || 0}</span>
               </div>
             </div>
           </div>
@@ -530,195 +461,150 @@ const Management = () => {
 
   // Consultant Modal Component
   const renderConsultantModal = () => {
-    if (!selectedRecord || selectedRecord.type !== 'consultant') return null;
-
-    const consultantData = {
-      name: selectedRecord?.name || 'N/A',
-      specialisation: selectedRecord?.specialisation || 'N/A',
-      type: selectedRecord?.type || 'consultant',
-      salary: Number(selectedRecord?.salary) || 0,
-      date: selectedRecord?.date || moment().format('YYYY-MM-DD'),
-      attendance_status: selectedRecord?.attendance_status || 'pending',
-      doj: selectedRecord?.created_at || selectedRecord?.date || moment().format('YYYY-MM-DD')
-    };
+    if (!selectedRecord) return null;
 
     return (
       <Modal
         title={
-          <div className="flex justify-between items-center">
-            <h3 className="text-xl font-semibold">
-              {consultantData.name}'s Details
-            </h3>
-            <DatePicker
-              value={moment(selectedDate)}
-              onChange={handleDateChange}
+          <div className="flex justify-between items-center border-b pb-3">
+            <h2 className="text-xl font-semibold text-gray-800">{selectedRecord.name}'s Details</h2>
+            <DatePicker 
+              value={moment(selectedRecord.date)}
+              onChange={handleModalDateChange}
               format="DD MMM YYYY"
-              className="w-44 h-[42px] rounded-xl"
+              className="border rounded-lg"
+              allowClear={false}
             />
           </div>
         }
-        open={isModalVisible}
-        onCancel={handleModalClose}
-        destroyOnClose={true}
-        maskClosable={false}
+        open={isConsultantModalVisible}
+        onCancel={handleConsultantModalClose}
         footer={null}
         width={800}
       >
-        <div className="space-y-6">
-          {/* Personal & Employment Information */}
-          <div className="grid grid-cols-2 gap-6">
-            <div className="bg-gray-50 p-6 rounded-xl">
-              <h4 className="text-lg font-semibold text-black dark:text-white mb-4">
-                Personal Information
-              </h4>
-              <div className="space-y-3 text-gray-600 dark:text-gray-300">
-                <p className="flex justify-between">
-                  <span className="font-medium">Name:</span>
-                  <span>{consultantData.name}</span>
-                </p>
-                <p className="flex justify-between">
-                  <span className="font-medium">Specialisation:</span>
-                  <span>{consultantData.specialisation}</span>
-                </p>
-                <p className="flex justify-between">
-                  <span className="font-medium">Employee Type:</span>
-                  <span className="capitalize">{consultantData.type}</span>
-                </p>
-                <p className="flex justify-between">
-                  <span className="font-medium">Date of Joining:</span>
-                  <span>{moment(consultantData.doj).format('DD MMM YYYY')}</span>
-                </p>
+        {/* Basic Information */}
+        <div className="grid grid-cols-2 gap-6 mb-6">
+          <div className="bg-white p-4 rounded-lg border border-gray-200">
+            <h3 className="text-lg font-semibold mb-4 text-gray-700">Personal Details</h3>
+            <div className="space-y-3">
+              <div className="flex justify-between">
+                <span className="text-gray-600">Name:</span>
+                <span className="font-medium">{selectedRecord.name}</span>
               </div>
-            </div>
-
-            <div className="bg-gray-50 p-6 rounded-xl">
-              <h4 className="text-lg font-semibold text-black dark:text-white mb-4">
-                Salary Information
-              </h4>
-              <div className="space-y-3 text-gray-600 dark:text-gray-300">
-                <p className="flex justify-between">
-                  <span className="font-medium">Daily Rate:</span>
-                  <span>₹{consultantData.salary.toLocaleString()}</span>
-                </p>
-                <p className="flex justify-between">
-                  <span className="font-medium">Today's Payable:</span>
-                  <span>₹{calculatePayableAmount(consultantData).toLocaleString()}</span>
-                </p>
+              <div className="flex justify-between">
+                <span className="text-gray-600">Type:</span>
+                <span>{selectedRecord.type}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-gray-600">Specialisation:</span>
+                <span>{selectedRecord.specialisation}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-gray-600">Daily Rate:</span>
+                <span className="font-medium">₹{selectedRecord.salary?.toLocaleString() || 0}</span>
               </div>
             </div>
           </div>
 
-          {/* Attendance & Payroll Details */}
-          <div className="bg-gray-50 p-6 rounded-xl">
-            <div className="flex justify-between items-center mb-4">
-              <h4 className="text-lg font-semibold">
-                Attendance & Payroll Details
-              </h4>
-              <Button
-                type="primary"
-                icon={<Download size={16} />}
-                onClick={() => setIsDownloadModalVisible(true)}
-                className="bg-primary hover:bg-primary/90 flex items-center gap-2"
-              >
-                Download Report
-              </Button>
-            </div>
-            <div className="grid grid-cols-2 gap-6">
-              <div className="space-y-3 text-gray-600 dark:text-gray-300">
-                <p className="flex justify-between">
-                  <span className="font-medium">Date:</span>
-                  <span>{moment(consultantData.date).format('DD MMM YYYY')}</span>
-                </p>
-                <p className="flex justify-between">
-                  <span className="font-medium">Status:</span>
-                  <span className={getStatusClass(consultantData.attendance_status)}>
-                    {consultantData.attendance_status.toUpperCase()}
-                  </span>
-                </p>
+          <div className="bg-white p-4 rounded-lg border border-gray-200">
+            <h3 className="text-lg font-semibold mb-4 text-gray-700">Attendance Details</h3>
+            <div className="space-y-3">
+              <div className="flex justify-between">
+                <span className="text-gray-600">Current Status:</span>
+                <span className={`font-medium ${getConsultantStatusColor(selectedRecord.attendance_status)}`}>
+                  {selectedRecord.attendance_status?.charAt(0).toUpperCase() + 
+                   selectedRecord.attendance_status?.slice(1)}
+                </span>
               </div>
-              <div className="space-y-3 text-gray-600 dark:text-gray-300">
-                <p className="flex justify-between">
-                  <span className="font-medium">Basic Pay:</span>
-                  <span>₹{consultantData.salary.toLocaleString()}</span>
-                </p>
-                <p className="flex justify-between">
-                  <span className="font-medium">Today's Payable:</span>
-                  <span>₹{calculatePayableAmount(consultantData).toLocaleString()}</span>
-                </p>
+              <div className="flex justify-between">
+                <span className="text-gray-600">Date:</span>
+                <span>{moment(selectedRecord.date).format('DD MMM YYYY')}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-gray-600">Last Updated:</span>
+                <span>{moment(selectedRecord.updated_at).format('DD MMM YYYY HH:mm')}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-gray-600">Payable Amount:</span>
+                <span className="font-medium text-primary">
+                  ₹{selectedRecord.payable_amount?.toLocaleString() || 0}
+                </span>
               </div>
             </div>
           </div>
+        </div>
 
-          {/* Attendance Status Section */}
-          <div className="bg-gray-50 p-6 rounded-xl col-span-2">
-            <div className="flex justify-between items-center mb-4">
-              <h4 className="text-lg font-semibold">Attendance Status</h4>
-              <Select
-                value={consultantData.attendance_status}
-                onChange={handleModalStatusChange}
-                loading={updatingStatus}
-                className="w-40"
-                popupClassName="rounded-xl"
-              >
-                {statusOptions.map(status => (
-                  <Option key={status.value} value={status.value}>
-                    <span className={status.color}>
-                      {status.label}
-                    </span>
-                  </Option>
-                ))}
-              </Select>
-            </div>
-            
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-3">
-                <p className="flex justify-between">
-                  <span className="text-gray-600">Current Status:</span>
-                  <span className={`font-medium ${getStatusClass(consultantData.attendance_status)}`}>
-                    {consultantData.attendance_status.charAt(0).toUpperCase() + 
-                     consultantData.attendance_status.slice(1)}
-                  </span>
-                </p>
-                <p className="flex justify-between">
-                  <span className="text-gray-600">Date:</span>
-                  <span>{moment(selectedDate).format('DD MMM YYYY')}</span>
-                </p>
-              </div>
-              <div className="space-y-3">
-                <p className="flex justify-between">
-                  <span className="text-gray-600">Payable Amount:</span>
-                  <span className="font-medium text-primary">
-                    ₹{calculatePayableAmount(consultantData).toLocaleString()}
-                  </span>
-                </p>
-              </div>
-            </div>
+        {/* Attendance Status Update Section */}
+        <div className="bg-white rounded-lg p-5 border border-gray-200 mb-6">
+          <div className="flex justify-between items-center mb-4">
+            <h3 className="text-lg font-semibold text-gray-700">Update Attendance Status</h3>
+            <Select
+              value={selectedRecord.attendance_status}
+              onChange={(newStatus) => handleConsultantStatusUpdate(selectedRecord, newStatus)}
+              className="w-40"
+              loading={loadingRows[selectedRecord.id]}
+            >
+              {consultantStatusOptions.map(option => (
+                <Option 
+                  key={option.value} 
+                  value={option.value}
+                  className={option.color}
+                >
+                  {option.label}
+                </Option>
+              ))}
+            </Select>
           </div>
+        </div>
+
+        {/* Report Download Section */}
+        <div className="flex justify-end">
+          <Button 
+            type="primary"
+            icon={<DownloadOutlined />}
+            onClick={() => handleConsultantReportDownload(selectedRecord)}
+            loading={loadingRows[`download_${selectedRecord.id}`]}
+          >
+            Download Report
+          </Button>
         </div>
       </Modal>
     );
   };
 
-  // Dashboard Cards with rounded borders
-  const DashboardCard = ({ icon: Icon, title, value, className }) => (
-    <div className="bg-white dark:bg-boxdark rounded-2xl p-6 border border-gray-200 dark:border-gray-700 shadow-sm">
-      <div className="flex items-center gap-4">
-        <div className="flex h-12 w-12 items-center justify-center rounded-full bg-gray-100 dark:bg-boxdark-2">
-          <Icon className="h-6 w-6 text-primary dark:text-white" />
-        </div>
-        <div>
-          <h4 className="text-2xl font-bold text-black dark:text-white">
-            {value}
-          </h4>
-          <span className="text-sm font-medium text-gray-600 dark:text-gray-400">{title}</span>
-        </div>
-      </div>
-    </div>
-  );
+  const handleViewClick = async (record) => {
+    try {
+      setLoadingRows(prev => ({ ...prev, [record.id]: true }));
+      
+      const formattedDate = moment(selectedDate).format('YYYY-MM-DD');
+      const isConsultant = record.type === 'consultant';
+      
+      const response = isConsultant 
+        ? await getConsultantDetails(record.dental_team_id, formattedDate)
+        : await getStaffDetails(record.dental_team_id, formattedDate);
 
-  const handleViewClick = (record) => {
-    setSelectedRecord(record);
-    setIsModalVisible(true);
+      if (response.success) {
+        setSelectedRecord({
+          ...record,
+          ...response.data,
+          employeeType: isConsultant ? 'consultant' : 'staff'
+        });
+        
+        // Set the correct modal visibility
+        if (isConsultant) {
+          setIsConsultantModalVisible(true);
+        } else {
+          setIsStaffModalVisible(true);
+        }
+      } else {
+        message.error('Failed to fetch details');
+      }
+    } catch (error) {
+      console.error('Error fetching details:', error);
+      message.error('Failed to fetch details');
+    } finally {
+      setLoadingRows(prev => ({ ...prev, [record.id]: false }));
+    }
   };
 
   // Function to download Excel
@@ -799,6 +685,13 @@ const Management = () => {
         record.name.toLowerCase().includes(value.toLowerCase()),
     },
     {
+      title: "Date",
+      dataIndex: "date",
+      key: "date",
+      render: (date) => moment(date).format('DD MMM YYYY'),
+      sorter: (a, b) => moment(a.date).unix() - moment(b.date).unix(),
+    },
+    {
       title: "Specialisation",
       dataIndex: "specialisation",
       key: "specialisation",
@@ -843,78 +736,71 @@ const Management = () => {
         <Button
           type="primary"
           onClick={() => handleViewClick(record)}
-          icon={<EyeOutlined />}
+          loading={loadingRows[record.id]}
+          icon={!loadingRows[record.id] && <EyeOutlined />}
           className="bg-blue-500"
         >
-          View
+          {loadingRows[record.id] ? 'Loading' : 'View'}
         </Button>
-
-        
       ),
     },
   ];
 
   const consultantColumns = [
     {
-      title: 'Name',
-      dataIndex: 'name',
-      key: 'name',
+      title: "Name",
+      dataIndex: "name",
+      key: "name",
+      sorter: (a, b) => a.name.localeCompare(b.name),
     },
     {
-      title: 'Specialisation',
-      dataIndex: 'specialisation',
-      key: 'specialisation',
+      title: "Specialisation",
+      dataIndex: "specialisation",
+      key: "specialisation",
+      render: (specialisation) => specialisation || 'N/A',
+      sorter: (a, b) => (a.specialisation || '').localeCompare(b.specialisation || ''),
     },
     {
-      title: 'Salary',
-      dataIndex: 'salary',
-      key: 'salary',
-      render: (salary, record) => (
-        <InputNumber
-          defaultValue={salary}
-          onChange={(value) => handleStatusChange(record, record.attendance_status, value)}
-          min={0}
-          formatter={(value) => `₹ ${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')}
-          parser={(value) => value.replace(/₹\s?|(,*)/g, '')}
-        />
-      )
+      title: "Date",
+      dataIndex: "date",
+      key: "date",
+      render: (date) => moment(date).format('DD MMM YYYY'),
     },
     {
-      title: 'Status',
-      dataIndex: 'attendance_status',
-      key: 'attendance_status',
+      title: "Status",
+      dataIndex: "attendance_status",
+      key: "status",
       render: (status, record) => (
         <Select
           value={status}
-          onChange={(newStatus) => handleStatusChange(record, newStatus)}
+          onChange={(newStatus) => handleConsultantStatusUpdate(record, newStatus)}
           className="w-32"
-          dropdownClassName="rounded-xl"
+          loading={loadingRows[record.id]}
         >
           {consultantStatusOptions.map(option => (
             <Option key={option.value} value={option.value}>
-              <span className={option.color}>
-                {option.label}
-              </span>
+              <span className={option.color}>{option.label}</span>
             </Option>
           ))}
         </Select>
       )
     },
     {
-      title: 'Date',
-      dataIndex: 'date',
-      key: 'date',
-      render: (date) => moment(date).format('DD MMM YYYY')
+      title: "Daily Pay",
+      dataIndex: "salary",
+      key: "daily_pay",
+      render: (salary) => `₹${(salary || 0).toLocaleString()}`,
+      sorter: (a, b) => (a.salary || 0) - (b.salary || 0),
     },
     {
-      title: 'Actions',
-      key: 'actions',
+      title: "Actions",
+      key: "actions",
       render: (_, record) => (
         <Button
           type="primary"
-          onClick={() => showDetailModal(record)}
+          onClick={() => handleViewClick({ ...record, type: 'consultant' })}
           icon={<EyeOutlined />}
-          className="bg-blue-500"
+          loading={loadingRows[record.id]}
         >
           View
         </Button>
@@ -1017,48 +903,7 @@ const Management = () => {
   }, [staffData, consultantData]);
 
   // Update modal props to include monthlyTotals
-  const staffModalProps = {
-    selectedRecord,
-    isModalVisible,
-    selectedDate,
-    handleDateChange: (date) => setSelectedDate(date.format('YYYY-MM-DD')),
-    handleModalClose: () => {
-      setIsModalVisible(false);
-      setSelectedRecord(null);
-    },
-    handleQuickStatusUpdate,
-    handleModalStatusChange,
-    calculateMonthlyDetails,
-    calculatePayableAmount,
-    monthlyTotals,
-    statusOptions: [
-      { value: 'present', label: 'Present' },
-      { value: 'absent', label: 'Absent' },
-      { value: 'half-day', label: 'Half Day' },
-      { value: 'day-off', label: 'Day Off' }
-    ]
-  };
 
-  const consultantModalProps = {
-    selectedRecord,
-    isModalVisible,
-    selectedDate,
-    handleDateChange: (date) => setSelectedDate(date.format('YYYY-MM-DD')),
-    handleModalClose: () => {
-      setIsModalVisible(false);
-      setSelectedRecord(null);
-    },
-    handleQuickStatusUpdate,
-    handleModalStatusChange,
-    calculatePayableAmount,
-    monthlyTotals,
-    statusOptions: [
-      { value: 'present', label: 'Present' },
-      { value: 'absent', label: 'Absent' },
-      { value: 'half-day', label: 'Half Day' },
-      { value: 'day-off', label: 'Day Off' }
-    ]
-  };
 
   const fetchStaffData = async (date = selectedDate) => {
     try {
@@ -1118,6 +963,256 @@ const Management = () => {
         console.error('Error showing modal:', error);
         message.error('Failed to open details');
     }
+  };
+
+  const handleViewDetails = async (record, type) => {
+    try {
+      setLoading(true);
+      const formattedDate = moment(selectedDate).format('YYYY-MM-DD');
+      
+      let response;
+      if (type === 'staff') {
+        response = await getStaffDetails(record.dental_team_id, formattedDate);
+      } else {
+        response = await getConsultantDetails(record.dental_team_id, formattedDate);
+      }
+
+      if (response.success) {
+        showDetailModal(response.data);
+      } else {
+        message.error('Failed to fetch details');
+      }
+    } catch (error) {
+      console.error('Error fetching details:', error);
+      message.error('Failed to fetch details');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleDownloadReport = async (record) => {
+    try {
+      setLoadingRows(prev => ({ ...prev, [`download_${record.id}`]: true }));
+      
+      const startDate = moment(selectedDate).startOf('month').format('YYYY-MM-DD');
+      const endDate = moment(selectedDate).endOf('month').format('YYYY-MM-DD');
+      
+      const response = await downloadStaffReport(record.dental_team_id, startDate, endDate);
+      
+      // Create blob from response
+      const blob = new Blob([response.data], { 
+        type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' 
+      });
+      
+      // Create download link
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `${record.name}_attendance_report_${moment(selectedDate).format('MMM_YYYY')}.xlsx`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+
+      message.success('Report downloaded successfully');
+    } catch (error) {
+      console.error('Error downloading report:', error);
+      message.error('Failed to download report: ' + (error.message || 'Unknown error'));
+    } finally {
+      setLoadingRows(prev => ({ ...prev, [`download_${record.id}`]: false }));
+    }
+  };
+
+  const renderDetailsModal = () => (
+    <Modal
+      title={`${selectedEmployee?.name || 'Employee'}'s Details`}
+      open={isDetailsModalVisible}
+      onCancel={() => {
+        setIsDetailsModalVisible(false);
+        setSelectedEmployee(null);
+        setEmployeeDetails(null);
+      }}
+      footer={null}
+      width={800}
+    >
+      {loading ? (
+        <div>Loading...</div>
+      ) : employeeDetails ? (
+        <div className="space-y-4">
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <h3 className="font-semibold">Basic Information</h3>
+              <p>Name: {employeeDetails.name}</p>
+              <p>Specialisation: {employeeDetails.specialisation}</p>
+              <p>Type: {selectedEmployee?.employeeType === 'staff' ? 'Staff' : 'Consultant'}</p>
+              {selectedEmployee?.employeeType === 'staff' && (
+                <p>Date of Joining: {moment(employeeDetails.doj).format('DD MMM YYYY')}</p>
+              )}
+              <p>Monthly Salary: ₹{employeeDetails.salary}</p>
+            </div>
+            <div>
+              <h3 className="font-semibold">Monthly Statistics</h3>
+              <p>Present Days: {employeeDetails.monthly_statistics?.present_days || 0}</p>
+              <p>Absent Days: {employeeDetails.monthly_statistics?.absent_days || 0}</p>
+              {selectedEmployee?.employeeType === 'staff' && (
+                <>
+                  <p>Half Days: {employeeDetails.monthly_statistics?.half_days || 0}</p>
+                  <p>LOP Days: {employeeDetails.monthly_statistics?.lop_days || 0}</p>
+                  <p>Leave Balance: {employeeDetails.leave_balances || 0} days</p>
+                </>
+              )}
+            </div>
+          </div>
+          <div>
+            <h3 className="font-semibold">Payroll Information</h3>
+            <p>Daily Rate: ₹{(employeeDetails.monthly_statistics?.daily_rate || 0).toFixed(2)}</p>
+            <p>Total Payable: ₹{(employeeDetails.monthly_statistics?.total_payable || 0).toFixed(2)}</p>
+          </div>
+        </div>
+      ) : (
+        <div>No data available</div>
+      )}
+    </Modal>
+  );
+
+  const renderDownloadModal = () => (
+    <Modal
+      title="Download Attendance Report"
+      open={isDownloadModalVisible}
+      onOk={() => handleDownloadReport(selectedStaff)}
+      onCancel={() => setIsDownloadModalVisible(false)}
+    >
+      <div className="space-y-4">
+        <p>Select date range for the report:</p>
+        <RangePicker
+          value={downloadDateRange}
+          onChange={setDownloadDateRange}
+          className="w-full"
+        />
+      </div>
+    </Modal>
+  );
+
+  const handleModalDateChange = async (date) => {
+    try {
+      setLoading(true);
+      setModalDate(date);
+      const formattedDate = date.format('YYYY-MM-DD');
+      
+      if (selectedRecord) {
+        const isConsultant = selectedRecord.type === 'consultant';
+        const detailsResponse = isConsultant 
+          ? await getConsultantDetails(selectedRecord.dental_team_id, formattedDate)
+          : await getStaffDetails(selectedRecord.dental_team_id, formattedDate);
+
+        if (detailsResponse.success) {
+          setSelectedRecord(detailsResponse.data);
+        }
+      }
+    } catch (error) {
+      console.error('Error updating modal date:', error);
+      message.error('Failed to fetch updated details');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Fetch consultant attendances
+  const fetchConsultantAttendances = async (date) => {
+    try {
+      setLoading(true);
+      const formattedDate = moment(date).format('YYYY-MM-DD');
+      const response = await getConsultantAttendances(formattedDate);
+      
+      if (response.success) {
+        setConsultantData(response.data);
+      } else {
+        message.error('Failed to fetch consultant data');
+      }
+    } catch (error) {
+      console.error('Error fetching consultant data:', error);
+      message.error('Failed to fetch consultant data');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Handle consultant status update
+  const handleConsultantStatusUpdate = async (record, newStatus) => {
+    try {
+      setLoadingRows(prev => ({ ...prev, [record.id]: true }));
+      
+      const response = await updateConsultantAttendanceStatus(record.id, {
+        status: newStatus,
+        date: moment(selectedDate).format('YYYY-MM-DD')
+      });
+
+      if (response.success) {
+        message.success('Status updated successfully');
+        
+        // Fetch updated data for the modal
+        const detailsResponse = await getConsultantDetails(
+          record.dental_team_id, 
+          moment(selectedDate).format('YYYY-MM-DD')
+        );
+
+        if (detailsResponse.success) {
+          setSelectedRecord(detailsResponse.data);
+        }
+
+        // Refresh the table data
+        await fetchConsultantAttendances(selectedDate);
+      } else {
+        message.error(response.message || 'Failed to update status');
+      }
+    } catch (error) {
+      console.error('Error updating status:', error);
+      message.error('Failed to update status');
+    } finally {
+      setLoadingRows(prev => ({ ...prev, [record.id]: false }));
+    }
+  };
+
+  // Handle consultant report download
+  const handleConsultantReportDownload = async (record) => {
+    try {
+      setLoadingRows(prev => ({ ...prev, [`download_${record.id}`]: true }));
+      
+      const startDate = moment(selectedDate).startOf('month').format('YYYY-MM-DD');
+      const endDate = moment(selectedDate).endOf('month').format('YYYY-MM-DD');
+      
+      const response = await downloadConsultantReport(record.dental_team_id, startDate, endDate);
+      
+      const blob = new Blob([response.data], { 
+        type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' 
+      });
+      
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `${record.name}_consultant_report_${moment(selectedDate).format('MMM_YYYY')}.xlsx`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+
+      message.success('Report downloaded successfully');
+    } catch (error) {
+      console.error('Error downloading report:', error);
+      message.error('Failed to download report');
+    } finally {
+      setLoadingRows(prev => ({ ...prev, [`download_${record.id}`]: false }));
+    }
+  };
+
+  const handleStaffModalClose = () => {
+    setIsStaffModalVisible(false);
+    setSelectedRecord(null);
+  };
+
+  const handleConsultantModalClose = () => {
+    setIsConsultantModalVisible(false);
+    setSelectedRecord(null);
   };
 
   return (
@@ -1265,6 +1360,9 @@ const Management = () => {
           Create Today's Attendance
         </Button>
       </Box>
+
+      {renderDetailsModal()}
+      {renderDownloadModal()}
     </div>
   );
 };
