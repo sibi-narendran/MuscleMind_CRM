@@ -68,16 +68,14 @@ export function Navigation({ isMenuOpen, setIsMenuOpen, handleScroll }) {
               <NavLink key={link.href} {...link} handleScroll={handleScroll} />
             ))}
             <button
-              onClick={() =>
-                (window.location.href = 'https://www.growdentcrm/')
-              }
+              onClick={() => (window.location.href = '/login')}
               className="text-indigo-600 border border-indigo-600 px-4 py-2 rounded-lg hover:bg-indigo-50 transition-colors duration-300"
             >
               Log In
             </button>
             <button
               onClick={handleTrialClick}
-               className= " bg-purple-500 text-white border border-indigo-600 px-4 py-2 rounded-lg hover:bg-purple-900 transition-colors duration-300"
+              className=" bg-purple-500 text-white border border-indigo-600 px-4 py-2 rounded-lg hover:bg-purple-900 transition-colors duration-300"
             >
               Start Free Trial
             </button>
