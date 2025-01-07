@@ -32,6 +32,8 @@ const AppLoader = () => {
 };
 
 // Your existing route imports
+
+const LandingPage = lazy(() => import('../landingPage/LandingPage'));
 const Dashboard = lazy(() => import('../components/Dashboard'));
 const Patients = lazy(() => import('../pages/paitents'));
 const Appointments = lazy(() => import('../components/Appointments'));
@@ -47,7 +49,8 @@ const Prescriptions = lazy(() => import('../pages/Prescriptions'));
 const Settings = lazy(() => import('../components/Settings'));
 
 const coreRoutes = [
-  { path: '/', title: 'Login', component: Login },
+  { path: '/', title: 'Login', component: LandingPage },
+  { path: '/login', title: 'Login', component: Login },
   { path: '/create-account', title: 'Create Account', component: CreateAccount },
   { path: '/forgot-password', title: 'Forgot Password', component: ForgotPassword },
   { path: '/dashboard', title: 'Dashboard', component: Dashboard },
