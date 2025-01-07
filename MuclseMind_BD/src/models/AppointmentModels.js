@@ -33,17 +33,50 @@ const generateAppointmentId = async () => {
 };
 
 const createAppointment = async (appointmentData) => {
-  // Generate a unique 5-digit appointment ID
-  const appointmentId = await generateAppointmentId();
+  try {
+    // Generate a unique 5-digit appointment ID
+    let isUnique = false;
+    let appointmentId;
 
-  const { data, error } = await supabase
-    .from('appointments')
-    .insert([{ ...appointmentData, appointment_id: appointmentId }]);
-  
-  console.log(appointmentData);
+    while (!isUnique) {
+      // Generate a random 5-digit number
+      appointmentId = Math.floor(10000 + Math.random() * 90000).toString();
 
-  if (error) throw error;
-  return data;
+      // Check if the generated ID is unique
+      const { data: existingAppointment, error: checkError } = await supabase
+        .from('appointments')
+        .select('appointment_id')
+        .eq('appointment_id', appointmentId)
+        .single();
+
+      if (checkError && checkError.code !== 'PGRST116') {
+        throw checkError;
+      }
+
+      if (!existingAppointment) {
+        isUnique = true;
+      }
+    }
+
+    // Add the appointment_id to the data
+    const appointmentWithId = {
+      ...appointmentData,
+      appointment_id: appointmentId
+    };
+
+    // Insert the appointment with the generated ID
+    const { data, error } = await supabase
+      .from('appointments')
+      .insert([appointmentWithId])
+      .select()
+      .single();
+
+    if (error) throw error;
+    return data;
+  } catch (error) {
+    console.error('Error in createAppointment:', error);
+    throw error;
+  }
 };
 
 const getAppointments = async (userId) => {

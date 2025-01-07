@@ -9,16 +9,31 @@ const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 const supabase = createClient(supabaseUrl, supabaseKey);
 
 const getOperatingHours = async (userId) => {
-  const { data, error } = await supabase
-    .from('operating_hours')
-    .select('day, status, open_time, close_time')
-    .eq('user_id', userId);
+  try {
+    const { data, error } = await supabase
+      .from('operating_hours')
+      .select('day, status, shift_1_open_time, shift_1_close_time, shift_2_open_time, shift_2_close_time')
+      .eq('user_id', userId)
+      .order('day');
 
-  if (error) {
-    console.error("Error fetching operating hours:", error);
+    if (error) throw error;
+
+    const daysOfWeek = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
+    return daysOfWeek.map(day => {
+      const existingDay = data.find(d => d.day === day) || {};
+      return {
+        day,
+        status: existingDay.status || 'closed',
+        shift_1_open_time: existingDay.shift_1_open_time || null,
+        shift_1_close_time: existingDay.shift_1_close_time || null,
+        shift_2_open_time: existingDay.shift_2_open_time || null,
+        shift_2_close_time: existingDay.shift_2_close_time || null
+      };
+    });
+  } catch (error) {
+    console.error('Error in getOperatingHours:', error);
     throw error;
   }
-  return data;
 };
 
 const updateOperatingHours = async (id, hoursData) => {
@@ -35,25 +50,59 @@ const updateOperatingHours = async (id, hoursData) => {
 };
 
 const upsertOperatingHours = async (userId, hoursData) => {
-  const { data, error } = await supabase
-    .from('operating_hours')
-    .upsert(hoursData, { onConflict: ['user_id', 'day'] });
+  try {
+    // First delete existing records for this user
+    const { error: deleteError } = await supabase
+      .from('operating_hours')
+      .delete()
+      .eq('user_id', userId);
 
-  if (error) {
-    console.error("Error upserting operating hours:", error);
+    if (deleteError) throw deleteError;
+
+    // Then insert new records
+    const formattedData = hoursData.map(hour => ({
+      user_id: userId,
+      day: hour.day.toLowerCase(),
+      status: hour.status,
+      shift_1_open_time: hour.shift_1_open_time,
+      shift_1_close_time: hour.shift_1_close_time,
+      shift_2_open_time: hour.shift_2_open_time,
+      shift_2_close_time: hour.shift_2_close_time
+    }));
+
+    const { data, error: insertError } = await supabase
+      .from('operating_hours')
+      .insert(formattedData)
+      .select();
+
+    if (insertError) {
+      console.error('Error inserting operating hours:', insertError);
+      throw insertError;
+    }
+
+    return data;
+  } catch (error) {
+    console.error('Error in upsertOperatingHours:', error);
     throw error;
   }
-  return data;
 };
 
-const getOperatingHoursByDay = async (day) => {
-  const { data, error } = await supabase
-    .from('operating_hours')
-    .select('*')
-    .eq('day', day);
+const getOperatingHoursByDay = async (day, userId) => {
+  try {
+    const { data, error } = await supabase
+      .from('operating_hours')
+      .select('*')
+      .eq('day', day)
+      .eq('user_id', userId);
 
-  if (error) throw error;
-  return data;
+    if (error) throw error;
+
+    // Return the first matching record or null if none found
+    return data && data.length > 0 ? data[0] : null;
+  } catch (error) {
+    console.error('Error in getOperatingHoursByDay:', error);
+    throw error;
+  }
 };
 
 module.exports = { getOperatingHours, updateOperatingHours, upsertOperatingHours, getOperatingHoursByDay };

@@ -14,30 +14,30 @@ const getOperatingHoursController = async (req, res) => {
 const updateOperatingHoursController = async (req, res) => {
   const { userId } = req.user;
   const hoursData = req.body;
-  console.log('Received hoursData:', hoursData); // Debugging: Log the received data
 
   try {
-    // Validate and format the incoming data
-    const formattedHoursData = hoursData.map(({ day, status, open_time, close_time }) => {
-      if (!status) {
-        throw new Error(`Status is required for day: ${day}`);
-      }
-      return {
-        user_id: userId,
-        day,
-        status,
-        open_time: open_time || null,
-        close_time: close_time || null
-      };
-    });
+    // Convert the array data to the correct format
+    const formattedHoursData = hoursData.map(day => ({
+      user_id: userId,
+      day: day.day,
+      status: day.status,
+      shift_1_open_time: day.shift_1_open_time,
+      shift_1_close_time: day.shift_1_close_time,
+      shift_2_open_time: day.shift_2_open_time,
+      shift_2_close_time: day.shift_2_close_time
+    }));
 
-    console.log('Formatted hoursData:', formattedHoursData); // Debugging: Log the formatted data
+    console.log('Formatted hours data:', formattedHoursData); // Debug log
 
-    await editOperatingHours(userId, formattedHoursData);
+    const result = await editOperatingHours(userId, formattedHoursData);
+    
+    if (!result.success) {
+      return res.status(400).json(createResponse(false, 'Failed to update operating hours', null, result.error));
+    }
 
-    res.status(200).json(createResponse(true, 'Operating hours updated successfully'));
+    res.status(200).json(createResponse(true, 'Operating hours updated successfully', result.data));
   } catch (error) {
-    console.error('Error updating operating hours:', error.message); // Debugging: Log the error
+    console.error('Error in updateOperatingHoursController:', error);
     res.status(500).json(createResponse(false, 'Failed to update operating hours', null, error.message));
   }
 };

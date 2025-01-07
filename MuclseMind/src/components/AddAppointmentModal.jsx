@@ -59,6 +59,7 @@ const AddAppointmentModal = ({ visible, onClose, onAdd }) => {
   };
 
   const handleAdd = async (values) => {
+    if (isLoading) return; // Prevent double submission
     try {
       setIsLoading(true);
       const selectedPatient = patients.find(patient => patient.id === values.patient);
@@ -94,13 +95,19 @@ const AddAppointmentModal = ({ visible, onClose, onAdd }) => {
       if (response.success) {
         message.success('Appointment added successfully');
         form.resetFields();
-        onAdd(response.data);
-        onClose();
+        onClose(); // Close the modal first
+        // Use setTimeout to ensure the modal is closed before updating the parent
+        setTimeout(() => {
+          if (onAdd && response.data) {
+            onAdd(response.data);
+          }
+        }, 100);
       } else {
-        message.error(response.message);
+        throw new Error(response.message || response.error || 'Failed to add appointment');
       }
     } catch (error) {
-      message.error(error.error);
+      console.error('Error adding appointment:', error);
+      message.error(error.message || 'Failed to add appointment');
     } finally {
       setIsLoading(false);
     }
@@ -141,12 +148,15 @@ const AddAppointmentModal = ({ visible, onClose, onAdd }) => {
         onCancel={onClose}
         footer={null}
         bodyStyle={{ padding: '20px' }}
+        maskClosable={false}  // Prevent accidental closing
+        destroyOnClose={true} // Clean up form when modal closes
       >
         <Form 
           form={form}
           layout="vertical" 
           onFinish={handleAdd}
           className="space-y-4"
+          preserve={false} // Don't preserve form values
         >
           <Form.Item
             label={<span className="font-semibold">Patient</span>}
@@ -275,7 +285,7 @@ const AddAppointmentModal = ({ visible, onClose, onAdd }) => {
               type="primary" 
               htmlType="submit"
               disabled={isLoading}
-              icon={isLoading ? <LoadingOutlined /> : null}
+              loading={isLoading}
             >
               {isLoading ? 'Adding...' : 'Add Appointment'}
             </Button>

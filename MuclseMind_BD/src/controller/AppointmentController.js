@@ -4,16 +4,62 @@ const { createResponse } = require('../utils/responseUtil');
 const addAppointmentController = async (req, res) => {
   try {
     const appointmentData = req.body;
-    console.log(appointmentData);
-    const userId = req.user.userId; // Extract user ID from JWT
+    console.log("Received appointment data:", appointmentData);
 
-  
+    // Validate required fields
+    if (!appointmentData || Object.keys(appointmentData).length === 0) {
+      return res.status(400).send({
+        success: false,
+        message: 'Appointment data is required',
+        data: null,
+        error: 'Empty request body'
+      });
+    }
+
+    // Validate essential fields
+    const requiredFields = ['date', 'time', 'treatment_id', 'patient_id'];
+    const missingFields = requiredFields.filter(field => !appointmentData[field]);
+    
+    if (missingFields.length > 0) {
+      return res.status(400).send({
+        success: false,
+        message: `Missing required fields: ${missingFields.join(', ')}`,
+        data: null,
+        error: 'Missing required fields'
+      });
+    }
+
+    const userId = req.user.userId;
+    console.log("User ID:", userId);
 
     const result = await addAppointment(appointmentData, userId);
-    res.status(201).json(createResponse(true, 'Appointment added successfully', result));
+    console.log("Service result:", result); // Debug log
+    
+    // Check if there's an error in the result
+    if (!result.success) {
+      return res.status(400).send({
+        success: false,
+        message: result.error || 'Failed to add appointment',
+        data: null,
+        error: result.error || 'Unknown error occurred'
+      });
+    }
+
+    // If successful
+    return res.status(201).send({
+      success: true,
+      message: 'Appointment added successfully',
+      data: result.data,
+      error: null
+    });
   } catch (error) {
     console.error('Failed to add appointment:', error);
-    res.status(500).json(createResponse(false, 'Failed to add appointment', null, error.message));
+    return res.status(500).send({
+      success: false,
+      message: error.message || 'Failed to add appointment',
+      data: null,
+      error: error.message || 'Internal server error'
+    });
   }
 };
 
@@ -33,10 +79,31 @@ const updateAppointmentController = async (req, res) => {
   try {
     const { id } = req.params;
     const updatedData = req.body;
-    const updatedAppointment = await modifyAppointment(id, updatedData);
-    res.status(200).json(createResponse(true, 'Appointment updated successfully', updatedAppointment));
+    const result = await modifyAppointment(id, updatedData);
+
+    // Check if there's an error in the result
+    if (!result.success) {
+      return res.status(400).json(createResponse(
+        false,
+        result.error, // Use the error message as the main message
+        null,
+        result.error
+      ));
+    }
+
+    // If successful
+    res.status(200).json(createResponse(
+      true,
+      'Appointment updated successfully',
+      result.data
+    ));
   } catch (error) {
-    res.status(500).json(createResponse(false, 'Failed to update appointment', null, error.message));
+    res.status(500).json(createResponse(
+      false,
+      error.message || 'Failed to update appointment',
+      null,
+      error.message
+    ));
   }
 };
 
