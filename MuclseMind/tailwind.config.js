@@ -3,18 +3,19 @@ import defaultTheme from 'tailwindcss/defaultTheme';
 /** @type {import('tailwindcss').Config} */
 module.exports = {
   content: [
-    './index.html', 
+    './index.html',
     './src/**/*.{js,ts,jsx,tsx}',
-    'node_modules/flowbite-react/lib/esm/**/*.js'
+    'node_modules/flowbite-react/lib/esm/**/*.js',
   ],
   darkMode: 'class',
   theme: {
     extend: {
       fontFamily: {
-        satoshi: ['Satoshi', 'sans-serif'],
+        ubuntu: ['Ubuntu', 'sans-serif'],
         ...defaultTheme.fontFamily,
       },
       colors: {
+        primary: '#2563eb',
         current: 'currentColor',
         transparent: 'transparent',
         white: '#FFFFFF',
@@ -249,13 +250,13 @@ module.exports = {
         bounce: {
           '0%, 100%': {
             transform: 'translateY(-16%)',
-            animationTimingFunction: 'cubic-bezier(0.8, 0, 1, 1)'
+            animationTimingFunction: 'cubic-bezier(0.8, 0, 1, 1)',
           },
           '50%': {
             transform: 'translateY(0)',
-            animationTimingFunction: 'cubic-bezier(0, 0, 0.2, 1)'
-          }
-        }
+            animationTimingFunction: 'cubic-bezier(0, 0, 0.2, 1)',
+          },
+        },
       },
       animation: {
         'ping-once': 'ping 5s cubic-bezier(0, 0, 0.2, 1)',
@@ -263,16 +264,16 @@ module.exports = {
         'spin-1.5': 'spin 1.5s linear infinite',
         'spin-2': 'spin 2s linear infinite',
         'spin-3': 'spin 3s linear infinite',
-        'bounce-slow': 'bounce 2s infinite ease-in-out'
+        'bounce-slow': 'bounce 2s infinite ease-in-out',
       },
     },
   },
-  
+
   plugins: [
     require('flowbite/plugin'),
     require('@tailwindcss/typography'),
     require('tailwind-scrollbar'),
-    function({ addUtilities }) {
+    function ({ addUtilities }) {
       const newUtilities = {
         '.hide-scrollbar': {
           'scrollbar-width': 'none',
@@ -281,10 +282,10 @@ module.exports = {
         '.hide-scrollbar::-webkit-scrollbar': {
           display: 'none',
         },
-      }
-      addUtilities(newUtilities)
-    }
+      };
+      addUtilities(newUtilities);
+    },
   ],
-}
+};
 
 
