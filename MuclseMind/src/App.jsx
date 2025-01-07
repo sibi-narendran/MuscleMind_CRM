@@ -17,7 +17,7 @@ function App() {
       <Routes>
         {/* Public Routes */}
         {routes
-          .filter(route => ['/', '/create-account', '/forgot-password'].includes(route.path))
+          .filter(route => ['/','/login', '/create-account', '/forgot-password'].includes(route.path))
           .map(({ path, component: Component }) => (
             <Route
               key={path}
@@ -33,7 +33,7 @@ function App() {
         {/* Protected Routes with DefaultLayout */}
         <Route element={<DefaultLayout />}>
           {routes
-            .filter(route => !['/', '/create-account', '/forgot-password'].includes(route.path))
+            .filter(route => !['/login','/', '/create-account', '/forgot-password'].includes(route.path))
             .map(({ path, component: Component }) => (
               <Route
                 key={path}
