@@ -95,17 +95,13 @@ const AddAppointmentModal = ({ visible, onClose, onAdd }) => {
       if (response.success) {
         message.success('Appointment added successfully');
         form.resetFields();
-        // First close the modal
-        if (onClose) {
-          onClose();
-        }
-        // Then notify parent component about the new appointment
-        if (onAdd) {
-          // Use setTimeout to ensure modal is closed first
-          setTimeout(() => {
+        onClose(); // Close the modal first
+        // Use setTimeout to ensure the modal is closed before updating the parent
+        setTimeout(() => {
+          if (onAdd && response.data) {
             onAdd(response.data);
-          }, 0);
-        }
+          }
+        }, 100);
       } else {
         throw new Error(response.message || response.error || 'Failed to add appointment');
       }

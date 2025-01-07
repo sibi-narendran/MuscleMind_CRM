@@ -68,16 +68,13 @@ const Appointments = () => {
 
   const handleAddAppointment = async (newAppointment) => {
     try {
-      const response = await addAppointment(newAppointment);
-      if (response.success) {
-        message.success('Appointment added successfully');
-        setShowAddModal(false);
-        await fetchTodayAppointments();
-      } else {
-        message.error(response.message || 'Failed to add appointment');
-      }
+      // The appointment has already been created by the modal
+      // Just update the UI with the new appointment
+      await fetchTodayAppointments();
+      setShowAddModal(false);
     } catch (error) {
-      message.error('Failed to add appointment: ' + error.message);
+      console.error('Error refreshing appointments:', error);
+      message.error('Error refreshing appointments: ' + error.message);
     }
   };
 

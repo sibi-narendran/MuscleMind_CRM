@@ -191,17 +191,18 @@ const addAppointment = async (appointmentData, userId) => {
     // Handle notifications
     try {
       await sendAppointmentNotification({
-        patientName: patient_name,
+        patientName: appointmentData.patient_name,
         patientPhone: appointmentData.patient_phone,
         doctorName: appointmentData.care_person,
         doctorPhone: appointmentData.doctor_phone,
-        appointmentDate: date,
-        appointmentTime: time,
-        type: 'SCHEDULED'
+        appointmentDate: appointmentData.date,
+        appointmentTime: appointmentData.time,
+        type: 'SCHEDULED',
+        clinic_name: appointmentData.clinic_name
       });
     } catch (notificationError) {
       console.error('Notification error:', notificationError);
-      // Don't fail the appointment creation if notification fails
+      // Log the error but don't fail the appointment creation
     }
 
     return {

@@ -1,195 +1,128 @@
 const twilio = require('twilio');
 const moment = require('moment');
 
-const sendAppointmentNotification = async (appointmentData, type = 'SCHEDULED') => {
+// Initialize Twilio client
+const client = twilio(process.env.TWILIO_ACCOUNT_SID, process.env.TWILIO_AUTH_TOKEN);
+
+const sendAppointmentNotification = async (appointmentData) => {
   try {
-    console.log('Starting notification process for:', {
-      type,
-      patient: appointmentData.patient_name,
-      doctor: appointmentData.care_person
+    const {
+      patientName,
+      patientPhone,
+      doctorName,
+      doctorPhone,
+      appointmentDate,
+      appointmentTime,
+      type
+    } = appointmentData;
+
+    console.log('Sending notification for:', {
+      patientName,
+      patientPhone,
+      doctorName,
+      doctorPhone,
+      appointmentDate,
+      appointmentTime,
+      type
     });
 
-    const client = twilio(process.env.TWILIO_ACCOUNT_SID, process.env.TWILIO_AUTH_TOKEN);
-    const formattedDate = moment(appointmentData.date).format('MMMM DD, YYYY');
-    const formattedTime = moment(appointmentData.time, 'HH:mm').format('hh:mm A');
+    // Format date and time for the message
+    const formattedDate = new Date(appointmentDate).toLocaleDateString('en-US', {
+      weekday: 'long',
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric'
+    });
+    const formattedTime = new Date(`2000-01-01T${appointmentTime}`).toLocaleTimeString('en-US', {
+      hour: 'numeric',
+      minute: 'numeric',
+      hour12: true
+    });
 
-    const messages = {
-      SCHEDULED: {
-        patient: `
-🦷 *Appointment Confirmation - ${appointmentData.clinic_name}*
+    // Patient message
+    const patientMessage = type === 'SCHEDULED' 
+      ? `🦷 *Appointment Confirmation - ${appointmentData.clinic_name}*\n\nDear ${patientName},\n\nYour dental appointment has been scheduled:\n📅 Date: ${formattedDate}\n⏰ Time: ${formattedTime}\n👨‍⚕️ Doctor: Dr. ${doctorName}\n\nPlease arrive 10 minutes early. If you need to reschedule, please contact us 24 hours in advance.\n\nThank you for choosing us!`
+      : type === 'CANCELLED'
+      ? `🦷 *Appointment Cancellation*\n\nDear ${patientName},\n\nYour appointment with Dr. ${doctorName} for ${formattedDate} at ${formattedTime} has been cancelled.`
+      : `🦷 *Appointment Update*\n\nDear ${patientName},\n\nYour appointment with Dr. ${doctorName} for ${formattedDate} at ${formattedTime} has been updated.`;
 
-Dear ${appointmentData.patient_name},
+    // Doctor message
+    const doctorMessage = type === 'SCHEDULED'
+      ? `🦷 *New Appointment Alert*\n\nDear Dr. ${doctorName},\n\nA new appointment has been scheduled:\n👤 Patient: ${patientName}\n📅 Date: ${formattedDate}\n⏰ Time: ${formattedTime}`
+      : type === 'CANCELLED'
+      ? `🦷 *Appointment Cancellation Alert*\n\nDear Dr. ${doctorName},\n\nThe appointment with ${patientName} for ${formattedDate} at ${formattedTime} has been cancelled.`
+      : `🦷 *Appointment Update Alert*\n\nDear Dr. ${doctorName},\n\nThe appointment with ${patientName} for ${formattedDate} at ${formattedTime} has been updated.`;
 
-Your dental appointment has been scheduled:
-📅 Date: ${formattedDate}
-⏰ Time: ${formattedTime}
-👨‍⚕️ Doctor: Dr. ${appointmentData.care_person}
-🏥 Treatment: ${appointmentData.treatment_name}
-
-Location: ${appointmentData.clinic_name}
-📞 Clinic Contact: ${appointmentData.clinic_phone}
-
-Please arrive 10 minutes early. If you need to reschedule, please contact us 24 hours in advance.
-
-Thank you for choosing us!`,
-
-        doctor: `
-🦷 *New Appointment Alert*
-
-Dear Dr. ${appointmentData.care_person},
-
-A new appointment has been scheduled:
-👤 Patient: ${appointmentData.patient_name}
-📅 Date: ${formattedDate}
-⏰ Time: ${formattedTime}
-🏥 Treatment: ${appointmentData.treatment_name}
-📞 Patient Contact: ${appointmentData.patient_phone}
-
-Location: ${appointmentData.clinic_name}`
-      },
-
-      CANCELLED: {
-        patient: `
-🦷 *Appointment Cancellation - ${appointmentData.clinic_name}*
-
-Dear ${appointmentData.patient_name},
-
-Your appointment scheduled for:
-📅 Date: ${formattedDate}
-⏰ Time: ${formattedTime}
-👨‍⚕️ Doctor: Dr. ${appointmentData.care_person}
-
-Has been cancelled. Please contact ${appointmentData.clinic_phone} to reschedule.
-
-Thank you for your understanding.`,
-
-        doctor: `
-🦷 *Appointment Cancellation Alert*
-
-Dear Dr. ${appointmentData.care_person},
-
-The following appointment has been cancelled:
-👤 Patient: ${appointmentData.patient_name}
-📅 Date: ${formattedDate}
-⏰ Time: ${formattedTime}
-🏥 Treatment: ${appointmentData.treatment_name}`
-      },
-
-      COMPLETED: {
-        patient: `
-🦷 *Thank You - ${appointmentData.clinic_name}*
-
-Dear ${appointmentData.patient_name},
-
-Thank you for visiting us today. Your appointment with Dr. ${appointmentData.care_person} has been completed.
-
-For any post-treatment queries, please contact us:
-📞 ${appointmentData.clinic_phone}
-
-We appreciate your trust in our care!`,
-
-        doctor: `
-🦷 *Appointment Completed*
-
-Dear Dr. ${appointmentData.care_person},
-
-Appointment completed for:
-👤 Patient: ${appointmentData.patient_name}
-📅 Date: ${formattedDate}
-⏰ Time: ${formattedTime}
-🏥 Treatment: ${appointmentData.treatment_name}`
-      }
+    const results = {
+      patient: { sms: false, whatsapp: false },
+      doctor: { sms: false, whatsapp: false }
     };
 
-    const notifications = [];
-    const notificationResults = {
-      patient: { sms: null, whatsapp: null },
-      doctor: { sms: null, whatsapp: null }
-    };
-
-    // Send notifications to patient
-    if (appointmentData.patient_phone) {
-      console.log('Sending notifications to patient:', appointmentData.patient_phone);
-
-      // SMS to patient
+    // Send SMS to patient
+    if (patientPhone) {
       try {
         const patientSMS = await client.messages.create({
-          body: messages[type].patient,
-          to: appointmentData.patient_phone,
+          body: patientMessage,
+          to: patientPhone,
           from: process.env.TWILIO_PHONE_NUMBER
         });
-        console.log('✅ Patient SMS sent:', patientSMS.sid);
+        console.log('Patient SMS sent:', patientSMS.sid);
+        results.patient.sms = true;
       } catch (error) {
-        console.error('❌ Patient SMS failed:', error.message);
+        console.error('Error sending patient SMS:', error.message);
       }
 
-      // WhatsApp to patient
+      // Send WhatsApp to patient
       try {
         const patientWhatsApp = await client.messages.create({
-          body: messages[type].patient,
-          to: `whatsapp:${appointmentData.patient_phone}`,
+          body: patientMessage,
+          to: `whatsapp:${patientPhone}`,
           from: `whatsapp:${process.env.TWILIO_WHATSAPP_NUMBER}`
         });
-        console.log('✅ Patient WhatsApp sent:', patientWhatsApp.sid);
+        console.log('Patient WhatsApp sent:', patientWhatsApp.sid);
+        results.patient.whatsapp = true;
       } catch (error) {
-        console.error('❌ Patient WhatsApp failed:', error.message);
+        console.error('Error sending patient WhatsApp:', error.message);
       }
     }
 
-    // Send notifications to doctor
-    if (appointmentData.doctor_phone) {
-      console.log('Sending notifications to doctor:', appointmentData.doctor_phone);
-
-      // SMS to doctor
+    // Send SMS to doctor
+    if (doctorPhone) {
       try {
         const doctorSMS = await client.messages.create({
-          body: messages[type].doctor,
-          to: appointmentData.doctor_phone,
+          body: doctorMessage,
+          to: doctorPhone,
           from: process.env.TWILIO_PHONE_NUMBER
         });
-        console.log('✅ Doctor SMS sent:', doctorSMS.sid);
+        console.log('Doctor SMS sent:', doctorSMS.sid);
+        results.doctor.sms = true;
       } catch (error) {
-        console.error('❌ Doctor SMS failed:', error.message);
+        console.error('Error sending doctor SMS:', error.message);
       }
 
-      // WhatsApp to doctor
+      // Send WhatsApp to doctor
       try {
         const doctorWhatsApp = await client.messages.create({
-          body: messages[type].doctor,
-          to: `whatsapp:${appointmentData.doctor_phone}`,
+          body: doctorMessage,
+          to: `whatsapp:${doctorPhone}`,
           from: `whatsapp:${process.env.TWILIO_WHATSAPP_NUMBER}`
         });
-        console.log('✅ Doctor WhatsApp sent:', doctorWhatsApp.sid);
+        console.log('Doctor WhatsApp sent:', doctorWhatsApp.sid);
+        results.doctor.whatsapp = true;
       } catch (error) {
-        console.error('❌ Doctor WhatsApp failed:', error.message);
+        console.error('Error sending doctor WhatsApp:', error.message);
       }
     }
 
-    // Log final results
-    console.log('\n📊 Notification Summary:');
-    console.log('Patient Notifications:', {
-      sms: notificationResults.patient.sms ? '✅ Sent' : '❌ Failed',
-      whatsapp: notificationResults.patient.whatsapp ? '✅ Sent' : '❌ Failed'
-    });
-    console.log('Doctor Notifications:', {
-      sms: notificationResults.doctor.sms ? '✅ Sent' : '❌ Failed',
-      whatsapp: notificationResults.doctor.whatsapp ? '✅ Sent' : '❌ Failed'
+    console.log('📊 Notification Summary:', {
+      patient: results.patient,
+      doctor: results.doctor
     });
 
-    // Return detailed results
-    return {
-      success: true,
-      message: 'Notifications processed',
-      results: notificationResults
-    };
-
+    return results;
   } catch (error) {
-    console.error('❌ Fatal error in notification service:', error);
-    return {
-      success: false,
-      error: error.message,
-      details: error
-    };
+    console.error('Error in sendAppointmentNotification:', error);
+    throw error;
   }
 };
 
