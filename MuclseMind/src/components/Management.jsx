@@ -1218,102 +1218,102 @@ const Management = () => {
   return (
     <div className="p-6 bg-gray-50 dark:bg-boxdark-2">
       {/* Dashboard Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-6 mb-6">
-        <div className="bg-white dark:bg-boxdark p-6 rounded-xl shadow-sm border border-gray-100 dark:border-strokedark">
+      <div className="grid grid-cols-1 xs:grid-cols-2 md:grid-cols-3 xl:grid-cols-5 gap-4 sm:gap-6 mb-4 sm:mb-6">
+        <div className="bg-white dark:bg-boxdark p-4 sm:p-6 rounded-xl shadow-sm border border-gray-100 dark:border-strokedark">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-gray-500 dark:text-meta-2">
+              <p className="text-xs sm:text-sm text-gray-500 dark:text-meta-2">
                 Total Staff
               </p>
-              <h3 className="text-2xl font-bold text-gray-900 dark:text-white mt-1">
+              <h3 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white mt-1">
                 {staffData.length}
               </h3>
             </div>
-            <Users className="h-8 w-8 text-blue-500 dark:text-meta-3" />
+            <Users className="h-6 w-6 sm:h-8 sm:w-8 text-blue-500 dark:text-meta-3" />
           </div>
         </div>
 
-        <div className="bg-white dark:bg-boxdark p-6 rounded-xl shadow-sm border border-gray-100 dark:border-strokedark">
+        <div className="bg-white dark:bg-boxdark p-4 sm:p-6 rounded-xl shadow-sm border border-gray-100 dark:border-strokedark">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-gray-500 dark:text-meta-2">
+              <p className="text-xs sm:text-sm text-gray-500 dark:text-meta-2">
                 Present Today
               </p>
-              <h3 className="text-2xl font-bold text-gray-900 dark:text-white mt-1">
+              <h3 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white mt-1">
                 {presentStaff}
               </h3>
             </div>
-            <Clock className="h-8 w-8 text-green-500 dark:text-meta-3" />
+            <Clock className="h-6 w-6 sm:h-8 sm:w-8 text-green-500 dark:text-meta-3" />
           </div>
         </div>
 
-        <div className="bg-white dark:bg-boxdark p-6 rounded-xl shadow-sm border border-gray-100 dark:border-strokedark">
+        <div className="bg-white dark:bg-boxdark p-4 sm:p-6 rounded-xl shadow-sm border border-gray-100 dark:border-strokedark">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-gray-500 dark:text-meta-2">
+              <p className="text-xs sm:text-sm text-gray-500 dark:text-meta-2">
                 Absent Today
               </p>
-              <h3 className="text-2xl font-bold text-gray-900 dark:text-white mt-1">
+              <h3 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white mt-1">
                 {absentStaff}
               </h3>
             </div>
-            <Calendar className="h-8 w-8 text-red-500 dark:text-meta-3" />
+            <Calendar className="h-6 w-6 sm:h-8 sm:w-8 text-red-500 dark:text-meta-3" />
           </div>
         </div>
 
-        <div className="bg-white dark:bg-boxdark p-6 rounded-xl shadow-sm border border-gray-100 dark:border-strokedark">
+        <div className="bg-white dark:bg-boxdark p-4 sm:p-6 rounded-xl shadow-sm border border-gray-100 dark:border-strokedark">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-gray-500 dark:text-meta-2">
+              <p className="text-xs sm:text-sm text-gray-500 dark:text-meta-2">
                 Day Off Staff
               </p>
-              <h3 className="text-2xl font-bold text-gray-900 dark:text-white mt-1">
+              <h3 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white mt-1">
                 {dayOffStaff}
               </h3>
             </div>
-            <Calendar className="h-8 w-8 text-yellow-500 dark:text-meta-3" />
+            <Calendar className="h-6 w-6 sm:h-8 sm:w-8 text-yellow-500 dark:text-meta-3" />
           </div>
         </div>
 
-        <div className="bg-white dark:bg-boxdark p-6 rounded-xl shadow-sm border border-gray-100 dark:border-strokedark">
+        <div className="bg-white dark:bg-boxdark p-4 sm:p-6 rounded-xl shadow-sm border border-gray-100 dark:border-strokedark">
           <div className="flex items-center justify-between">
             <div className="flex flex-col">
-              <p className="text-sm text-gray-500 dark:text-meta-2">
+              <p className="text-xs sm:text-sm text-gray-500 dark:text-meta-2">
                 Total Payroll
               </p>
-              <h3 className="text-2xl font-bold text-gray-900 dark:text-white mt-1">
+              <h3 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white mt-1">
                 ₹{totalPayroll.toLocaleString()}
               </h3>
             </div>
-            <DollarSign className="h-8 w-8 text-yellow-500 dark:text-meta-3" />
+            <DollarSign className="h-6 w-6 sm:h-8 sm:w-8 text-yellow-500 dark:text-meta-3" />
           </div>
         </div>
       </div>
 
       {/* Main Content */}
-      <div className="mt-8">
+      <div className="mt-4 sm:mt-8 overflow-hidden">
         {/* Header Section */}
-        <div className="flex flex-col-reverse sm:flex-row justify-between items-center mb-6 gap-4">
-          <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 sm:mb-6 gap-4 overflow-x-auto hide-scrollbar">
+          <h2 className="text-base sm:text-lg font-semibold text-gray-900 dark:text-white whitespace-nowrap">
             {selectedDate === moment().format("YYYY-MM-DD")
               ? "Today's Attendances"
               : `Attendances for ${moment(selectedDate).format('DD MMM YYYY')}`}
           </h2>
 
           {/* Search & Date */}
-          <div className="flex flex-col sm:flex-row gap-4 w-full sm:w-auto">
+          <div className="flex flex-col sm:flex-row gap-4 w-full sm:w-auto min-w-[280px]">
             {/* Search Input */}
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-500 w-5 h-5" />
+            <div className="relative w-full sm:w-auto">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-500 w-4 h-4 sm:w-5 sm:h-5" />
               <input
                 type="text"
                 placeholder="Search by name"
                 value={searchText}
                 onChange={(e) => setSearchText(e.target.value)}
-                className="w-full sm:w-64 pl-10 pr-4 py-2.5 bg-white dark:bg-boxdark-2 
+                className="w-full sm:w-64 pl-10 pr-4 py-2 sm:py-2.5 bg-white dark:bg-boxdark-2 
                           border border-gray-200 dark:border-strokedark rounded-xl 
                           focus:outline-none focus:ring-2 focus:ring-primary/20
-                          text-black dark:text-white"
+                          text-sm sm:text-base text-black dark:text-white"
               />
             </div>
 
@@ -1322,40 +1322,40 @@ const Management = () => {
               value={moment(selectedDate)}
               onChange={(date, dateString) => setSelectedDate(dateString)}
               format="DD MMM YYYY"
-              className="w-full sm:w-44 h-[42px] !rounded-xl antd-datepicker-custom
+              className="w-full sm:w-44 h-[38px] sm:h-[42px] !rounded-xl antd-datepicker-custom
                         !border-gray-200 dark:!border-strokedark 
-                        !bg-white dark:!bg-boxdark-2"
+                        !bg-white dark:!bg-boxdark-2
+                        !text-sm sm:!text-base"
             />
           </div>
         </div>
 
         {/* Tabs Section */}
-        <div className="bg-white dark:bg-boxdark rounded-xl shadow-sm border border-gray-100 dark:border-strokedark">
-          <Tabs 
-            defaultActiveKey="staff"
-            items={tabItems}
-            className="attendance-tabs"
-            tabBarStyle={{
-              margin: 0,
-              padding: '16px 16px 0',
-            }}
-          />
+        <div className="bg-white dark:bg-boxdark rounded-xl shadow-sm border border-gray-100 dark:border-strokedark overflow-hidden">
+          <div className="overflow-x-auto hide-scrollbar">
+            <Tabs 
+              defaultActiveKey="staff"
+              items={tabItems}
+              className="attendance-tabs"
+              tabBarStyle={{
+                margin: 0,
+                padding: '12px 12px 0 12px',
+                '@media (min-width: 640px)': {
+                  padding: '16px 16px 0',
+                },
+              }}
+            />
+          </div>
         </div>
       </div>
 
-      {/* Render Modals */}
-      {renderStaffModal()}
-      {renderConsultantModal()}
-
-      {/* Download Modal */}
-      {DownloadModal}
-
-      <Box sx={{ p: 2 }}>
+      {/* Create Attendance Button */}
+      <Box sx={{ p: { xs: 1, sm: 2 }, mt: { xs: 2, sm: 3 } }}>
         <Button
           type="primary"
           loading={loading}
           onClick={handleCreateAttendance}
-          className="bg-blue-500"
+          className="bg-blue-500 w-full sm:w-auto text-sm sm:text-base py-1.5 sm:py-2"
         >
           Create Today's Attendance
         </Button>
@@ -1383,44 +1383,165 @@ const fetchAttendanceReport = async (startDate, endDate) => {
 const styles = `
 /* Custom styles for Ant Design DatePicker */
 .antd-datepicker-custom {
-  @apply !px-4 !py-2;
+  @apply !px-3 sm:!px-4 !py-1.5 sm:!py-2;
 }
 
-.antd-datepicker-custom:hover {
-  @apply !border-primary;
+/* Hide scrollbar but keep functionality */
+.hide-scrollbar {
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* IE and Edge */
+  &::-webkit-scrollbar {
+    display: none; /* Chrome, Safari, Opera */
+  }
 }
 
-.antd-datepicker-custom .ant-picker-input > input {
-  @apply text-black dark:text-white placeholder-gray-400 dark:placeholder-gray-500;
+/* Table Container Styles */
+.attendance-tabs {
+  @apply w-full overflow-x-auto hide-scrollbar;
 }
 
-.antd-datepicker-custom .ant-picker-suffix {
-  @apply text-gray-400 dark:text-gray-500;
+.attendance-tabs .ant-table-wrapper {
+  @apply overflow-x-auto hide-scrollbar;
 }
 
-/* DatePicker Dropdown Panel */
-.ant-picker-dropdown {
-  @apply dark:bg-boxdark-2 dark:border-strokedark;
+.attendance-tabs .ant-table {
+  @apply min-w-[640px]; /* Minimum width to prevent squishing */
 }
 
-.ant-picker-dropdown .ant-picker-cell-in-view {
-  @apply dark:text-white;
+/* Table Row Styles */
+.attendance-tabs .ant-table-tbody > tr > td {
+  @apply text-xs sm:text-sm whitespace-nowrap bg-white dark:bg-boxdark;
+  border-bottom: 1px solid #f0f0f0;
 }
 
-.ant-picker-dropdown .ant-picker-cell-selected .ant-picker-cell-inner {
-  @apply !bg-primary dark:!text-white;
+.attendance-tabs .ant-table-tbody > tr:hover > td {
+  @apply bg-gray-50 dark:bg-boxdark-2 !important;
 }
 
-.ant-picker-dropdown .ant-picker-header {
-  @apply dark:text-white dark:border-strokedark;
+/* Make table header stick to top while scrolling */
+.attendance-tabs .ant-table-thead > tr > th {
+  @apply text-xs sm:text-sm whitespace-nowrap sticky top-0 bg-white dark:bg-boxdark z-10 border-b border-gray-200 dark:border-strokedark;
 }
 
-.ant-picker-dropdown .ant-picker-header button {
-  @apply dark:text-gray-400 hover:dark:text-white;
+/* Table Cell Padding */
+.attendance-tabs .ant-table-cell {
+  @apply px-2 sm:px-4 py-3;
 }
 
-.ant-picker-dropdown .ant-picker-content th {
-  @apply dark:text-gray-400;
+/* Table Background */
+.attendance-tabs .ant-table-container {
+  @apply bg-white dark:bg-boxdark;
+}
+
+/* Table Border Styles */
+.attendance-tabs .ant-table {
+  @apply border-separate border-spacing-0;
+}
+
+.attendance-tabs .ant-table-tbody > tr:last-child > td {
+  border-bottom: none;
+}
+
+/* Modal Responsive Styles */
+.ant-modal {
+  @apply max-w-[95vw] sm:max-w-[90vw] md:max-w-[800px];
+}
+
+.ant-modal-content {
+  @apply p-4 sm:p-6 overflow-x-auto hide-scrollbar;
+}
+
+.ant-modal-body {
+  @apply text-sm sm:text-base overflow-x-auto hide-scrollbar;
+}
+
+/* Modal Content Scrolling */
+.ant-modal-body {
+  max-height: calc(90vh - 130px);
+  overflow-y: auto;
+  @apply hide-scrollbar;
+}
+
+/* Table Select Styles */
+.attendance-tabs .ant-select {
+  @apply min-w-[120px];
+}
+
+.attendance-tabs .ant-select-selector {
+  @apply rounded-lg border-gray-200 dark:border-strokedark;
+}
+
+/* Status Colors */
+.attendance-tabs .text-green-500 {
+  @apply bg-green-50 dark:bg-green-900/20 px-2 py-1 rounded-lg;
+}
+
+.attendance-tabs .text-red-500 {
+  @apply bg-red-50 dark:bg-red-900/20 px-2 py-1 rounded-lg;
+}
+
+.attendance-tabs .text-yellow-500 {
+  @apply bg-yellow-50 dark:bg-yellow-900/20 px-2 py-1 rounded-lg;
+}
+
+.attendance-tabs .text-blue-500 {
+  @apply bg-blue-50 dark:bg-blue-900/20 px-2 py-1 rounded-lg;
+}
+
+/* Table Container Styles */
+.attendance-tabs .ant-table-wrapper {
+  @apply w-full overflow-x-auto;
+}
+
+/* Table Background and Row Styles */
+.attendance-tabs .ant-table {
+  @apply min-w-full bg-white dark:bg-boxdark;
+}
+
+/* Table Row Background */
+.attendance-tabs .ant-table-tbody > tr {
+  @apply bg-white dark:bg-boxdark w-full;
+}
+
+.attendance-tabs .ant-table-tbody > tr > td {
+  @apply text-xs sm:text-sm whitespace-nowrap bg-white dark:bg-boxdark border-b border-gray-200 dark:border-strokedark;
+}
+
+/* Table Row Hover */
+.attendance-tabs .ant-table-tbody > tr:hover {
+  @apply bg-gray-50 dark:bg-boxdark-2;
+}
+
+.attendance-tabs .ant-table-tbody > tr:hover > td {
+  @apply bg-gray-50 dark:bg-boxdark-2 !important;
+}
+
+/* Table Header */
+.attendance-tabs .ant-table-thead > tr > th {
+  @apply text-xs sm:text-sm whitespace-nowrap sticky top-0 bg-white dark:bg-boxdark z-10 
+         border-b border-gray-200 dark:border-strokedark w-full;
+}
+
+/* Table Cell Padding */
+.attendance-tabs .ant-table-cell {
+  @apply px-4 py-3;
+}
+
+/* Ensure full width on mobile */
+@media (max-width: 640px) {
+  .attendance-tabs .ant-table {
+    @apply w-[100vw];
+  }
+  
+  .attendance-tabs .ant-table-tbody > tr > td,
+  .attendance-tabs .ant-table-thead > tr > th {
+    @apply min-w-[120px];  /* Minimum width for cells on mobile */
+  }
+}
+
+/* Table Container */
+.attendance-tabs .ant-table-container {
+  @apply bg-white dark:bg-boxdark overflow-x-auto w-full;
 }
 `;
 

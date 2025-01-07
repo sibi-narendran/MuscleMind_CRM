@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
-import Logo from '../assets/logo/logo.png';
-import { FaTachometerAlt, FaTable, FaArrowLeft } from 'react-icons/fa'; 
+import Logo from '/icons8-dental-64.png';
+import { FaTachometerAlt,FaArrowLeft } from 'react-icons/fa'; 
 import SidebarLinkGroup from './SidebarLinkGroup';
 import { Bell, Briefcase, Calendar, Receipt, Users, Stethoscope, BellDot } from 'lucide-react';
 
@@ -65,7 +65,7 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }) => {
   return (
     <aside
       ref={sidebar}
-      className={`absolute left-0 top-0 z-9999 flex h-screen w-72.5 flex-col overflow-y-hidden bg-black duration-300 ease-linear dark:bg-boxdark lg:static lg:translate-x-0 ${
+      className={`absolute left-0 top-0 z-50 flex h-screen w-72.5 flex-col overflow-y-hidden bg-black duration-300 ease-linear dark:bg-boxdark lg:static lg:translate-x-0 ${
         sidebarOpen ? 'translate-x-0' : '-translate-x-full'
       }`}
     >

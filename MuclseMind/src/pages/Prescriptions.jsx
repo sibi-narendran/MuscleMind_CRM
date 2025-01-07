@@ -6,7 +6,7 @@ import AddPrescriptionForm from './AddPrescriptionForm';
 import { deletePrescriptions, GetPrescription, getUserProfile, generatePrescription } from '../api.services/services';
 import { generatePDF } from '../lib/pdfGenerator';
 import { z } from 'zod';
-import GeminiIcon from "../Images/google-gemini-icon.svg";
+import GeminiIcon from "../assets/google-gemini-icon.svg";
 
 const { Search } = Input;
 const { Title } = Typography;

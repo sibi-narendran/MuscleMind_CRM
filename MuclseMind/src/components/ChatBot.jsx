@@ -3,7 +3,7 @@ import { Send, Loader2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import ReactMarkdown from 'react-markdown';
 import { format } from 'date-fns';
-import chatIcon from '../Images/robot.png';
+import chatIcon from '../assets/robot.png';
 
 const ChatBot = () => {
   const [isOpen, setIsOpen] = useState(false);

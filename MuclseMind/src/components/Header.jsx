@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import Logo from '../assets/logo/logo-icon.svg';
+import Logo from '/icons8-dental-64.png';
 import DarkModeSwitcher from './DarkModeSwitcher';
 import DropdownUser from './DropdownUser';
 
@@ -72,8 +72,8 @@ const Header = (props) => {
             </span>
           </button>
 
-          <Link className="block flex-shrink-0 lg:hidden" to="/">
-            <img src={Logo} alt="Logo" />
+          <Link className="block flex-shrink-0 lg:hidden" to="/login">
+            <img src={Logo} alt="Logo" className='w-10 h-10' />
           </Link>
         </div>
 

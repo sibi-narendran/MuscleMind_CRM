@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { FaUser, FaAddressBook, FaCog } from 'react-icons/fa'; 
-import UserOne from '../Images/Profile.jpg';
+import UserOne from '../assets/Profile.jpg';
 import { Lock } from 'lucide-react';
 import { getUserProfile } from '../api.services/services';
 
@@ -121,7 +121,7 @@ const DropdownUser = () => {
           </li>
           <li>
             <Link
-              to="/"
+              to="/login"
               className="flex items-center gap-3.5 text-sm font-medium duration-300 ease-in-out hover:text-meta-1 lg:text-base"
             >
               <Lock className="text-lg" />

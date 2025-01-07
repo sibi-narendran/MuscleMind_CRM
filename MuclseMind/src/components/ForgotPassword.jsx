@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { message } from 'antd';
 import Loader from '../styles/Loader';
 import { sendPasswordResetOtp, resetPassword } from '../api.services/services';
-import cover from '../Images/background.jpg'
+import cover from '../assets/background.jpg'
 
 const ForgotPassword = () => {
   const navigate = useNavigate();

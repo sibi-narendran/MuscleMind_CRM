@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { message } from 'antd';
 import Loader from '../styles/Loader';
 import { userLogin } from '../api.services/services';
-import cover from '../Images/background.jpg'
+import cover from '../assets/background.jpg'
 import Logo from '../../public/logo512.png';
 
 const Login = () => {

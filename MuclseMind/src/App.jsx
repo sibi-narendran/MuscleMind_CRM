@@ -2,10 +2,23 @@ import { Suspense, lazy } from 'react';
 import { Route, Routes } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
 import routes from './routes';
+import { DotLottieReact } from '@lottiefiles/dotlottie-react';
+
 
 const DefaultLayout = lazy(() => import('./layout/DefaultLayout'));
 
 function App() {
+  const LoadingAnimation = () => (
+    <div className="flex h-screen items-center justify-center">
+      <DotLottieReact
+        src="https://lottie.host/96a56ec3-d253-4f61-890d-c11896653ee9/6ozXHhfQG6.lottie"
+        loop
+        autoplay
+        style={{ width: '100px', height: '100px' }}
+      />
+    </div>
+  );
+
   return (
     <>
       {/* ram */}
@@ -23,7 +36,7 @@ function App() {
               key={path}
               path={path}
               element={
-                <Suspense fallback={<div>Loading...</div>}>
+                <Suspense fallback={<LoadingAnimation />}>
                   <Component />
                 </Suspense>
               }
@@ -39,7 +52,7 @@ function App() {
                 key={path}
                 path={path}
                 element={
-                  <Suspense fallback={<div>Loading...</div>}>
+                  <Suspense fallback={<LoadingAnimation />}>
                     <Component />
                   </Suspense>
                 }

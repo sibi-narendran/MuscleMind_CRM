@@ -11,7 +11,7 @@ module.exports = {
   theme: {
     extend: {
       fontFamily: {
-        ubuntu: ['Ubuntu', 'sans-serif'],
+        ubuntu: ['sans-serif','Ubuntu', ],
         ...defaultTheme.fontFamily,
       },
       colors: {
@@ -212,11 +212,9 @@ module.exports = {
       opacity: {
         65: '.65',
       },
-      backgroundImage: {
-        video: "url('../images/video/video.png')",
-      },
+  
       content: {
-        'icon-copy': 'url("../images/icon/icon-copy-alt.svg")',
+        'icon-copy': 'url("../assets/icon/icon-copy-alt.svg")',
       },
       transitionProperty: { width: 'width', stroke: 'stroke' },
       borderWidth: {

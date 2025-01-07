@@ -5,7 +5,7 @@ import { Formik, Form, Field, ErrorMessage } from "formik";
 import * as Yup from "yup";
 import { Select } from "antd";
 import { userRegister, otpVerify, sendOtp } from "../api.services/services";
-import cover from '../Images/background.jpg'
+import cover from '../assets/background.jpg'
 
 const { Option } = Select;
 

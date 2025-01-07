@@ -1,6 +1,6 @@
 import Breadcrumb from '../components/Breadcrumb';
-import CoverOne from "../Images/cover-01.jpg";
-import userSix from '../Images/user-06.png';
+import CoverOne from "../assets/cover-01.jpg";
+import userSix from '../assets/user-06.png';
 import { Link } from 'react-router-dom';
 import { FaFacebookF, FaTwitter, FaInstagram, FaLinkedinIn, FaGithub, FaEdit } from 'react-icons/fa';
 import { MdCameraAlt } from 'react-icons/md';

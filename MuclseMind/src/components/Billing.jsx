@@ -7,7 +7,7 @@ import EditBillingModal from "./EditBillingModal";
 import AddInvoiceModal from "./AddInvoiceModal";
 import invoicePNG from "../assets/invoice.png";
 import { getUserProfile, generateInvoice } from "../api.services/services";
-import GeminiIcon from "../Images/google-gemini-icon.svg";
+import GeminiIcon from "../assets/google-gemini-icon.svg";
 
 const Billing = () => {
   const [billings, setBillings] = useState([]);
