@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { message } from 'antd';
 import Loader from '../styles/Loader';
-import { userLogin } from '../api.services/services';
+import { userLogin } from '../interceptor/services';
 import cover from '../assets/background.jpg'
 import Logo from '../../public/logo512.png';
 

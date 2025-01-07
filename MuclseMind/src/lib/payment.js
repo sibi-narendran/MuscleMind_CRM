@@ -1,4 +1,4 @@
-import { createPaymentOrder, verifyPayment } from '../api.services/services';
+import { createPaymentOrder, verifyPayment } from '../interceptor/services';
 
 const RAZORPAY_KEY_ID = 'rzp_test_LP09yDpPnI4V3x';
 

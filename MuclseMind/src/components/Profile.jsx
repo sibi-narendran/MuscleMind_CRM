@@ -1,10 +1,10 @@
-import Breadcrumb from '../components/Breadcrumb';
+import Breadcrumb from '../comman/Breadcrumb';
 import CoverOne from "../assets/cover-01.jpg";
 import userSix from '../assets/user-06.png';
 import { Link } from 'react-router-dom';
 import { FaFacebookF, FaTwitter, FaInstagram, FaLinkedinIn, FaGithub, FaEdit } from 'react-icons/fa';
 import { MdCameraAlt } from 'react-icons/md';
-import { getUserProfile } from '../api.services/services';
+import { getUserProfile } from '../interceptor/services';
 import { useEffect, useState } from 'react';
 
 

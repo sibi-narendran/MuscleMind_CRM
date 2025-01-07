@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { FaUser, FaAddressBook, FaCog } from 'react-icons/fa'; 
 import UserOne from '../assets/Profile.jpg';
 import { Lock } from 'lucide-react';
-import { getUserProfile } from '../api.services/services';
+import { getUserProfile } from '../interceptor/services';
 
 const DropdownUser = () => {
   const [dropdownOpen, setDropdownOpen] = useState(false);

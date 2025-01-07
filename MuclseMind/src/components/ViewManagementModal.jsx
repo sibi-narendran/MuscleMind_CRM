@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Modal, message } from 'antd';
 import moment from 'moment';
-import { fetchEmployeeAttendance } from '../api.services/services';
+import { fetchEmployeeAttendance } from '../interceptor/services';
 
 const ViewManagementModal = ({ isVisible, onClose, dentalTeamId }) => {
   const [attendanceData, setAttendanceData] = useState([]);

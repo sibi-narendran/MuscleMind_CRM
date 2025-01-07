@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { PricingToggle } from '../components/PricingToggle';
-import { PricingCard } from '../components/PricingCard';
-import { PaymentModal } from '../components/PaymentModal';
-import { initializeRazorpay, createOrder, handlePayment } from '../services/payment';
+import { PricingToggle } from './PricingToggle';
+import { PricingCard } from './PricingCard';
+import { PaymentModal } from './PaymentModal';
+import { initializeRazorpay, createOrder, handlePayment } from '../../lib/payment';
 import { Button, message, Modal } from 'antd';
 import {AppleFilled, AndroidFilled, GlobalOutlined } from '@ant-design/icons';
 

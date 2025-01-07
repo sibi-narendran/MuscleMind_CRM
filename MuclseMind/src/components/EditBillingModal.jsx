@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Modal, Input, Select, Button, message, Form, Tooltip } from "antd";
-import { getTreatments, updateBilling } from "../api.services/services";
+import { getTreatments, updateBilling } from "../interceptor/services";
 import { Plus, X } from "lucide-react";
 
 const EditBillingModal = ({ isOpen, onClose, billing, onUpdate }) => {

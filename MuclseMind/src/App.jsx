@@ -3,9 +3,7 @@ import { Route, Routes } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
 import routes from './routes';
 import { DotLottieReact } from '@lottiefiles/dotlottie-react';
-
-
-const DefaultLayout = lazy(() => import('./layout/DefaultLayout'));
+import DefaultLayout from './layout/DefaultLayout';
 
 function App() {
   const LoadingAnimation = () => (

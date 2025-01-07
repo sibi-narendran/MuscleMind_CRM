@@ -2,7 +2,7 @@ import { Users, Calendar, Activity, TrendingUp, PieChart, CheckCircle, LineChart
 import { Line, Bar } from 'react-chartjs-2';
 import 'chart.js/auto';
 import React, { useEffect, useState } from 'react';
-import { getDashboardStats, getTodayAppointments, getDashboardPatientGrowth } from '../api.services/services';
+import { getDashboardStats, getTodayAppointments, getDashboardPatientGrowth } from '../../interceptor/services';
 import { format } from 'date-fns';
 
 const Dashboard = () => {

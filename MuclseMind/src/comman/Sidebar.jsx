@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
 import Logo from '/icons8-dental-64.png';
 import { FaTachometerAlt,FaArrowLeft } from 'react-icons/fa'; 
-import SidebarLinkGroup from './SidebarLinkGroup';
+import SidebarLinkGroup from '../lib/SidebarLinkGroup';
 import { Bell, Briefcase, Calendar, Receipt, Users, Stethoscope, BellDot } from 'lucide-react';
 
 const Sidebar = ({ sidebarOpen, setSidebarOpen }) => {

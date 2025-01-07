@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { Button, Input, Table, Card, Space, Typography, Modal, message, Spin, Tooltip } from 'antd';
 import { DownloadOutlined, DeleteOutlined, PlusOutlined, EditOutlined, SearchOutlined } from '@ant-design/icons';
-import EditPrescriptionForm from './EditPrescriptionForm';
-import AddPrescriptionForm from './AddPrescriptionForm';
-import { deletePrescriptions, GetPrescription, getUserProfile, generatePrescription } from '../api.services/services';
+import EditPrescriptionForm from '../components/EditPrescriptionForm';
+import AddPrescriptionForm from '../components/AddPrescriptionForm';
+import { deletePrescriptions, GetPrescription, getUserProfile, generatePrescription } from '../interceptor/services';
 import { generatePDF } from '../lib/pdfGenerator';
 import { z } from 'zod';
 import GeminiIcon from "../assets/google-gemini-icon.svg";

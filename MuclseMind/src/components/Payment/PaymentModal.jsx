@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { initializeRazorpay, createOrder, handlePayment } from '../services/payment';
+import { initializeRazorpay, createOrder, handlePayment } from '../../lib/payment';
 import { message } from 'antd';
-import { getUserProfile } from '../api.services/services';
+import { getUserProfile } from '../../interceptor/services';
 
 export function PaymentModal({ isOpen, onClose, selectedPlan, onSuccess }) {
   const [isLoading, setIsLoading] = useState(false);

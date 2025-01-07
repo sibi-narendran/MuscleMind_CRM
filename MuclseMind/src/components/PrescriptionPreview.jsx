@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { FaStethoscope } from 'react-icons/fa';
-import { getUserProfile } from '../api.services/services';
+import { getUserProfile } from '../interceptor/services';
 
 export default function PrescriptionPreview({ data }) {
   const [clinicData, setClinicData] = useState({

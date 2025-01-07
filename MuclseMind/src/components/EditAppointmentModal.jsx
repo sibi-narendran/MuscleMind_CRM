@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Modal, Form, DatePicker, TimePicker, Button, Select, message } from 'antd';
 import moment from 'moment';
-import { updateAppointment, getPatients, getTreatments, getTeamMembers } from '../api.services/services'; // Import necessary services
+import { updateAppointment, getPatients, getTreatments, getTeamMembers } from '../interceptor/services'; // Import necessary services
 
 const { Option } = Select;
 

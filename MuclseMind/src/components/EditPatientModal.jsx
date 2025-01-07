@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Modal, Input, Form, Button, Select, Upload, Row, Col, Radio, Collapse, message } from 'antd';
 import { UploadOutlined } from '@ant-design/icons';
-import {getTeamMembers} from "../api.services/services";
+import {getTeamMembers} from "../interceptor/services";
 
 const { Option } = Select;
 const { TextArea } = Input;

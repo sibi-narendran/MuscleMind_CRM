@@ -2,13 +2,13 @@ import React, { useState, useEffect } from 'react';
 import { Modal, Form, Input, InputNumber, Select, Button, Table, Upload, DatePicker, List, Typography, message, TimePicker, Checkbox, Image, Space } from 'antd';
 import { PlusOutlined, EditOutlined, DeleteOutlined, UploadOutlined } from '@ant-design/icons';
 import moment from 'moment';
-import { getOperatingHours, updateOperatingHours,getTreatments, addTreatment, editTreatment, deleteTreatment  } from '../api.services/services';
-import { getMedications, addMedication, editMedication, deleteMedication } from '../api.services/services';
-import { getTeamMembers, addTeamMember, editTeamMember, deleteTeamMember } from '../api.services/services';
-import { addHoliday, getHolidays, updateHoliday, deleteHoliday } from '../api.services/services';
-import { clinicInfo, updateClinicInfo } from '../api.services/services';
+import { getOperatingHours, updateOperatingHours,getTreatments, addTreatment, editTreatment, deleteTreatment  } from '../interceptor/services';
+import { getMedications, addMedication, editMedication, deleteMedication } from '../interceptor/services';
+import { getTeamMembers, addTeamMember, editTeamMember, deleteTeamMember } from '../interceptor/services';
+import { addHoliday, getHolidays, updateHoliday, deleteHoliday } from '../interceptor/services';
+import { clinicInfo, updateClinicInfo } from '../interceptor/services';
 import axios from 'axios';
-import { updateImageClinicInfo } from '../api.services/services';
+import { updateImageClinicInfo } from '../interceptor/services';
 
 
 const { Option } = Select;

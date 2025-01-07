@@ -4,11 +4,11 @@ import { PlusOutlined, EditOutlined, DeleteOutlined, DownloadOutlined, EyeOutlin
 import PreviewCaseSheet from '../components/PreviewCaseSheet';
 import AddPatientModal from '../components/AddPatientModal';
 import EditPatientModal from '../components/EditPatientModal';
-import CaseSheetPdfGenerator from '../components/CaseSheetPdfGenerator';
-import { getPatients, addPatient, editPatient, deletePatient, getTeamMembers } from '../api.services/services';
+import CaseSheetPdfGenerator from '../lib/CaseSheetPdfGenerator';
+import { getPatients, addPatient, editPatient, deletePatient, getTeamMembers } from '../interceptor/services';
 import { useTable } from 'react-table';
 import '../assets/css/Patients.css';
-import { getUserProfile } from '../api.services/services';  
+import { getUserProfile } from '../interceptor/services';  
 import ViewPatientModal from './ViewPatientModal';
 
 const { Option } = Select;

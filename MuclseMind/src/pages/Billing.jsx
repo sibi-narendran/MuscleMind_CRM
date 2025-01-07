@@ -1,12 +1,12 @@
 import React, { useState, useEffect } from "react";
 import { DollarSign, Download, Filter, Trash2, Edit, Search, X } from "lucide-react";
 import { Modal, message, Spin, Tooltip } from "antd";
-import { getBillings, deleteBilling } from "../api.services/services";
+import { getBillings, deleteBilling } from "../interceptor/services";
 import { generateBillingPDF } from "../lib/BillGenerator";
-import EditBillingModal from "./EditBillingModal";
-import AddInvoiceModal from "./AddInvoiceModal";
+import EditBillingModal from "../components/EditBillingModal";
+import AddInvoiceModal from "../components/AddInvoiceModal";
 import invoicePNG from "../assets/invoice.png";
-import { getUserProfile, generateInvoice } from "../api.services/services";
+import { getUserProfile, generateInvoice } from "../interceptor/services";
 import GeminiIcon from "../assets/google-gemini-icon.svg";
 
 const Billing = () => {

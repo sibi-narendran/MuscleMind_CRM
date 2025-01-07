@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Modal, Form, Input, Button, DatePicker, Select, message, TimePicker } from 'antd';
 import moment from 'moment';
-import { getPatients, addAppointment, getTreatments, getTeamMembers } from '../api.services/services';
+import { getPatients, addAppointment, getTreatments, getTeamMembers } from '../interceptor/services';
 import AddPatientModal from './AddPatientModal';
 import { LoadingOutlined } from '@ant-design/icons';
 

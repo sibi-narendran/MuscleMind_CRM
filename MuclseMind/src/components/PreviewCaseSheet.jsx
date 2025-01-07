@@ -1,6 +1,6 @@
 import React from 'react';
 import { Modal, Button } from 'antd';
-import CaseSheetPdfGenerator from './CaseSheetPdfGenerator';
+import CaseSheetPdfGenerator from '../lib/CaseSheetPdfGenerator';
 
 const PreviewCaseSheet = ({ visible, onClose, patient, clinicName }) => {
   const handlePreview = () => {

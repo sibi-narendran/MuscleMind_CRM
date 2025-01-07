@@ -1,52 +1,49 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { Form, Input, Button, Radio, Typography, message, Checkbox } from "antd";
-import { FaStethoscope } from "react-icons/fa";
+import { prescriptionSchema } from "../pages/Prescriptions";
 import PrescriptionPreview from "./PrescriptionPreview";
-import { addPrescription } from "../api.services/services";
+import { updatePrescription } from "../interceptor/services";
 
-export default function AddPrescriptionForm({ onUpdate }) {
-  const [formData, setFormData] = useState({
-    patient_name: "",
-    age: "",
-    gender: "",
-    treatment_name: "",
-    date: new Date().toISOString().split("T")[0],
-    medicines: []
-  });
+export default function EditPrescriptionForm({ selectedPrescription, onUpdate }) {
+  const [medicines, setMedicines] = useState(selectedPrescription.medicines || []);
+  const [treatmentField, setTreatmentField] = useState('');
+
+  useEffect(() => {
+    setMedicines(selectedPrescription.medicines || []);
+    setTreatmentField(selectedPrescription.treatment_name || '');
+  }, [selectedPrescription]);
 
   const handleFormSubmit = async () => {
     try {
-      const response = await addPrescription(formData);
+      const payload = {
+        ...selectedPrescription,
+        medicines: medicines,
+        treatment_name: treatmentField,
+      };
+      
+      const response = await updatePrescription(selectedPrescription.id, payload);
+      
       if (response.success) {
-        message.success('Prescription added successfully');
         onUpdate();
       } else {
-        throw new Error(response.message || 'Failed to add prescription');
+        throw new Error(response.message || 'Failed to update prescription');
       }
     } catch (error) {
-      message.error(`Failed to add prescription: ${error.message}`);
-      console.error('Error adding prescription:', error);
+      message.error(`Failed to update prescription: ${error.message}`);
+      console.error('Error updating prescription:', error);
     }
   };
 
-  const handleInputChange = (field, value) => {
-    setFormData(prev => ({
-      ...prev,
-      [field]: value
-    }));
-  };
-
   const handleMedicineChange = (index, field, value) => {
-    const updatedMedicines = formData.medicines.map((medicine, idx) => {
+    const updatedMedicines = medicines.map((medicine, idx) => {
       if (idx === index) {
         return { ...medicine, [field]: value };
       }
       return medicine;
     });
-    setFormData(prev => ({
-      ...prev,
-      medicines: updatedMedicines
-    }));
+    setMedicines(updatedMedicines);
   };
 
   const addMedicine = () => {
@@ -57,23 +54,17 @@ export default function AddPrescriptionForm({ onUpdate }) {
       morning: false,
       afternoon: false,
       night: false,
-      instructions: ""
+      instructions: "",
     };
-    setFormData(prev => ({
-      ...prev,
-      medicines: [...prev.medicines, newMedicine]
-    }));
+    setMedicines([...medicines, newMedicine]);
   };
 
   const handleRemoveMedicine = (index) => {
-    setFormData(prev => ({
-      ...prev,
-      medicines: prev.medicines.filter((_, idx) => idx !== index)
-    }));
+    setMedicines(medicines.filter((_, idx) => idx !== index));
   };
 
   return (
-    <div className="grid grid-cols-2 gap-8">
+    <div className="grid grid-cols-2 gap-8 ">
       <div>
         <Form
           layout="vertical"
@@ -82,52 +73,36 @@ export default function AddPrescriptionForm({ onUpdate }) {
         >
           <div className="space-y-6">
             <Form.Item label="Patient Name">
-              <Input
-                value={formData.patient_name}
-                onChange={(e) => handleInputChange('patient_name', e.target.value)}
-                placeholder="Enter patient name"
-              />
+              <Input disabled defaultValue={selectedPrescription.patient_name} />
             </Form.Item>
-
+            
             <div className="grid grid-cols-2 gap-4">
               <Form.Item label="Age">
-                <Input
-                  type="number"
-                  value={formData.age}
-                  onChange={(e) => handleInputChange('age', e.target.value)}
-                  placeholder="Enter age"
-                />
+                <Input disabled defaultValue={selectedPrescription.age} type="number" />
               </Form.Item>
               <Form.Item label="Gender">
-                <Radio.Group
-                  value={formData.gender}
-                  onChange={(e) => handleInputChange('gender', e.target.value)}
-                >
+                <Radio.Group disabled defaultValue={selectedPrescription.gender}>
                   <Radio value="Male">Male</Radio>
                   <Radio value="Female">Female</Radio>
                 </Radio.Group>
               </Form.Item>
             </div>
 
-            <Form.Item label="Treatment Name">
-              <Input
-                value={formData.treatment_name}
-                onChange={(e) => handleInputChange('treatment_name', e.target.value)}
-                placeholder="Enter treatment name"
-              />
+            <Form.Item label="Date">
+              <Input disabled defaultValue={selectedPrescription.date} type="date" />
             </Form.Item>
 
-            <Form.Item label="Date">
-              <Input
-                type="date"
-                value={formData.date}
-                onChange={(e) => handleInputChange('date', e.target.value)}
+            <Form.Item label="Treatment Field">
+              <Input 
+                type="text"
+                value={treatmentField} 
+                onChange={(e) => setTreatmentField(e.target.value)}  
               />
             </Form.Item>
 
             <Form.Item label="Medicines">
               <div className="space-y-4">
-                {formData.medicines.map((medicine, index) => (
+                {medicines.map((medicine, index) => (
                   <div key={index} className="relative space-y-2 p-4 border rounded-lg bg-gray-50">
                     <button
                       type="button"
@@ -212,13 +187,13 @@ export default function AddPrescriptionForm({ onUpdate }) {
 
             <Form.Item>
               <Button type="primary" onClick={handleFormSubmit} className="w-full">
-                Add Prescription
+                Update Prescription
               </Button>
             </Form.Item>
           </div>
         </Form>
       </div>
-      <PrescriptionPreview data={formData} />
+      <PrescriptionPreview data={{ ...selectedPrescription, medicines, treatment_field: treatmentField }} />
     </div>
   );
 }

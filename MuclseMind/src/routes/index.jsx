@@ -34,19 +34,19 @@ const AppLoader = () => {
 // Your existing route imports
 
 const LandingPage = lazy(() => import('../landingPage/LandingPage'));
-const Dashboard = lazy(() => import('../components/Dashboard'));
+const Dashboard = lazy(() => import('../components/Dashboard/Dashboard'));
 const Patients = lazy(() => import('../pages/paitents'));
-const Appointments = lazy(() => import('../components/Appointments'));
-const Billing = lazy(() => import('../components/Billing'));
-const Management = lazy(() => import('../components/Management'));
-const Reminders = lazy(() => import('../components/Reminders'));
-const Clinic = lazy(() => import('../components/ClinicInfo'));
-const Login = lazy(() => import('../components/login'));
-const CreateAccount = lazy(() => import('../components/CreateAccount'));
-const ForgotPassword = lazy(() => import('../components/ForgotPassword'));
+const Appointments = lazy(() => import('../pages/Appointments'));
+const Billing = lazy(() => import('../pages/Billing'));
+const Management = lazy(() => import('../pages/Management'));
+const Reminders = lazy(() => import('../components/Dashboard/Reminders'));
+const Clinic = lazy(() => import('../pages/ClinicInfo'));
+const Login = lazy(() => import('../comman/login'));
+const CreateAccount = lazy(() => import('../comman/CreateAccount'));
+const ForgotPassword = lazy(() => import('../comman/ForgotPassword'));
 const MyProfile = lazy(() => import('../components/Profile'));
 const Prescriptions = lazy(() => import('../pages/Prescriptions'));
-const Settings = lazy(() => import('../components/Settings'));
+const Settings = lazy(() => import('../components/Payment/Settings'));
 
 const coreRoutes = [
   { path: '/', title: 'Login', component: LandingPage },

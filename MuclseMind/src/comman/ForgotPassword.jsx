@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { message } from 'antd';
 import Loader from '../styles/Loader';
-import { sendPasswordResetOtp, resetPassword } from '../api.services/services';
+import { sendPasswordResetOtp, resetPassword } from '../interceptor/services';
 import cover from '../assets/background.jpg'
 
 const ForgotPassword = () => {

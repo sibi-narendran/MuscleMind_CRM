@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Modal, Input, Select, Button, Checkbox, message } from "antd";
-import { getTreatments, createBilling, getPatients } from "../api.services/services";
+import { getTreatments, createBilling, getPatients } from "../interceptor/services";
 import PropTypes from "prop-types";
 
 const { Option } = Select;
