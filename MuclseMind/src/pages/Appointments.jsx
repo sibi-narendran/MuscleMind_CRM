@@ -138,7 +138,15 @@ const Appointments = () => {
 
   const handleEditAppointment = async (updatedAppointment) => {
     try {
-      const response = await updateAppointment(updatedAppointment.id, updatedAppointment);
+      // Ensure user_id is included and properly formatted
+      const updateData = {
+        ...updatedAppointment,
+        user_id: updatedAppointment.user_id || localStorage.getItem('user_id'),
+        patient_id: updatedAppointment.patient_id,
+        treatment_id: updatedAppointment.treatment_id
+      };
+
+      const response = await updateAppointment(updatedAppointment.id, updateData);
       if (response.success) {
         message.success('Appointment updated successfully');
         setShowEditModal(false);

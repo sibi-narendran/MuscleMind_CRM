@@ -103,22 +103,42 @@ const getAppointmentsByDate = async (date) => {
 };
 
 const updateAppointment = async (id, updatedData) => {
-  const { data, error } = await supabase
-    .from('appointments')
-    .update(updatedData)
-    .eq('id', id)
-    .select()
-    .single();
+  try {
+    console.log('Model updating appointment:', { id, updatedData });
 
-  if (error) {
+    if (!id) {
+      throw new Error('Appointment ID is required');
+    }
+
+    if (!updatedData || Object.keys(updatedData).length === 0) {
+      throw new Error('Update data is required');
+    }
+
+    const { data, error } = await supabase
+      .from('appointments')
+      .update(updatedData)
+      .eq('id', id)
+      .select()
+      .single();
+
+    if (error) {
+      console.error('Supabase update error:', error);
+      throw error;
+    }
+
+    if (!data) {
+      throw new Error('No data returned after update');
+    }
+
+    return {
+      success: true,
+      data: data,
+      message: 'Appointment updated successfully'
+    };
+  } catch (error) {
+    console.error('Error in updateAppointment:', error);
     throw error;
   }
-
-  return {
-    success: true,
-    data: data,
-    message: 'Appointment updated successfully'
-  };
 };
 
 const deleteAppointment = async (id) => {

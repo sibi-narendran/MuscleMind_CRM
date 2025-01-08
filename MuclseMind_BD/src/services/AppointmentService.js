@@ -225,7 +225,32 @@ const fetchAppointments = async (userId) => {
 
 const modifyAppointment = async (id, updatedData) => {
   try {
-    // If time or date is being updated, validate against operating hours
+    console.log('Updating appointment:', { id, updatedData });
+
+    // Check if updatedData exists and has a status property
+    if (updatedData && typeof updatedData.status === 'string') {
+      // Status update only
+      try {
+        const result = await updateAppointment(id, {
+          status: updatedData.status
+        });
+
+        return {
+          success: true,
+          data: result.data,
+          message: 'Appointment status updated successfully'
+        };
+      } catch (error) {
+        console.error('Status update error:', error);
+        return {
+          success: false,
+          message: 'Failed to update appointment status',
+          error: error.message
+        };
+      }
+    }
+
+    // Rest of the validation for other updates
     if (updatedData.time || updatedData.date) {
       const date = updatedData.date;
       const time = updatedData.time;
@@ -233,7 +258,7 @@ const modifyAppointment = async (id, updatedData) => {
       const day = appointmentTime.toLocaleString('en-US', { weekday: 'long' }).toLowerCase();
 
       // Check operating hours
-      const operatingHoursList = await getOperatingHoursByDay(day);
+      const operatingHoursList = await getOperatingHoursByDay(day, updatedData.user_id);
       if (!operatingHoursList || operatingHoursList.length === 0) {
         throw new Error('Operating hours not found for this day');
       }
@@ -316,12 +341,11 @@ const modifyAppointment = async (id, updatedData) => {
     // Update the appointment with sanitized data
     const result = await updateAppointment(id, sanitizedData);
     
-    // Send notifications based on status change
-    if (result.success && updatedData.status) {
-      await sendAppointmentNotification(updatedData, updatedData.status.toUpperCase());
-    }
-
-    return result;
+    return {
+      success: true,
+      data: result.data,
+      message: 'Appointment updated successfully'
+    };
 
   } catch (error) {
     console.error('Error in modifyAppointment:', error);

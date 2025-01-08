@@ -26,6 +26,7 @@ const pricingTiers = [
     name: 'AI-Powered CRM',
     price: 2499,
     popular: true,
+    
     description: 'Advanced AI-powered features for intelligent practice management',
     features: [
       'All Basic Plan features',
