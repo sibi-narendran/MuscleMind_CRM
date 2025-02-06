@@ -12,12 +12,29 @@ const ChatBot = () => {
   ]);
   const [inputMessage, setInputMessage] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [notification, setNotification] = useState('');
   const messagesEndRef = useRef(null);
   const chatRef = useRef(null);
   const buttonRef = useRef(null);
+  const isSubscribed = false;
+
+  // Modern "pop" animation variants for the chat window
+  const chatWindowVariants = {
+    hidden: { opacity: 0, scale: 0.8 },
+    visible: {
+      opacity: 1,
+      scale: 1,
+      transition: { type: 'spring', stiffness: 500, damping: 30 }
+    },
+    exit: {
+      opacity: 0,
+      scale: 0.8,
+      transition: { type: 'tween', duration: 0.3 }
+    }
+  };
 
   const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   };
 
   useEffect(() => {
@@ -27,7 +44,7 @@ const ChatBot = () => {
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (
-        chatRef.current && 
+        chatRef.current &&
         !chatRef.current.contains(event.target) &&
         buttonRef.current &&
         !buttonRef.current.contains(event.target)
@@ -37,7 +54,6 @@ const ChatBot = () => {
     };
 
     document.addEventListener('mousedown', handleClickOutside);
-
     return () => {
       document.removeEventListener('mousedown', handleClickOutside);
     };
@@ -53,7 +69,7 @@ const ChatBot = () => {
       timestamp: new Date()
     };
 
-    setMessages(prev => [...prev, userMessage]);
+    setMessages((prev) => [...prev, userMessage]);
     setInputMessage('');
     setIsLoading(true);
 
@@ -67,29 +83,53 @@ const ChatBot = () => {
       
       const data = await response.json();
       
-      setMessages(prev => [...prev, {
-        role: 'assistant',
-        content: data.message,
-        timestamp: new Date()
-      }]);
+      setMessages((prev) => [
+        ...prev,
+        {
+          role: 'assistant',
+          content: data.message,
+          timestamp: new Date()
+        }
+      ]);
     } catch (error) {
       console.error('Error:', error);
-      setMessages(prev => [...prev, {
-        role: 'assistant',
-        content: 'Sorry, I encountered an error. Please try again.',
-        timestamp: new Date()
-      }]);
+      setMessages((prev) => [
+        ...prev,
+        {
+          role: 'assistant',
+          content: 'Sorry, I encountered an error. Please try again.',
+          timestamp: new Date()
+        }
+      ]);
     } finally {
       setIsLoading(false);
     }
   };
 
+  const handleChatClick = () => {
+    if (!isSubscribed) {
+      // Show a toast notification instead of an alert/modal
+      setNotification('Please subscribe to the plan to open the chat.');
+      setTimeout(() => setNotification(''), 3000);
+      return;
+    }
+    console.log('Opening chat...');
+    setIsOpen(true);
+  };
+
   return (
     <>
+      {/* Toast Notification */}
+      {notification && (
+        <div className="fixed bottom-20 right-7 z-50 bg-red-600 text-white px-4 py-2 rounded shadow-md transition-opacity">
+          {notification}
+        </div>
+      )}
+
       {/* Chat Toggle Button - Added bounce animation */}
       <button
         ref={buttonRef}
-        onClick={() => setIsOpen(!isOpen)}
+        onClick={handleChatClick}
         className="fixed bottom-4 right-7 inline-flex items-center justify-center text-sm font-medium 
           rounded-full w-14 h-14 bg-gradient-to-r from-slate-800 to-indigo-900 
           hover:from-slate-900 hover:to-indigo-950 shadow-lg transition-all duration-300
@@ -110,9 +150,10 @@ const ChatBot = () => {
         {isOpen && (
           <motion.div
             ref={chatRef}
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: 20 }}
+            variants={chatWindowVariants}
+            initial="hidden"
+            animate="visible"
+            exit="exit"
             className="fixed bottom-[calc(3.2rem+1.5rem)] right-0 mr-3 sm:mr-8 
               w-[95vw] sm:w-[320px] md:w-[380px] lg:w-[320px] 
               h-[80vh] sm:h-[500px] 
